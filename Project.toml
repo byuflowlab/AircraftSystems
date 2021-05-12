@@ -1,0 +1,8 @@
+name = "BlownWing"
+uuid = "cfe12fbd-3804-4fd6-94c9-16839ce519d8"
+authors = ["rymanderson <rymanderson@gmail.com>"]
+version = "0.1.0"
+
+[deps]
+CCBlade = "e1828068-15df-11e9-03e4-ef195ea46fa4"
+VortexLattice = "7a09bdf8-3785-11e9-0bdd-57d0ec69af3f"
