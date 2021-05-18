@@ -1,6 +1,6 @@
 # AircraftSystems
 
-Author: Ryan Anderson
+Authors: Ryan Anderson
 Email: rymanderson@gmail.com
 Date: 12 May 2021
 
