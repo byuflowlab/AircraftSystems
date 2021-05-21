@@ -1,63 +1,26 @@
-"Blown wing system."
-struct System{R}
-    # CCBlade objects
-    rotors::Vector{CC.Rotor}
-    sections_list::Vector{Vector{CC.Section}}
-    # VortexLattice objects
-    VL_system::VL.System
-    VL_reference::VL.Reference
-    # coupling
-    rotorindex::Vector{R}                   # which element of `System.rotors`
-    rotorposition::Vector{Tuple{R,R,R}}     # position of each rotor
-    rotororientation::Vector{Vector{R}}     # forward axial orientation of each rotor
-    wakedevelopmentfactor::Vector{R}        # 0-1: set how developed each wake is
-end
+"""
+Aircraft system.
 
-function System(
-    rotors::Vector{CC.Rotor},
-    sections_list::Vector{Vector{CC.Section}},
-    VL_system::VL.System,
-    VL_reference::VL.Reference,
-    rotorindex::Vector,
-    rotorposition::Vector{Tuple{R,R,R}} where R,
-    rotororientation::Vector{Vector},
-    wakedevelopmentfactor::Vector
-)
-    @assert length(rotors) == length(sections_list) "`rotors` and `sections_list` must be of the same length"
-    @assert length(rotorindex) == length(rotorposition) "`rotorindex` and `rotorposition` must be of the same length"
-    @assert length(rotororientation) == length(rotorposition) "`rotorposition` and `rotororientation` must be of the same length"
-    @assert length(wakedevelopmentfactor) == length(rotorindex) "`rotorindex` and `wakedevelopmentfactor` must be of the same length"
+Attributes:
 
-    return System(rotors, sections_list, VL_system, VL_reference, rotorindex, rotorposition, rotororientation, wakedevelopmentfactor)
-end
-
-"Convenience constructor for a single wing, single rotor `System` object."
-function SimpleSystem(;
-    rotor_D, rotor_Rhub, rotor_r, rotor_c, rotor_θ,
-    rotor_orientation = [-1.0, 0.0, 0.0],
-    rotor_position = [0.0, 0.0, 0.0],
-    wing_b = 2.0, wing_TR = 0.8, wing_AR = 8.0, wing_θroot = 0.0, wing_θtip = 0.0,
-    wing_camber = fill((xc) -> 0, 2), # camberline function for each section
-    wing_npanels = 50, wing_nchordwisepanels = 1,
-    wing_spacing_s = VL.Cosine(), wing_spacing_c = VL.Uniform()
-)
-    # build rotor
-
-    # build wing
-    vlmsystem = simplewing(;
-        wing_b = 2.0, wing_TR = 0.8, wing_AR = 8.0, wing_θroot = 0.0, wing_θtip = 0.0,
-        wing_camber = fill((xc) -> 0, 2), # camberline function for each section
-        wing_npanels = 50, wing_nchordwisepanels = 1,
-        wing_spacing_s = VL.Cosine(), wing_spacing_c = VL.Uniform()
-    )
-
+* `wings` : defines all lifting surfaces with sufficient detail for simulation. Eg, a `VortexLattice.System` object.
+* `rotors` : a struct containing all information required to define `CCBlade`
+"""
+struct System
+    wings
+    rotors
+    nonliftingbodies
+    structures
+    motors
+    batteries
 end
 
 function simplewing(;
     wing_b = 2.0, wing_TR = 0.8, wing_AR = 8.0, wing_θroot = 0.0, wing_θtip = 0.0,
     wing_camber = fill((xc) -> 0, 2), # camberline function for each section
     wing_npanels = 50, wing_nchordwisepanels = 1,
-    wing_spacing_s = VL.Cosine(), wing_spacing_c = VL.Uniform()
+    wing_spacing_s = VL.Cosine(), wing_spacing_c = VL.Uniform(),
+    symmetric = true
 )
     # build wing object
     xle = [0.0, 0.0]
@@ -84,7 +47,7 @@ function simplewing(;
     grids = [grid]
     surfaces = [surface]
 
-    symmetric = true
+    symmetric = symmetric
 
     # reference parameters
     Sref = wing_b * cmac

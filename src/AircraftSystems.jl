@@ -8,6 +8,8 @@ import DelimitedFiles
 DF = DelimitedFiles
 import FLOWMath
 FM = FLOWMath
+# import GeometricTools
+# GT = GeometricTools
 using LaTeXStrings
 import PyPlot
 plt = PyPlot
@@ -42,7 +44,9 @@ for directory in subdirectories
     end
 end
 
-# export functions
+# export packages
+export CCBlade, FLOWMath, VortexLattice, Xfoil
 
+# export functions
 
 end # module

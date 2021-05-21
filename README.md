@@ -59,7 +59,7 @@ Create a seamless interface between several intersecting codes applied to aerody
 <!-- * `preroutines/` # processes required to prepare a simulation -->
 * `system/`
 
-    * `geometry.jl`
+    * `common.jl`
 
         * simple geometry definition defined for the package
         * to be translated into geometries for use by other packages
@@ -120,14 +120,19 @@ Create a seamless interface between several intersecting codes applied to aerody
     * `template.jl`
     * `blownwing.jl`
 
-* `simulation.jl`
+* `simulation/`
 
+    * `simulation.jl`
     * function run every time
     * time series analysis or not
     * eventually, incorporate unsteady_analysis in VortexLattice?
     * writes VTK files
     * iterates over interactions
     * returns solution dictionary populated by `Interaction` objects
+
+* `vehicles/`
+
+    * convenience functions to build common system configurations, eg a single fuselage biplane
 
 # Documentation
 

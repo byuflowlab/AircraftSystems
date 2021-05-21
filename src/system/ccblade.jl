@@ -1,11 +1,87 @@
 #=##############################################################################################
-Filename: rotor.jl
+Filename: ccblade.jl
 Author: Ryan Anderson
 Contact: rymanderson@gmail.com
 README: this file is meant to provide convenience functions for building CCBlade rotor objects.
         This includes running all necessary airfoil analysis and store files in an accessible
         directory structure.
 =###############################################################################################
+
+"""
+Defines CCBlade rotor geometry.
+"""
+struct RotorSystem
+    rotors::Vector{CC.Rotor}
+    sectionlists::Vector{Vector{CC.Section}}
+    index::Vector{Int}
+    positions::Vector{Tuple{R,R,R}} where R
+    orientations::Vector{Tuple{R,R,R}} where R
+end
+
+"""
+Convenience constructor for `RotorSystem`.
+"""
+function RotorSystem(
+    nblades_list::Vector{Int},
+    rhub_list::Vector{R} where R,
+    rtip_list::Vector{R} where R,
+    radii_list::Vector{Vector{R}} where R,
+    chords_list::Vector{Vector{R}} where R,
+    twists_list::Vector{Vector{R}} where R,
+    airfoilcontours_list::Vector{Vector{String}},
+    airfoilnames_list::Vector{Vector{String}},
+    index::Vector{Int},
+    positions::Vector{Tuple{R,R,R}} where R,
+    orientations::Vector{Tuple{R,R,R}} where R;
+    Res_list = [fill([1e4, 1e5, 1e6], length(radii_list[i])) for i in 1:length(nblades_list)],
+    skipstart = 1,
+    xfoil_alpha = range(-20.0, stop=20.0, length= 161), # every quarter degree
+    M = 0, ν = NU, Re_digits = -4,
+    runxfoil=true, xfoil_iter = 300, xfoil_npan = 200,
+    xfoil_clmaxstop = true, xfoil_clminstop = true,
+    viternaextrapolation=true, rotationcorrection=true, rotationcorrection_J = 2.0,
+    radians = false, savefiles = true, useoldfiles = true, polardirectory = joinpath(topdirectory, "data", "airfoil", "polars", TODAY),
+    plotoutput = true, saveplots = true, plotextension = ".pdf",
+    verbose = true, v_lvl = 0
+)
+    # build CCBlade.Rotor objects
+    @assert length(nblades_list) == length(radii_list) "list of nblades and list of radii must be the same length"
+    @assert length(nblades_list) == length(rhub_list) "list of nblades and list of hub radii must be the same length"
+    @assert length(nblades_list) == length(rtip_list) "list of nblades and list of tip radii must be the same length"
+    rotors = Vector{CC.Rotor}(undef,length(nblades_list))
+    for i in 1:length(rotors)
+        rotors[i] = CC.Rotor(rhub_list[i], rtip_list[i], nblades_list[i]; precone=0.0, turbine=false, mach=CC.PrandtlGlauert(), re=nothing, rotation=nothing, tip=CC.PrandtlTipHub())
+    end
+    # build CCBlade.Section lists
+    @assert length(nblades_list) == length(chords_list) "list of nblades and list of chords must be the same length"
+    @assert length(nblades_list) == length(twists_list) "list of nblades and list of twists must be the same length"
+    @assert length(nblades_list) == length(airfoilcontours_list) "list of nblades and list of airfoil contour files must be the same length"
+    @assert length(nblades_list) == length(airfoilnames_list) "list of nblades and list of airfoil names must be the same length"
+    sectionlists = Vector{Vector{CC.Section}}(undef,length(rotors))
+    for i in 1:length(rotors)
+        cr75 = FM.linear(radii_list[i] ./ rtip_list[i], chords_list[i], 0.75) / rtip_list[i]
+        polars_list = rotor2polars(radii_list[i], chords_list[i], cr75, Res_list[i], airfoilcontours_list[i], airfoilnames_list[i];
+            skipstart = skipstart,
+            xfoil_alpha = xfoil_alpha,
+            M = M, ν = ν, Re_digits = Re_digits,
+            runxfoil = runxfoil, xfoil_iter = xfoil_iter, xfoil_npan = xfoil_npan,
+            xfoil_clmaxstop = xfoil_clmaxstop, xfoil_clminstop = xfoil_clminstop,
+            viternaextrapolation = viternaextrapolation, rotationcorrection = rotationcorrection, rotationcorrection_J = rotationcorrection_J,
+            radians = radians, savefiles = savefiles, useoldfiles = useoldfiles, polardirectory = polardirectory,
+            plotoutput = plotoutput, saveplots = saveplots, plotextension = plotextension,
+            verbose = verbose, v_lvl = v_lvl
+        )
+        sectionlists[i] = CC.Section.(radii_list[i], chords_list[i], twists_list[i], polars_list)
+    end
+    # check index length
+    @assert length(index) == length(positions) "length of `index` must match the length of `positions`"
+    @assert length(index) == length(orientations) "length of `index` must match the length of `orientations`"
+    @assert maximum(index) <= length(rotors) "maximum rotor index cannot exceed the number of rotors"
+    # build rotor system
+    rotorsystem = RotorSystem(rotors, sectionlists, index, positions, orientations)
+
+    return rotorsystem
+end
 
 """
 Build a vector of airfoil functions for each rotor section.
@@ -52,22 +128,21 @@ Outputs:
 * if `saveplots == true`, saves plots to `polardirectory` for reference
 
 """
-function rotor2airfoil(radii::Vector, chords::Vector, cr75,
-        vinf_low, vinf_high, rpm_low, rpm_high, N_Re::Vector,
-        contourfiles::Vector{String}, airfoilnames::Vector{String};
-        skipstart = 1,
-        xfoil_alpha = range(-20.0, stop=20.0, length= 161), # every quarter degree
-        M = 0, ν = NU, Re_digits = -4,
-        runxfoil=true, xfoil_iter = 300, xfoil_npan = 200,
-        xfoil_clmaxstop = true, xfoil_clminstop = true,
-        viternaextrapolation=true, rotationcorrection=true, rotationcorrection_J = 2.0,
-        radians = false, savefiles = true, useoldfiles = true, polardirectory = joinpath(topdirectory, "data", "airfoil", "polars", TODAY),
-        plotoutput = true, saveplots = true, plotextension = ".pdf",
-        verbose = true, v_lvl = 0
-    ) where T
+function rotor2polars(radii::Vector, chords::Vector, cr75, Res_list::Vector{Vector{R}} where R,
+    contourfiles::Vector{String}, airfoilnames::Vector{String};
+    skipstart = 1,
+    xfoil_alpha = range(-20.0, stop=20.0, length= 161), # every quarter degree
+    M = 0, ν = NU, Re_digits = -4,
+    runxfoil=true, xfoil_iter = 300, xfoil_npan = 200,
+    xfoil_clmaxstop = true, xfoil_clminstop = true,
+    viternaextrapolation=true, rotationcorrection=true, rotationcorrection_J = 2.0,
+    radians = false, savefiles = true, useoldfiles = true, polardirectory = joinpath(topdirectory, "data", "airfoil", "polars", TODAY),
+    plotoutput = true, saveplots = true, plotextension = ".pdf",
+    verbose = true, v_lvl = 0
+) where T
 
     @assert length(radii) == length(chords) "length of radii and chords inconsistent"
-    @assert length(N_Re) == length(radii) "length of radii and N_Re inconsistent"
+    @assert length(radii) == length(Res_list) "length of radii and Res_list inconsistent"
     @assert length(radii) == length(contourfiles) "length of radii and contourfiles inconsistent"
     @assert length(radii) == length(airfoilnames) "length of radii and airfoilnames inconsistent"
 
@@ -75,9 +150,7 @@ function rotor2airfoil(radii::Vector, chords::Vector, cr75,
 
     # get polars for each radial station
     for (i_radius, radius) in enumerate(radii)
-        Res = Re_range(radius, chords[i_radius], vinf_low, vinf_high, rpm_low, rpm_high, N_Re[i_radius];
-                ν = ν, Re_digits = Re_digits
-            )
+        Res = Res_list[i_radius]
         # check if files already exist
         filenames_uncorrected = airfoilfilenames(airfoilnames[i_radius], Res; M=0, viternaextrapolation=false, rotationcorrection=false, aoaset=false)
         filepaths_uncorrected = joinpath.(Ref(polardirectory), filenames_uncorrected)
@@ -102,6 +175,59 @@ function rotor2airfoil(radii::Vector, chords::Vector, cr75,
     end
 
     return airfoilobjects
+end
+
+"""
+Calculate Reynolds numbers based on the expected performance envelope.
+
+Inputs:
+
+* radii::Vector - radii of each rotor section in absolute units
+* chords::Vector - chord of each rotor section in absolute units
+* cr75::Float - local chord to tip radius at 75% r/R location
+* vinf_low::Float - lowest expected freestream velocity
+* vinf_high::Float - highest expected freestream velocity
+* rpm_low::Float - lowest expected RPM value
+* rpm_high::Float - highest expected RPM value
+* N_Re::Vector - vector of number of Reynold's numbers desired for interpolation
+* contourfiles::Vector{String} - vector of paths to .dat airfoil contour file
+* airfoilnames::Vector{String} - vector of names of each airfoil
+
+"""
+function rotor2polars(radii::Vector, chords::Vector, cr75,
+    vinf_low, vinf_high, rpm_low, rpm_high, N_Re::Vector,
+    contourfiles::Vector{String}, airfoilnames::Vector{String};
+    skipstart = 1,
+    xfoil_alpha = range(-20.0, stop=20.0, length= 161), # every quarter degree
+    M = 0, ν = NU, Re_digits = -4,
+    runxfoil=true, xfoil_iter = 300, xfoil_npan = 200,
+    xfoil_clmaxstop = true, xfoil_clminstop = true,
+    viternaextrapolation=true, rotationcorrection=true, rotationcorrection_J = 2.0,
+    radians = false, savefiles = true, useoldfiles = true, polardirectory = joinpath(topdirectory, "data", "airfoil", "polars", TODAY),
+    plotoutput = true, saveplots = true, plotextension = ".pdf",
+    verbose = true, v_lvl = 0
+) where T
+
+Res_list = Vector{Vector{Int64}}(undef,length(radii))
+for i = 1:length(radii)
+    Res_list[i] = Re_range(radius, chords[i_radius], vinf_low, vinf_high, rpm_low, rpm_high, N_Re[i_radius];
+        ν = ν, Re_digits = Re_digits
+        )
+end
+
+return rotor2polars(radii, chords, cr75,
+        Res_list,
+        contourfiles, airfoilnames;
+        skipstart = 1,
+        xfoil_alpha = range(-20.0, stop=20.0, length= 161), # every quarter degree
+        M = 0, ν = NU, Re_digits = -4,
+        runxfoil=true, xfoil_iter = 300, xfoil_npan = 200,
+        xfoil_clmaxstop = true, xfoil_clminstop = true,
+        viternaextrapolation=true, rotationcorrection=true, rotationcorrection_J = 2.0,
+        radians = false, savefiles = true, useoldfiles = true, polardirectory = joinpath(topdirectory, "data", "airfoil", "polars", TODAY),
+        plotoutput = true, saveplots = true, plotextension = ".pdf",
+        verbose = true, v_lvl = 0
+    )
 end
 
 """
@@ -172,7 +298,7 @@ function airfoil2xfoil(Res, contourfile::String, airfoilname::String;
                     printdata=verbose,
                     zeroinit=true,
                     clmaxstop=xfoil_clmaxstop,
-                    clminstop=clminstop
+                    clminstop=xfoil_clminstop
                     )
             # create object and save files
             angleconversion = radians ? pi / 180.0 : 1
