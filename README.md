@@ -54,6 +54,81 @@ Create a seamless interface between several intersecting codes applied to aerody
 * observers/algorithms/operations: -> list of functions; default templates available
 * templates: load modules and set solutions, etc.
 
+# Files
+
+<!-- * `preroutines/` # processes required to prepare a simulation -->
+* `system/`
+
+    * `geometry.jl`
+
+        * simple geometry definition defined for the package
+        * to be translated into geometries for use by other packages
+        * likely also contains additional elements:
+
+            * lifting surfaces
+            * structures
+            * rotors
+            * batteries
+            * motors
+
+    * `compositestructures.jl`
+
+        * translates `common.jl` objects to `compositestructures.jl` objects and vice versa
+
+    * `vortexlattice.jl`
+
+        * translates `common.jl` objects to `vortexlattice.jl` objects and vice versa
+
+    * `ccblade.jl`
+
+        * translates `common.jl` objects to `vortexlattice.jl` objects and vice versa
+        * given a rotor geometry and operating conditions, create airfoil polars from Xfoil and compile into a vector of CCBlade airfoil objects; plot airfoils for checking
+        * given an airfoil name and Reynolds number, re-run a single polar
+        * given a geometry, builds a CCBlade rotor object
+        * other translation functions from `geometry.jl` definitions to `CCBlade`
+
+* `interactions/`
+
+    * `interaction.jl`
+
+        * `abstract type Interaction end`
+        * `struct Interaction`
+        * instances contain a function to be run during each iteration of a simulation and miscellaneous parameters
+
+    * `rotor_on_wing.jl`
+
+        * `Interaction` object and function
+
+    * `wing_on_rotor.jl`
+
+        * `Interaction` object and function
+
+    * `aero_on_structures.jl`
+
+        * `Interaction` object and function
+
+* `observers/`
+
+    * `observer.jl`
+
+        * abstract type defining observers
+        * functions that accept a system object and a solution dictionary and update the solution
+
+* `templates/`
+
+    * contains `template` abstract type (essentially a list of `Interaction` and `observer` structs) and files with convenience `template` objects for common applications
+    * `template.jl`
+    * `blownwing.jl`
+
+* `simulation.jl`
+
+    * function run every time
+    * time series analysis or not
+    * eventually, incorporate unsteady_analysis in VortexLattice?
+    * writes VTK files
+    * iterates over interactions
+    * returns solution dictionary populated by `Interaction` objects
+
 # Documentation
 
 Visit the documentation [here](urlgoeshere).
