@@ -7,21 +7,25 @@ README: this file is meant to provide convenience functions for building CCBlade
         directory structure.
 =###############################################################################################
 
+# global variables
+global CC_NU = 1.5e-5 # kinematic viscocity
+
 """
 Defines CCBlade rotor geometry.
 """
-struct RotorSystem
+struct CCBladeSystem <: RotorSystem
     rotors::Vector{CC.Rotor}
     sectionlists::Vector{Vector{CC.Section}}
+    rlists::Vector{Vector{R}} where R
     index::Vector{Int}
     positions::Vector{Tuple{R,R,R}} where R
     orientations::Vector{Tuple{R,R,R}} where R
 end
 
 """
-Convenience constructor for `RotorSystem`.
+Convenience constructor for `CCBladeSystem`.
 """
-function RotorSystem(
+function CCBladeSystem(
     nblades_list::Vector{Int},
     rhub_list::Vector{R} where R,
     rtip_list::Vector{R} where R,
@@ -33,10 +37,10 @@ function RotorSystem(
     index::Vector{Int},
     positions::Vector{Tuple{R,R,R}} where R,
     orientations::Vector{Tuple{R,R,R}} where R;
-    Res_list = [fill([1e4, 1e5, 1e6], length(radii_list[i])) for i in 1:length(nblades_list)],
+    Res_list = [fill([5e4, 1e5, 1e6], length(radii_list[i])) for i in 1:length(nblades_list)],
     skipstart = 1,
     xfoil_alpha = range(-20.0, stop=20.0, length= 161), # every quarter degree
-    M = 0, ν = NU, Re_digits = -4,
+    M = 0, ν = CC_NU, Re_digits = -4,
     runxfoil=true, xfoil_iter = 300, xfoil_npan = 200,
     xfoil_clmaxstop = true, xfoil_clminstop = true,
     viternaextrapolation=true, rotationcorrection=true, rotationcorrection_J = 2.0,
@@ -73,14 +77,19 @@ function RotorSystem(
         )
         sectionlists[i] = CC.Section.(radii_list[i], chords_list[i], twists_list[i], polars_list)
     end
+    # build rlists
+    rlists = Vector{Vector}(undef,length(rotors))
+    for i in 1:length(rotors)
+        rlists[i] = [section.r for section in sectionlists[i]]
+    end
     # check index length
     @assert length(index) == length(positions) "length of `index` must match the length of `positions`"
     @assert length(index) == length(orientations) "length of `index` must match the length of `orientations`"
     @assert maximum(index) <= length(rotors) "maximum rotor index cannot exceed the number of rotors"
     # build rotor system
-    rotorsystem = RotorSystem(rotors, sectionlists, index, positions, orientations)
+    ccbladesystem = CCBladeSystem(rotors, sectionlists, rlists, index, positions, orientations)
 
-    return rotorsystem
+    return ccbladesystem
 end
 
 """
@@ -132,7 +141,7 @@ function rotor2polars(radii::Vector, chords::Vector, cr75, Res_list::Vector{Vect
     contourfiles::Vector{String}, airfoilnames::Vector{String};
     skipstart = 1,
     xfoil_alpha = range(-20.0, stop=20.0, length= 161), # every quarter degree
-    M = 0, ν = NU, Re_digits = -4,
+    M = 0, ν = CC_NU, Re_digits = -4,
     runxfoil=true, xfoil_iter = 300, xfoil_npan = 200,
     xfoil_clmaxstop = true, xfoil_clminstop = true,
     viternaextrapolation=true, rotationcorrection=true, rotationcorrection_J = 2.0,
@@ -199,7 +208,7 @@ function rotor2polars(radii::Vector, chords::Vector, cr75,
     contourfiles::Vector{String}, airfoilnames::Vector{String};
     skipstart = 1,
     xfoil_alpha = range(-20.0, stop=20.0, length= 161), # every quarter degree
-    M = 0, ν = NU, Re_digits = -4,
+    M = 0, ν = CC_NU, Re_digits = -4,
     runxfoil=true, xfoil_iter = 300, xfoil_npan = 200,
     xfoil_clmaxstop = true, xfoil_clminstop = true,
     viternaextrapolation=true, rotationcorrection=true, rotationcorrection_J = 2.0,
@@ -220,7 +229,7 @@ return rotor2polars(radii, chords, cr75,
         contourfiles, airfoilnames;
         skipstart = 1,
         xfoil_alpha = range(-20.0, stop=20.0, length= 161), # every quarter degree
-        M = 0, ν = NU, Re_digits = -4,
+        M = 0, ν = CC_NU, Re_digits = -4,
         runxfoil=true, xfoil_iter = 300, xfoil_npan = 200,
         xfoil_clmaxstop = true, xfoil_clminstop = true,
         viternaextrapolation=true, rotationcorrection=true, rotationcorrection_J = 2.0,
@@ -269,7 +278,7 @@ Outputs:
 function airfoil2xfoil(Res, contourfile::String, airfoilname::String;
         skipstart = 1, # 1 line header in .dat contour file
         xfoil_alpha = range(-20.0, stop=20.0, length= 161), # every quarter degree
-        M = 0, ν = NU, Re_digits = -4,
+        M = 0, ν = CC_NU, Re_digits = -4,
         xfoil_iter = 300, xfoil_npan = 200, xfoil_clmaxstop = true, xfoil_clminstop = true,
         radians = false, useoldfiles = true, polardirectory = joinpath(topdirectory, "data", "airfoil", "polars", TODAY),
         plotoutput = true, saveplots = true, plotextension = ".pdf",
@@ -432,7 +441,7 @@ function airfoilfilenames(airfoilname, Res;
     [airfoilname * "_Re$(Re)" * tags * extension for Re in Res]
 end
 
-function Re_range(radius, chord, vinf_low, vinf_high, rpm_low, rpm_high, N_Re::Int; ν = Nu, Re_digits=-4)
+function Re_range(radius, chord, vinf_low, vinf_high, rpm_low, rpm_high, N_Re::Int; ν =CC_Nu, Re_digits=-4)
     vtangential_low = rpm_low / 60.0 * 2 * pi * radius
     vtot_low = sqrt(vinf_low^2 + vtangential_low^2)
     Re_low = chord * vtot_low / ν
@@ -525,4 +534,27 @@ function plot_airfoil(airfoilobject::CCBlade.AlphaAF, filename::String, airfoiln
         savefigure = savefigure, savepath = savepath,
         extension = extension, tag = tag, clearfigure = clearfigure
         )
+end
+
+function CC.OperatingPoint(ccbladesystem::CCBladeSystem, omegas::Vector{R} where R, freestream::Freestream, environment::Environment)
+
+    Nrotors = length(ccbladesystem.index)
+    @assert length(omegas) == Nrotors "number of rotor controls must match the number of rotors"
+
+    vinf = LA.norm(freestream.Vinf)
+    alpha = freestream.alpha
+    beta = freestream.beta
+    Vinf = vinf .*
+        [   cos(alpha) * cos(beta),
+            -sin(beta),
+            sin(alpha) * cos(beta)
+        ]
+    operatingpoints_list = Vector{Vector{CC.OperatingPoint}}(undef, Nrotors)
+    for (i,index) in enumerate(ccbladesystem.index)
+        vinflow = -LA.dot(Vinf, ccbladesystem.orientations[i])
+        r = ccbladesystem.rlists[index]
+        operatingpoints_list[i] = CC.simple_op.(vinflow, omegas[i], r, environment.ρ; pitch = 0.0, mu = environment.μ, asound = environment.a, precone = 0.0)
+    end
+
+    return operatingpoints_list
 end

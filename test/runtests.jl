@@ -31,7 +31,7 @@ using Test
     radii = [0.148, 0.254237, 0.381356, 0.508475, 0.635593, 0.762712, 0.889831, 1.0] .* 236e-2/2
     twists = [35.0, 32.5, 26.5, 23.5, 19, 16.5, 14.0, 10.0] * pi/180
     chords = [9.88, 11.88, 15.59, 18.81, 19.55, 18.32, 13.96, 0.01] * 1e-3
-    cr75 = FM.akima(radii ./ 236e-3 * 2, chords ./ radii, 0.75)
+    # cr75 = FM.akima(radii ./ 236e-3 * 2, chords ./ radii, 0.75)
     vinf_low = 35.0
     vinf_high = 50.0
     rpm_low = 5000
@@ -63,7 +63,7 @@ using Test
     index = [1,1]
     positions = fill((0.0,0.0,0.0),2)
     orientations = fill((-1.0,0.0,0.0),2)
-    rotorsystem = AS.RotorSystem(
+    ccbladesystem = AS.CCBladeSystem(
         nblades_list,
         rhub_list,
         rtip_list,
@@ -76,4 +76,9 @@ using Test
         positions,
         orientations
     )
+
+    omegas = fill(5000, length(ccbladesystem.index))
+    freestream = AS.Freestream(20.0, 15.0 * pi/180, 3.0 * pi/180, [0.0, 0.0, 0.0])
+    environment = AS.Environment()
+    ops_list = AS.CC.OperatingPoint(ccbladesystem, omegas, freestream, environment)
 # end

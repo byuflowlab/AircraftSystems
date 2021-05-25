@@ -1,74 +1,33 @@
+#=##############################################################################################
+Filename: system.jl
+Author: Ryan Anderson
+Contact: rymanderson@gmail.com
+README: this file defines the `System` struct.
+=###############################################################################################
+
+
 """
-Aircraft system.
+Aircraft system. Types of all members must inherit from their respective abstract types.
+
+`System` objects are meant to be flexible as to what types populate their members. This
+allows simulations to be run with user-designed models. Functionality is defined in
+instances of the `Action` and `Observer` types.
 
 Attributes:
 
-* `wings` : defines all lifting surfaces with sufficient detail for simulation. Eg, a `VortexLattice.System` object.
-* `rotors` : a struct containing all information required to define `CCBlade`
+* `wings` : comprehensively defines the aircraft's wings
+* `rotors` : comprehensively defines the aircraft's rotors
+* `nonliftingbodies` : comprehensively defines non-lifting body(s) composing the aircraft
+* `structures` : comprehensively defines the aircraft's structure(s)
+* `motors` : comprehensively defines the aircraft's motor(s)
+* `batteries` : comprehensively defines the aircraft's batterie(s)
+
 """
 struct System
-    wings
-    rotors
-    nonliftingbodies
-    structures
-    motors
-    batteries
-end
-
-function simplewing(;
-    wing_b = 2.0, wing_TR = 0.8, wing_AR = 8.0, wing_θroot = 0.0, wing_θtip = 0.0,
-    wing_camber = fill((xc) -> 0, 2), # camberline function for each section
-    wing_npanels = 50, wing_nchordwisepanels = 1,
-    wing_spacing_s = VL.Cosine(), wing_spacing_c = VL.Uniform(),
-    symmetric = true
-)
-    # build wing object
-    xle = [0.0, 0.0]
-    yle = [0.0, wing_b/2]
-    zle = [0.0, 0.0]
-    cmac = wing_b / wing_AR # AR = b/c => c = b/AR
-    #=
-    cr + ct = cmac * 2
-    ct = λ * cr
-    cr = cmac * 2 / (1 + λ)
-    ct = cmac * 2 / (1/λ + 1)
-    =#
-    chord = [cmac * 2 / (1 + wing_TR), cmac * 2 / (1/wing_TR + 1)]
-    theta = [wing_θroot, wing_θtip]
-    phi = [0.0, 0.0]
-
-    # discretization parameters
-    ns = wing_npanels
-    nc = wing_nchordwisepanels
-
-    # construct surfaces and grids
-    grid, surface = VL.wing_to_surface_panels(xle, yle, zle, chord, theta, phi, ns, nc;
-        fc = wing_camber, spacing_s=wing_spacing_s, spacing_c=wing_spacing_c)
-    grids = [grid]
-    surfaces = [surface]
-
-    symmetric = symmetric
-
-    # reference parameters
-    Sref = wing_b * cmac
-    cref = cmac
-    bref = wing_b
-    staticmargin = 0.10
-    cgx = cmac * (0.25 - staticmargin)
-    rref = [cgx, 0.0, 0.0]
-    Vinf = 1.0
-    reference = VL.Reference(Sref, cref, bref, rref, Vinf)
-
-    # initialize freestream parameters
-    Vinf = 1.0
-    alpha = 0.0*pi/180
-    beta = 0.0
-    Omega = [0.0; 0.0; 0.0]
-    fs = VL.Freestream(Vinf, alpha, beta, Omega)
-
-    # perform steady state analysis
-    vlmsystem = VL.steady_analysis(surfaces, reference, fs; symmetric=symmetric)
-    # maybe find a better way to build this
-
-    return vlmsystem
+    wings::WingSystem
+    rotors::RotorSystem
+    nonliftingbodies::NonliftingBodySystem
+    structures::StructureSystem
+    motors::MotorSystem
+    batteries::BatterySystem
 end

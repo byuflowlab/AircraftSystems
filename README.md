@@ -87,13 +87,14 @@ Create a seamless interface between several intersecting codes applied to aerody
         * given a geometry, builds a CCBlade rotor object
         * other translation functions from `geometry.jl` definitions to `CCBlade`
 
-* `interactions/`
+* `action/`
 
-    * `interaction.jl`
+    * `action.jl`
 
-        * `abstract type Interaction end`
-        * `struct Interaction`
-        * instances contain a function to be run during each iteration of a simulation and miscellaneous parameters
+        <!-- * `abstract type Interaction end` -->
+        * `struct Action`
+        * instances contain a function to be run during each iteration of a simulation and additional parameters
+        * other files in this directory contain functionals that return constructors for `Action` structs based on simulation data
 
     * `rotor_on_wing.jl`
 
@@ -127,8 +128,8 @@ Create a seamless interface between several intersecting codes applied to aerody
     * time series analysis or not
     * eventually, incorporate unsteady_analysis in VortexLattice?
     * writes VTK files
-    * iterates over interactions
-    * returns solution dictionary populated by `Interaction` objects
+    * iterates over actions
+    * returns solution dictionary populated by `Observer` objects
 
 * `vehicles/`
 

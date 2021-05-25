@@ -11,6 +11,8 @@ FM = FLOWMath
 # import GeometricTools
 # GT = GeometricTools
 using LaTeXStrings
+import LinearAlgebra
+LA = LinearAlgebra
 import PyPlot
 plt = PyPlot
 import VortexLattice
@@ -22,15 +24,13 @@ XF = Xfoil
 const topdirectory = normpath(joinpath(@__DIR__, ".."))
 
 # set global variables
-global NU = 1.5e-5 # kinematic viscocity
 global TODAY = replace(string(Dates.today()),"-" => "")
 
 # load files
 subdirectories = [
     "system/",
-    "interactions/",
-    "observers/",
-    "templates/",
+    "action/",
+    "template/",
     "simulation/"
 ]
 for directory in subdirectories
