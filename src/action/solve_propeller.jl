@@ -5,70 +5,75 @@ Contact: rymanderson@gmail.com
 README: define an `Action` object to solve a CCBlade rotor
 =###############################################################################################
 
-function solve_propeller(system::System, timerange) <: ActionConstructor
+"""
+Action function.
 
-    # prepare parameterkeys and parameterinits for this particular system and simulation
-    parameterkeys = [
-        "freestream",
-        "environment",
-        "omegas"
-    ]
+Inputs:
 
-    freestream_alpha0 = 0.0
-    freestream_beta0 = 0.0
-    freestream_omega0 = [0.0,0.0,0.0]
-    freestream_magnitude0 = 1.0
+* `aircraft::Aircraft` : `Aircraft` system object
+* `parameters<:Parameters` `Parameters` struct
+* `freestream::Freestream` : `Freestream` object
+* `environment::Environment` `Environment` object
+* `timerange::AbstractArray` : array of times for which the simulation is run
+* `ti::Int` : index of the current timestep
 
-    omegas0 = ones(length(system.rotorsystem.index))
+`parameters <: Parameters` requires the following elements:
 
-    parameterinits = [
-        Freestream(freestream_alpha0, freestream_beta0, freestream_omega0, freestream_magnitude0),
-        Environment(),
-        omegas0
-    ]
+* `omegas::Vector{Float64}` : a vector of length `length(timerange)` containing a vector of rotational velocities for each rotor
+* `Js_history::Vector{Vector{Float64}}` : a vector of length `length(timerange)` containing a vector of advance ratios for each rotor
+* `CTs::Vector{Vector{Float64}}` : a vector of length `length(timerange)` containing a vector of thrust coefficients for each rotor
+* `CQs::Vector{Vector{Float64}}` : a vector of length `length(timerange)` containing a vector of torque coefficients for each rotor
+* `ηs::Vector{Vector{Float64}}` : a vector of length `length(timerange)` containing a vector of propulsive efficiencies for each rotor
 
-    # prepare solutionkeys and solutioninits for this particular system and simulation
-    solutionkeys = [
-        "thrust",
-        "torque",
-        "efficiency",
-        "u",
-        "v"
-    ]
+"""
+function solve_propeller(aircraft, parameters, freestream, environment, timerange, ti)
 
-    nrotors = length(system.RotorSystem.index)
-    nsections = [length(sectionlist) for sectionlist in system.RotorSystem.sectionlists]
-    u_init0 = [zeros(nsections[i]) for i in system.RotorSystem.index]
-    u_init = fill(u_init0, length(timerange))
-    v_init = deepcopy(u_init)
+    omegas = parameters.omegas[ti]
+    Js, CTs, CQs, ηs = solverotorsystem(aircraft.rotorsystem, omegas, freestream, environment)
 
-    solutioninits = [
-        fill([0.0,0.0,0.0], length(timerange)),
-        zeros(length(timerange)),
-        zeros(length(timerange)),
-        u_init,
-        v_init
-    ]
+    parameters.Js_history[ti] .= Js
+    parameters.CTs[ti] .= CTs
+    parameters.CQs[ti] .= CQs
+    parameters.ηs[ti] .= ηs
 
-    # define `activate!` function
-    function activate!(solution::Dict, parameters::Dict, system::System, ti)
-        CC_freestream = parameters["freestream"]
-    end
-
-    return Action(activate!, solutionkeys, solutioninits, parameterkeys, parameterinits)
+    return false
 end
 
-function solverotorsystem(rotorsystem::CCBladeSystem, omegas::Vector, freestream::Freestream, environment::Environment)#, interstream::Interstream)
+"""
+solve_propeller(system, timerange)
 
-    operatingpoints_list = CC.OperatingPoint(rotorsystem, omegas, freestream, environment)
-    for (i, rotorindex) in enumerate(rotorsystem.index)
-        rotor = rotorsystem.rotors[rotorindex]
-        sections = rotorsystem.sectionlists[rotorindex]
-        operatingpoints = operatingpoints_list[i]
-        outputs = CC.solve.(Ref(rotor), sections, operatingpoints)
-        T, Q = CC.thrusttorque(rotor, sections, outputs)
+Method returns initialized elements required for the `parameters <: Parameters` struct during simulation.
 
-        η, CT, CQ = CC.nondim(T, Q, vhubs[i], omegas[i], environment.ρ, rotor, "propeller")
+Inputs:
 
-    end
+* `system::System` : system to be simulated
+* `timerange::AbstractArray` : defines each time step of the simulation
+
+Outputs:
+
+* `omegas::Vector{Float64}` : a vector of rotational speeds in rad/s at the current timestep
+* `Js::Vector{Vector{Float64}}` : each ith element is a vector of advance ratios corresponding to each rotor of `system.rotors` at the ith timestep
+* `CTs::Vector{Vector{Float64}}` : each ith element is a vector of thrust coefficients corresponding to each rotor of `system.rotors` at the ith timestep
+* `CQs::Vector{Vector{Float64}}` : each ith element is a vector of torque coefficients corresponding to each rotor of `system.rotors` at the ith timestep
+* `ηs::Vector{Vector{Float64}}` : each ith element is a vector of propulsive efficiencies corresponding to each rotor of `system.rotors` at the ith timestep
+
+"""
+function solve_propeller(system, timerange)
+    nrotors = length(system.rotorsystem.index) # number of rotors
+    omegas = fill(ones(nrotors) .* 5000.0, length(timerange))
+    Js = fill(zeros(nrotors), length(timerange))
+    CTs = fill(zeros(nrotors), length(timerange))
+    CQs = fill(zeros(nrotors), length(timerange))
+    ηs = fill(zeros(nrotors), length(timerange))
+
+    return omegas, Js, CTs, CQs, ηs
 end
+
+# # prepare solutionkeys and solutioninits for this particular system and simulation
+# solutionkeys = [
+#     "thrust",
+#     "torque",
+#     "efficiency",
+#     "u",
+#     "v"
+# ]

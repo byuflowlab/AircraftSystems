@@ -84,13 +84,17 @@ function CCBladeSystem(nblades_list, rhub_list, rtip_list, radii_list, chords_li
     Res_list = [fill([5e4, 1e5, 1e6], length(radii_list[i])) for i in 1:length(nblades_list)];
     kwargs...
 )
+    # check input sizes
+    for (iorientation, orientation) in enumerate(orientations)
+        @assert isapprox(LA.norm(orientation), 1.0) "`orientations` must be unit vectors; check the $(iorientation)th vector"
+    end
     # build CCBlade.Rotor objects
     @assert length(nblades_list) == length(radii_list) "list of nblades and list of radii must be the same length"
     @assert length(nblades_list) == length(rhub_list) "list of nblades and list of hub radii must be the same length"
     @assert length(nblades_list) == length(rtip_list) "list of nblades and list of tip radii must be the same length"
     rotors = Vector{CC.Rotor}(undef,length(nblades_list))
     for i in 1:length(rotors)
-        rotors[i] = CC.Rotor(rhub_list[i], rtip_list[i], nblades_list[i]; precone=0.0, turbine=false, mach=nothing, re=nothing, rotation=nothing, tip=CC.PrandtlTipHub()) #mach=CC.PrandtlGlauert()
+        rotors[i] = CC.Rotor(rhub_list[i], rtip_list[i], nblades_list[i]; precone=0.0, turbine=false, mach=CC.PrandtlGlauert(), re=nothing, rotation=nothing, tip=CC.PrandtlTipHub()) #mach=CC.PrandtlGlauert()
     end
     # build CCBlade.Section lists
     @assert length(nblades_list) == length(chords_list) "list of nblades and list of chords must be the same length"
@@ -98,11 +102,6 @@ function CCBladeSystem(nblades_list, rhub_list, rtip_list, radii_list, chords_li
     @assert length(nblades_list) == length(airfoilcontours_list) "list of nblades and list of airfoil contour files must be the same length"
     @assert length(nblades_list) == length(airfoilnames_list) "list of nblades and list of airfoil names must be the same length"
     # sectionlists = Vector{Vector{CC.Section}}(undef,length(rotors))
-    # for i in 1:length(rotors)
-        # cr75 = FM.linear(radii_list[i] ./ rtip_list[i], chords_list[i], 0.75) / rtip_list[i]
-        # polars_list = rotor2polars(radii_list[i], chords_list[i], cr75, Res_list[i], airfoilcontours_list[i], airfoilnames_list[i]; kwargs...)
-        # sectionlists[i] = CC.Section.(radii_list[i], chords_list[i], twists_list[i], polars_list)
-    # end
     sectionlists = rotor2sections.(rtip_list, radii_list, chords_list, twists_list, Res_list, airfoilcontours_list, airfoilnames_list; kwargs...)
     # build rlists
     rlists = sections2radii.(sectionlists)

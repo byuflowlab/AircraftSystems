@@ -23,15 +23,15 @@ XF = Xfoil
 # set path
 const topdirectory = normpath(joinpath(@__DIR__, ".."))
 
-# set global variables
-global TODAY = replace(string(Dates.today()),"-" => "")
+# set date
+const TODAY = replace(string(Dates.today()),"-" => "")
 
 # load files
 subdirectories = [
     "system/",
     "action/",
+    "simulation/",
     "template/",
-    "simulation/"
 ]
 for directory in subdirectories
     for (root, dirs, files) in walkdir(joinpath(topdirectory,"src",directory))
@@ -48,5 +48,6 @@ end
 export CCBlade, FLOWMath, VortexLattice, Xfoil
 
 # export functions
+export runsimulation!
 
 end # module
