@@ -58,8 +58,8 @@ Outputs:
 * `ηs::Vector{Vector{Float64}}` : each ith element is a vector of propulsive efficiencies corresponding to each rotor of `system.rotors` at the ith timestep
 
 """
-function solve_propeller(system, timerange)
-    nrotors = length(system.rotorsystem.index) # number of rotors
+function solve_propeller(aircraft, timerange)
+    nrotors = length(aircraft.rotorsystem.index) # number of rotors
     omegas = fill(ones(nrotors) .* 5000.0, length(timerange))
     Js = fill(zeros(nrotors), length(timerange))
     CTs = fill(zeros(nrotors), length(timerange))
