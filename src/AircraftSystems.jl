@@ -29,7 +29,9 @@ const TODAY = replace(string(Dates.today()),"-" => "")
 # load files
 subdirectories = [
     "system/",
-    "action/",
+    "action/fundamental/",
+    "action/compound/",
+    "postaction/",
     "simulation/",
     "template/",
 ]

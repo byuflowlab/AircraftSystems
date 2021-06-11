@@ -213,9 +213,10 @@ function simplewingsystem(wing_b = 2.0, wing_TR = 0.8, wing_AR = 8.0, wing_θroo
 
     # perform steady state analysis
     vlmsystem = VL.steady_analysis(surfaces, reference, fs; symmetric=symmetric)
-    wingsystem = VortexLatticeSystem(vlmsystem, grids)
+    lifting_line_rs, lifting_line_chords = VL.lifting_line_geometry(grids)
+    wingsystem = VortexLatticeSystem(vlmsystem, lifting_line_rs, lifting_line_chords, nothing)
 
-    return vlmsystem
+    return wingsystem
 end
 
 """

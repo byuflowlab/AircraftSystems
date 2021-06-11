@@ -25,7 +25,7 @@ struct CCBladeSystem{V1,V2,V3,V4,V5,V6,V7}
     index::V4
     positions::V5
     orientations::V6
-    spindirection::V7
+    spindirections::V7
 end
 
 """
@@ -178,7 +178,7 @@ Optional Arguments:
 * `savefiles = true` : save final polars to file for future reference
 * `useoldfiles = true` : use old polar files (if they exist)
 * `polardirectory = joinpath(topdirectory, "data", "airfoil", "polars", TODAY)` : path to save polars and plots
-* `plotoutput = true` : toggle plotting polars
+* `plotoutput = true` : toggle ploting polars
 * `saveplots = true` : toggle saving plots
 * `plotextension = ".pdf"` : extension of saved plots
 * `verbose = true` : toggle verbose output
@@ -222,7 +222,7 @@ function rotor2polars(radii, chords, cr75, Res_list, contourfiles, airfoilnames;
         if runxfoil && (!useoldfiles || !prod(i_existingfiles_uncorrected))
             airfoil2xfoil(Res, contourfiles[i_radius], airfoilnames[i_radius]; runxfoil = runxfoil, useoldfiles = useoldfiles, polardirectory = polardirectory, kwargs...)
         end
-        airfoilobjects[i_radius] = correct_align_polars(Res, airfoilnames[i_radius], cr75; polardirectory = polardirectory, viternaextrapolation = viternaextrapolation, rotationcorrection = rotationcorrection, kwargs...)
+        airfoilobjects[i_radius] = correctalignpolars(Res, airfoilnames[i_radius], cr75; polardirectory = polardirectory, viternaextrapolation = viternaextrapolation, rotationcorrection = rotationcorrection, kwargs...)
     end
 
     return airfoilobjects
@@ -275,7 +275,7 @@ Optional Inputs:
 * `radians = false` : desired units for polar files
 * `useoldfiles = true` : use old polar files (if they exist)
 * `polardirectory = joinpath(topdirectory, "data", "airfoil", "polars", TODAY)` : path to save polars and plots
-* `plotoutput = true` : toggle plotting polars
+* `plotoutput = true` : toggle ploting polars
 * `saveplots = true` : toggle saving plots
 * `plotextension = ".pdf"` : extension of saved plots
 * `verbose = true` : toggle verbose output
@@ -327,7 +327,7 @@ function airfoil2xfoil(Res, contourfile, airfoilname;
             thisobject = CC.AlphaAF(xfoil_alpha[conv] .* angleconversion, cl[conv], cd[conv], airfoilname, Re * 1.0, M * 1.0)
             CC.write_af(filepaths_uncorrected[i_Re], thisobject)
             if plotoutput
-                plot_airfoil(thisobject, filenames_uncorrected[i_Re], airfoilname, Re, M;
+                plotairfoil(thisobject, filenames_uncorrected[i_Re], airfoilname, Re, M;
                     viternaextrapolation = false, rotationcorrection = false,
                     savefigure = saveplots, savepath = polardirectory,
                     extension = plotextension)
@@ -368,7 +368,7 @@ Outputs:
 * if `plotoutput` and `saveplots == true`, saves plots of the polars
 
 """
-function correct_align_polars(Res, airfoilname, cr75;
+function correctalignpolars(Res, airfoilname, cr75;
         M = 0, viternaextrapolation=true, rotationcorrection=true, rotationcorrection_J = 2.0,
         radians = false, savefiles = true, polardirectory = joinpath(topdirectory, "data", "airfoil", "polars", TODAY),
         plotoutput = true, saveplots = true, plotextension = ".pdf", kwargs...
@@ -398,7 +398,7 @@ function correct_align_polars(Res, airfoilname, cr75;
         if viternaextrapolation
             α, cl, cd = CC.viterna(α, cl, cd, cr75) # only use converged values
             if plotoutput
-                plot_airfoil(α, cl, cd, filenames[i_Re], airfoilname, Re, M;
+                plotairfoil(α, cl, cd, filenames[i_Re], airfoilname, Re, M;
                     viternaextrapolation = true, rotationcorrection = false,
                     savefigure = saveplots, savepath = polardirectory,
                     extension = plotextension, tag = "", clearfigure = true
@@ -410,7 +410,7 @@ function correct_align_polars(Res, airfoilname, cr75;
                 cl[i_α], cd[i_α] = CC.rotation_correction(CC.DuSeligEggers(), cl[i_α], cd[i_α], cr75, 0.75, pi/rotationcorrection_J, this_α)
             end
             if plotoutput
-                plot_airfoil(α, cl, cd, filenames[i_Re], airfoilname, Re, M;
+                plotairfoil(α, cl, cd, filenames[i_Re], airfoilname, Re, M;
                     viternaextrapolation = viternaextrapolation, rotationcorrection = true,
                     savefigure = saveplots, savepath = polardirectory,
                     extension = plotextension, tag = "", clearfigure = false
@@ -490,10 +490,10 @@ Inputs:
 * savepath = joinpath(topdirectory, "data", "airfoil", "plots", TODAY) : directory to save the figure
 * extension = ".pdf" : figure extension
 * tag = "" : string to append to the series legend
-* clearfigure = true : clear the figure before plotting (set false if you want to compare series)
+* clearfigure = true : clear the figure before ploting (set false if you want to compare series)
 
 """
-function plot_airfoil(α, cl, cd, filename, airfoilname, Re, M;
+function plotairfoil(α, cl, cd, filename, airfoilname, Re, M;
         radians = false,
         viternaextrapolation = false, rotationcorrection = false,
         savefigure = false, savepath = joinpath(topdirectory, "data", "airfoil", "plots", TODAY),
@@ -536,9 +536,9 @@ function plot_airfoil(α, cl, cd, filename, airfoilname, Re, M;
     return nothing
 end
 
-"Overload `plot_airfoil` to accept a CCBlade.AlphaAF object."
-function plot_airfoil(airfoilobject::CCBlade.AlphaAF, filename, airfoilname, Re, M; kwargs...)
-    plot_airfoil(airfoilobject.alpha, airfoilobject.cl, airfoilobject.cd, filename, airfoilname, Re, M; kwargs...)
+"Overload `plotairfoil` to accept a CCBlade.AlphaAF object."
+function plotairfoil(airfoilobject::CCBlade.AlphaAF, filename, airfoilname, Re, M; kwargs...)
+    plotairfoil(airfoilobject.alpha, airfoilobject.cl, airfoilobject.cd, filename, airfoilname, Re, M; kwargs...)
 end
 
 """
@@ -579,18 +579,116 @@ function rotor2operatingpoints(vinflow, r, omega, environment)
     return operatingpoints
 end
 
+function solverotorsystemnondimensional(rotorsystem, omegas, freestream, environment)#, interstream::Interstream)
+    # extract rotor info
+    orientations = rotorsystem.orientations
+    # operating conditions
+    vinflows = rotorinflow.(Ref(freestream), orientations)
+    # pre-allocate solution
+    Js, Ts, Qs, _, _ = solverotorsystem(rotorsystem, omegas, freestream, environment)
+    CTs = similar(Qs)
+    CQs = similar(Qs)
+    ηs = similar(Qs)
+    # iterate over rotors
+    for (i, rotorindex) in enumerate(rotorsystem.index)
+        # isolate rotor
+        rotor = rotorsystem.rotors[rotorindex]
+        η, CT, CQ = CC.nondim(Ts[i], Qs[i], vinflows[i], omegas[i], environment.ρ, rotor, "propeller")
+        CTs[i] = CT
+        CQs[i] = CQ
+        ηs[i] = η
+    end
+
+    return Js, CTs, CQs, ηs
+end
+
+"""
+In-place version of solverotorsystemnondimensional.
+"""
+function solverotorsystemnondimensional!(Js, Ts, Qs, CTs, CQs, ηs, rotorsystem, omegas, freestream, environment)#, interstream::Interstream)
+    # extract rotor info
+    orientations = rotorsystem.orientations
+    # operating conditions
+    vinflows = rotorinflow.(Ref(freestream), orientations)
+    # pre-allocate solution
+    solverotorsystem!(Js, Ts, Qs, rotorsystem, omegas, freestream, environment)
+    # iterate over rotors
+    for (i, rotorindex) in enumerate(rotorsystem.index)
+        # isolate rotor
+        rotor = rotorsystem.rotors[rotorindex]
+        η, CT, CQ = CC.nondim(Ts[i], Qs[i], vinflows[i], omegas[i], environment.ρ, rotor, "propeller")
+        CTs[i] = CT
+        CQs[i] = CQ
+        ηs[i] = η
+    end
+
+    return Js, CTs, CQs, ηs
+end
+
+"""
+    solverotorsystem(rotorsystem, omegas, freestream, environment)
+
+Solves the rotor system at the specified RPM, freestream, and environment.
+
+Inputs:
+
+* `rotorsystem::CCBladeSystem` : a rotor system
+* `omegas::Vector{Float64} : vector of rotational velocities in rad/s of each rotor
+* `freestream::Freestream` : Freestream object
+* `environment::Environment` : Environment object
+
+Outputs:
+
+* `Js::Vector{Float64}` : vector of advance ratios of each rotor
+* `Ts::Vector{Float64}` : vector of thrust values of each rotor
+* `Qs::Vector{Float64}` : vector of torque values of each rotor
+* `us::Vector{Vector{Float64}}` : [i][j] refers to the axial induced velocity at the rotor disk at the jth radial station of the ith rotor
+* `vs::Vector{Vector{Float64}}` : [i][j] refers to the swirl induced velocity at the rotor disk at the jth radial station of the ith rotor
+
+"""
 function solverotorsystem(rotorsystem, omegas, freestream, environment)#, interstream::Interstream)
+    # pre-allocate solution
+    Ts = zeros(length(rotorsystem.index))
+    Qs = similar(Ts)
+    us = [zeros(typeof(freestream.vinf), length(radii)) for radii in rotorsystem.rlists[rotorsystem.index]]
+    vs = deepcopy(us)
+
+    Js, Ts, Qs, us, vs = solverotorsystem!(Js, Ts, Qs, us, vs, rotorsystem, omegas, freestream, environment)
+
+    return Js, Ts, Qs, us, vs
+end
+
+"""
+In-place instance of `solverotorsystem`.
+
+Inputs:
+
+* `Js::Vector{Float64}` : vector of advance ratios of each rotor
+* `Ts::Vector{Float64}` : vector of thrust values of each rotor
+* `Qs::Vector{Float64}` : vector of torque values of each rotor
+* `us::Vector{Vector{Float64}}` : [i][j] refers to the axial induced velocity at the rotor disk at the jth radial station of the ith rotor
+* `vs::Vector{Vector{Float64}}` : [i][j] refers to the swirl induced velocity at the rotor disk at the jth radial station of the ith rotor
+* `rotorsystem::CCBladeSystem` : a rotor system
+* `omegas::Vector{Float64} : vector of rotational velocities in rad/s of each rotor
+* `freestream::Freestream` : Freestream object
+* `environment::Environment` : Environment object
+
+Modifies:
+
+* `Js::Vector{Float64}` : vector of advance ratios of each rotor
+* `Ts::Vector{Float64}` : vector of thrust values of each rotor
+* `Qs::Vector{Float64}` : vector of torque values of each rotor
+* `us::Vector{Vector{Float64}}` : [i][j] refers to the axial induced velocity at the rotor disk at the jth radial station of the ith rotor
+* `vs::Vector{Vector{Float64}}` : [i][j] refers to the swirl induced velocity at the rotor disk at the jth radial station of the ith rotor
+
+"""
+function solverotorsystem!(Js, Ts, Qs, us, vs, rotorsystem, omegas, freestream, environment)#, interstream::Interstream)
     # extract rotor info
     rlists = rotorsystem.rlists[rotorsystem.index]
     orientations = rotorsystem.orientations
     # operating conditions
     vinflows = rotorinflow.(Ref(freestream), orientations)
     operatingpoints_list = rotor2operatingpoints.(vinflows, rlists, omegas, Ref(environment))
-    # pre-allocate solution
-    ηs = zeros(length(rotorsystem.index))
-    CTs = similar(ηs)
-    CQs = similar(ηs)
-    Js = similar(ηs)
     # iterate over rotors
     for (i, rotorindex) in enumerate(rotorsystem.index)
         # isolate rotor
@@ -601,13 +699,139 @@ function solverotorsystem(rotorsystem, omegas, freestream, environment)#, inters
         # solve CCBlade
         outputs = CC.solve.(Ref(rotor), sections, operatingpoints)
         T, Q = CC.thrusttorque(rotor, sections, outputs)
-        η, CT, CQ = CC.nondim(T, Q, vinflows[i], omegas[i], environment.ρ, rotor, "propeller")
-        ηs[i] = η
-        CTs[i] = CT
-        CQs[i] = CQ
+        Ts[i] = T
+        Qs[i] = Q
+        us[i][:] .= outputs.u
+        vs[i][:] .= outputs.v
     end
+    # calculate Js
+    Js .= vinflows ./ omegas * 2 * pi ./ [2 * rotor.Rtip for rotor in rotorsystem.rotors[rotorsystem.index]]
+
+    return Js, Ts, Qs, us, vs
+end
+
+"""
+In-place instance of `solverotorsystem`.
+
+Inputs:
+
+* `Js::Vector{Float64}` : vector of advance ratios of each rotor
+* `Ts::Vector{Float64}` : vector of thrust values of each rotor
+* `Qs::Vector{Float64}` : vector of torque values of each rotor
+* `us::Vector{Vector{Float64}}` : [i][j] refers to the axial induced velocity at the rotor disk at the jth radial station of the ith rotor
+* `vs::Vector{Vector{Float64}}` : [i][j] refers to the swirl induced velocity at the rotor disk at the jth radial station of the ith rotor
+* `rotorsystem::CCBladeSystem` : a rotor system
+* `omegas::Vector{Float64} : vector of rotational velocities in rad/s of each rotor
+* `freestream::Freestream` : Freestream object
+* `environment::Environment` : Environment object
+
+Modifies:
+
+* `Js::Vector{Float64}` : vector of advance ratios of each rotor
+* `Ts::Vector{Float64}` : vector of thrust values of each rotor
+* `Qs::Vector{Float64}` : vector of torque values of each rotor
+* `us::Vector{Vector{Float64}}` : [i][j] refers to the axial induced velocity at the rotor disk at the jth radial station of the ith rotor
+* `vs::Vector{Vector{Float64}}` : [i][j] refers to the swirl induced velocity at the rotor disk at the jth radial station of the ith rotor
+
+"""
+function solverotorsystem!(Js, Ts, Qs, rotorsystem, omegas, freestream, environment)#, interstream::Interstream)
+    # extract rotor info
+    rlists = rotorsystem.rlists[rotorsystem.index]
+    orientations = rotorsystem.orientations
+    # operating conditions
+    vinflows = rotorinflow.(Ref(freestream), orientations)
+    operatingpoints_list = rotor2operatingpoints.(vinflows, rlists, omegas, Ref(environment))
+    # iterate over rotors
+    for (i, rotorindex) in enumerate(rotorsystem.index)
+        # isolate rotor
+        rotor = rotorsystem.rotors[rotorindex]
+        sections = rotorsystem.sectionlists[rotorindex]
+        # isolate operating conditions
+        operatingpoints = operatingpoints_list[i]
+        # solve CCBlade
+        outputs = CC.solve.(Ref(rotor), sections, operatingpoints)
+        T, Q = CC.thrusttorque(rotor, sections, outputs)
+        Ts[i] = T
+        Qs[i] = Q
+    end
+    # calculate Js
+    Js .= vinflows ./ omegas * 2 * pi ./ [2 * rotor.Rtip for rotor in rotorsystem.rotors[rotorsystem.index]]
+
+    return Js, Ts, Qs
+end
+
+solverotor(rotor, sections, operatingpoints) = CC.solve.(Ref(rotor), sections, operatingpoints)
+
+function solverotorsystem_outputs(rotorsystem, omegas, freestream, environment)
+    # extract rotor info
+    rlists = rotorsystem.rlists[rotorsystem.index]
+    orientations = rotorsystem.orientations
+    # operating conditions
+    vinflows = rotorinflow.(Ref(freestream), orientations)
+    operatingpoints_list = rotor2operatingpoints.(vinflows, rlists, omegas, Ref(environment))
+    # solve rotors
+    outputs_list = solverotor.(rotorsystem.rotors[rotorsystem.index], rotorsystem.sectionlists[rotorsystem.index], operatingpoints_list)
     # calculate Js
     Js = vinflows ./ omegas * 2 * pi ./ [2 * rotor.Rtip for rotor in rotorsystem.rotors[rotorsystem.index]]
 
-    return Js, CTs, CQs, ηs
+    return Js, outputs
+end
+
+"""
+    induced2wakefunction(rotorsystem, us, vs, xD_fullydeveloped_u, xD_fullydeveloped_v)
+
+Interpolates rotor-induced velocities into a wake function of X.
+
+Inputs:
+
+* `rotorsystem::CCBladeSystem` : system of rotors
+* `us::Vector{Vector{Float64}}` : [i][j]th element is the axial induced velocity at the jth radial station of the ith rotor
+* `vs::Vector{Vector{Float64}}` : [i][j]th element is the swirl induced velocity at the jth radial station of the ith rotor
+
+Keyword Arguments:
+
+* `wakeshapefunction = (Rtip, x) -> Rtip,` : function accepts a rotor radius and axial coordinate and returns the local wake radius
+* `axialinterpolation = (rs, us, r) -> FM.linear(rs, us, r)` : function accepts radial stations, axial velocities, and the radial coordinate and returns the unmodified axial induced velocity
+* `swirlinterpolation = (rs, vs, r) -> FM.linear(rs, vs, r)` : function accepts radial stations, swirl velocities, and the radial coordinate and returns the unmodified swirl induced velocity
+* `axialmultiplier = (u, distance2plane, Rtip) -> u * 2` : function multiplied by the axial interpolation function
+* `swirlmultiplier = (v, distance2plane, Rtip) -> v` : function multiplied by the swirlinterpolation function
+
+"""
+function induced2wakefunction(rotorsystem, us, vs;
+        wakeshapefunction = (Rtip, x) -> Rtip,
+        axialinterpolation = (rs, us, r) -> FM.linear(rs, us, r),
+        swirlinterpolation = (rs, vs, r) -> FM.linear(rs, vs, r),
+        axialmultiplier = (distance2plane, Rtip) -> 2,
+        swirlmultiplier = (distance2plane, Rtip) -> 1
+    )
+    function wakefunction(X)
+        Vwake = zeros(3)
+        for (irotor, rotorindex) in enumerate(rotorsystem.index)
+            # translate origin to rotor center (R is the vector from the rotor center to X)
+            R = X - rotorsystem.positions[irotor]
+            r = LA.norm(R)
+            # calculate distance from rotor plane (positive is in the negative thrust direction)
+            distance2plane = -LA.dot(R, rotorsystem.orientations[irotor])
+            # angle between normal and R (\in [0,\pi])
+            θ = acos(distance2plane/r)
+            # calculate distance to centerline
+            distance2centerline = r * sin(θ) # always positive
+            # check if X is within the wake
+            Rtip = rotorsystem.rotors[rotorindex].Rtip
+            if distance2centerline < wakeshapefunction(Rtip, distance2plane)
+                # interpolate wake velocity
+                u = axialinterpolation(rotorsystem.rlists[rotorindex], us[irotor], distance2centerline) * axialmultiplier(distance2plane, Rtip)
+                v = swirlinterpolation(rotorsystem.rlists[rotorindex], vs[irotor], distance2centerline) * swirlmultiplier(distance2plane, Rtip)
+                # get axial unit vector
+                axialhat = -rotorsystem.orientations[irotor]
+                # get tangential unit vector
+                tangentialhat = LA.cross(rotorsystem.orientations[irotor], R)
+                tangentialhat ./= LA.norm(tangentialhat)
+                # project R onto the plane parallel to normal
+                Vinduced = u * axialhat + v * tangentialhat * (rotorsystem.spindirections[irotor] ? 1 : -1)
+                Vwake .+= Vinduced
+            end
+        end
+        return Vwake
+    end
 end
