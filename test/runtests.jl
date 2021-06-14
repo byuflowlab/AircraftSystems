@@ -100,3 +100,23 @@ polardirectory = joinpath(AS.topdirectory, "data", "airfoil", "polars", "2021052
 
 simulationdata = AS.rotor_sweep_template(Js, omegas, nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, Res_list = [fill([5e4, 1e5, 1e6], length(radii))]; polardirectory = polardirectory)
 objective = AS.runsimulation!(simulationdata...)
+
+# @testset "Epema Blown Wing Validation" begin
+
+#     include(joinpath(AS.topdirectory, test, "EpemaData.jl"))
+
+#     function epema_validation()
+
+
+
+
+#         return aircraft, parameters, actions, freestream_function, environment_function, objective_function, timerange
+#     end
+
+#     aircraft, parameters, actions, 
+#         freestream_function, environment_function, 
+#         objective_function, timerange = epema_validation()
+
+#     outs = runsimulation!(aircraft, parameters, actions, freestream_function, environment_function, objective_function, timerange)
+
+# end
