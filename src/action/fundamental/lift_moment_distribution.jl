@@ -57,7 +57,7 @@ Method returns initialized elements required for the `parameters <: Parameters` 
 
 Inputs:
 
-* `system::System` : system to be simulated
+* `aircraft::Aircraft` : system to be simulated
 * `steprange::AbstractArray` : defines each step of the simulation
 
 Outputs:

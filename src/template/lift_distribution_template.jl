@@ -75,7 +75,7 @@ function lift_distribution_template(ploti, alphas, wing_b, wing_TR, wing_AR, win
     # initialize parameters
     CLs, CDs, CYs = solve_CF(aircraft, alphas) # let steprange be replaced by alphas
     cls, cds, cys, cmxs, cmys, cmzs = lift_moment_distribution(aircraft, alphas) # let steprange be replaced by alphas
-    _, _, _, _, _, _, cfs, cms, _, _, _, _ = plot_lift_moment_distributions(aircraft, alphas)
+    _, _, _, _, _, _, cfs, cms, _, _, _, _ = post_plot_lift_moment_distribution(aircraft, alphas)
     # check sizes and instantiate struct
     @assert length(CLs) == length(alphas) "length of parameter CLs and alphas inconsistent"
     @assert length(CDs) == length(alphas) "length of parameter CDs and alphas inconsistent"
@@ -109,7 +109,7 @@ function lift_distribution_template(ploti, alphas, wing_b, wing_TR, wing_AR, win
         Environment() # arbitrary
     end
     # compile postactions
-    postactions = [plot_clalphasweep, plot_lift_moment_distributions]
+    postactions = [plot_clalphasweep, post_plot_lift_moment_distribution]
     # build objective_function
     objective_function(aircraft, parameters, freestream, environment, alphas) = 0.0
 

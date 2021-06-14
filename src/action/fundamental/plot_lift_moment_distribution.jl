@@ -33,7 +33,6 @@ Inputs:
 
 """
 function plot_lift_moment_distribution(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol)
-    println("Sherlock! plot_lift_moment_distribution\n\tplotstepi = $(parameters.plotstepi)")
     # extract plot indices
     plotstepi = parameters.plotstepi
     if stepi in plotstepi
@@ -55,8 +54,6 @@ function plot_lift_moment_distribution(aircraft, parameters, freestream, environ
         if stepi == parameters.plotstepi[1]
             fig.clear()
             for isurface = 1:nsurfaces
-                println("Sherlock! surfacenames = $(surfacenames)")
-                println("\tsurfacename = $(surfacenames[isurface])")
                 fig.add_subplot(nsubplotbase + 2 + (isurface-1) * nsurfaces, ylabel = L"c_d") # drag ylim = cd_ylim,
                 fig.add_subplot(nsubplotbase + 3 + (isurface-1) * nsurfaces, ylabel = L"c_y", xlabel = L"y [m]") # side force ylim = cy_ylim,
                 fig.add_subplot(nsubplotbase + 1 + (isurface-1) * nsurfaces, ylabel = L"c_l", title = surfacenames[isurface]) # lift ylim = cl_ylim,
@@ -144,7 +141,7 @@ Method returns initialized elements required for the `parameters <: Parameters` 
 
 Inputs:
 
-* `system::System` : system to be simulated
+* `aircraft::Aircraft` : system to be simulated
 * `steprange::AbstractArray` : defines each step of the simulation
 
 Outputs:

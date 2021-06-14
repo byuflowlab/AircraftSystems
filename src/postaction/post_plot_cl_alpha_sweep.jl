@@ -1,5 +1,5 @@
 """
-plot_cl_alpha_sweep <: PostAction
+post_plot_cl_alpha_sweep <: PostAction
 
 Inputs:
 
@@ -28,7 +28,7 @@ Outputs:
 * `plotextension::String` : extension of saved figure files
 
 """
-function plot_cl_alpha_sweep(aircraft, parameters, alpharange, stepsymbol)
+function post_plot_cl_alpha_sweep(aircraft, parameters, alpharange, stepsymbol)
     # extract info
     CLs = parameters.CLs
     CDs = parameters.CDs
@@ -57,7 +57,7 @@ function plot_cl_alpha_sweep(aircraft, parameters, alpharange, stepsymbol)
 end
 
 """
-    plot_cl_alpha_sweep(aircraft, steprange) <: Action
+    post_plot_cl_alpha_sweep(aircraft, steprange) <: Action
 
 Method returns initialized elements required for the `parameters <: Parameters` struct during simulation.
 
@@ -76,7 +76,7 @@ Outputs:
 * `plotextension::String` : extension of saved figure files
 
 """
-function plot_cl_alpha_sweep(aircraft, steprange)
+function post_plot_cl_alpha_sweep(aircraft, steprange)
     CLs = zeros(length(steprange))
     CDs = zeros(length(steprange))
     CYs = zeros(length(steprange))

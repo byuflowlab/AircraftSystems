@@ -38,7 +38,7 @@ function solve_rotor(aircraft, parameters, freestream, environment, steprange, s
     Qs = parameters.Qs[:,stepi]
     us = parameters.us[stepi]
     vs = parameters.vs[stepi]
-    solverotorsystem!(Js, Ts, Qs, us, vs, aircraft.rotorsystem, omegas, freestream, environment)
+    solverotors!(Js, Ts, Qs, us, vs, aircraft.rotorsystem, omegas, freestream, environment)
 
     return false
 end
@@ -50,7 +50,7 @@ Method returns initialized elements required for the `parameters <: Parameters` 
 
 Inputs:
 
-* `system::System` : system to be simulated
+* `aircraft::Aircraft` : system to be simulated
 * `steprange::AbstractArray` : defines each step of the simulation
 
 Outputs:
@@ -61,6 +61,7 @@ Outputs:
 * `Qs::Array{Float64,2}` : [i,j]th element is the torque of the ith rotor at the jth step
 * `us::Vector{Vector{Vector{Float64}}}` : each [i][j][k]th element is the axial induced velocity at ith step of the jth rotor at the kth radial section
 * `vs::Vector{Vector{Vector{Float64}}}` : each [i][j][k]th element is the swirl induced velocity at ith step of the jth rotor at the kth radial section
+
 """
 function solve_rotor(aircraft, steprange)
     nrotors = length(aircraft.rotorsystem.index) # number of rotors
@@ -68,7 +69,7 @@ function solve_rotor(aircraft, steprange)
     Js = zeros(nrotors, length(steprange))
     Ts = zeros(nrotors, length(steprange))
     Qs = zeros(nrotors, length(steprange))
-    us = fill([zeros(length(aircraft.rotorsystem.rlists[i])) for i in aircraft.rotorsystem.index], length(steprange))
+    us = [[zeros(length(aircraft.rotorsystem.rlists[i])) for i in aircraft.rotorsystem.index] for _ in 1:length(steprange)]
     vs = deepcopy(us)
 
     return omegas, Js, Ts, Qs, us, vs

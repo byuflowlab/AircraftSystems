@@ -80,8 +80,8 @@ Outputs:
 * `rotorsystem::CCBladeSystem` : constructs a `CCBladeSystem` struct
 
 """
-function CCBladeSystem(nblades_list, rhub_list, rtip_list, radii_list, chords_list, twists_list, airfoilcontours_list, airfoilnames_list, index, positions, orientations, spindirections,
-    Res_list = [fill([5e4, 1e5, 1e6], length(radii_list[i])) for i in 1:length(nblades_list)];
+function CCBladeSystem(nblades_list, rhub_list, rtip_list, radii_list, chords_list, twists_list, airfoilcontours_list, airfoilnames_list, index, positions, orientations, spindirections;
+    Res_list = [fill([5e4, 1e5, 1e6], length(radii_list[i])) for i in 1:length(nblades_list)],
     kwargs...
 )
     # check input sizes
@@ -102,6 +102,7 @@ function CCBladeSystem(nblades_list, rhub_list, rtip_list, radii_list, chords_li
     @assert length(nblades_list) == length(airfoilcontours_list) "list of nblades and list of airfoil contour files must be the same length"
     @assert length(nblades_list) == length(airfoilnames_list) "list of nblades and list of airfoil names must be the same length"
     # sectionlists = Vector{Vector{CC.Section}}(undef,length(rotors))
+    println("Sherlock! Res_list = $Res_list")
     sectionlists = rotor2sections.(rtip_list, radii_list, chords_list, twists_list, Res_list, airfoilcontours_list, airfoilnames_list; kwargs...)
     # build rlists
     rlists = sections2radii.(sectionlists)
@@ -196,7 +197,7 @@ function rotor2polars(radii, chords, cr75, Res_list, contourfiles, airfoilnames;
     viternaextrapolation=true, rotationcorrection=true, radians = false, kwargs...)
 
     @assert length(radii) == length(chords) "length of radii and chords inconsistent"
-    @assert length(radii) == length(Res_list) "length of radii and Res_list inconsistent"
+    @assert length(radii) == length(Res_list) "length of radii ($(length(radii))) and Res_list ($(length(Res_list))) inconsistent"
     @assert length(radii) == length(contourfiles) "length of radii and contourfiles inconsistent"
     @assert length(radii) == length(airfoilnames) "length of radii and airfoilnames inconsistent"
 
@@ -579,13 +580,13 @@ function rotor2operatingpoints(vinflow, r, omega, environment)
     return operatingpoints
 end
 
-function solverotorsystemnondimensional(rotorsystem, omegas, freestream, environment)#, interstream::Interstream)
+function solverotorsnondimensional(rotorsystem, omegas, freestream, environment)#, interstream::Interstream)
     # extract rotor info
     orientations = rotorsystem.orientations
     # operating conditions
     vinflows = rotorinflow.(Ref(freestream), orientations)
     # pre-allocate solution
-    Js, Ts, Qs, _, _ = solverotorsystem(rotorsystem, omegas, freestream, environment)
+    Js, Ts, Qs, us, vs = solverotors(rotorsystem, omegas, freestream, environment)
     CTs = similar(Qs)
     CQs = similar(Qs)
     ηs = similar(Qs)
@@ -603,15 +604,15 @@ function solverotorsystemnondimensional(rotorsystem, omegas, freestream, environ
 end
 
 """
-In-place version of solverotorsystemnondimensional.
+In-place version of solverotorsnondimensional.
 """
-function solverotorsystemnondimensional!(Js, Ts, Qs, CTs, CQs, ηs, rotorsystem, omegas, freestream, environment)#, interstream::Interstream)
+function solverotorsnondimensional!(Js, Ts, Qs, CTs, CQs, ηs, rotorsystem, omegas, freestream, environment)#, interstream::Interstream)
     # extract rotor info
     orientations = rotorsystem.orientations
     # operating conditions
     vinflows = rotorinflow.(Ref(freestream), orientations)
     # pre-allocate solution
-    solverotorsystem!(Js, Ts, Qs, rotorsystem, omegas, freestream, environment)
+    solverotors!(Js, Ts, Qs, rotorsystem, omegas, freestream, environment)
     # iterate over rotors
     for (i, rotorindex) in enumerate(rotorsystem.index)
         # isolate rotor
@@ -622,11 +623,34 @@ function solverotorsystemnondimensional!(Js, Ts, Qs, CTs, CQs, ηs, rotorsystem,
         ηs[i] = η
     end
 
-    return Js, CTs, CQs, ηs
+    return nothing
 end
 
 """
-    solverotorsystem(rotorsystem, omegas, freestream, environment)
+In-place version of solverotorsnondimensional including `us` and `vs`.
+"""
+function solverotorsnondimensional!(Js, Ts, Qs, CTs, CQs, ηs, us, vs, rotorsystem, omegas, freestream, environment)#, interstream::Interstream)
+    # extract rotor info
+    orientations = rotorsystem.orientations
+    # operating conditions
+    vinflows = rotorinflow.(Ref(freestream), orientations)
+    # pre-allocate solution
+    solverotors!(Js, Ts, Qs, us, vs, rotorsystem, omegas, freestream, environment)
+    # iterate over rotors
+    for (i, rotorindex) in enumerate(rotorsystem.index)
+        # isolate rotor
+        rotor = rotorsystem.rotors[rotorindex]
+        η, CT, CQ = CC.nondim(Ts[i], Qs[i], vinflows[i], omegas[i], environment.ρ, rotor, "propeller")
+        CTs[i] = CT
+        CQs[i] = CQ
+        ηs[i] = η
+    end
+
+    return nothing
+end
+
+"""
+    solverotors(rotorsystem, omegas, freestream, environment)
 
 Solves the rotor system at the specified RPM, freestream, and environment.
 
@@ -646,20 +670,21 @@ Outputs:
 * `vs::Vector{Vector{Float64}}` : [i][j] refers to the swirl induced velocity at the rotor disk at the jth radial station of the ith rotor
 
 """
-function solverotorsystem(rotorsystem, omegas, freestream, environment)#, interstream::Interstream)
+function solverotors(rotorsystem, omegas, freestream, environment)#, interstream::Interstream)
     # pre-allocate solution
-    Ts = zeros(length(rotorsystem.index))
+    Js = zeros(length(rotorsystem.index))
+    Ts = similar(Js)
     Qs = similar(Ts)
     us = [zeros(typeof(freestream.vinf), length(radii)) for radii in rotorsystem.rlists[rotorsystem.index]]
     vs = deepcopy(us)
 
-    Js, Ts, Qs, us, vs = solverotorsystem!(Js, Ts, Qs, us, vs, rotorsystem, omegas, freestream, environment)
+    solverotors!(Js, Ts, Qs, us, vs, rotorsystem, omegas, freestream, environment)
 
     return Js, Ts, Qs, us, vs
 end
 
 """
-In-place instance of `solverotorsystem`.
+In-place instance of `solverotors`.
 
 Inputs:
 
@@ -682,7 +707,7 @@ Modifies:
 * `vs::Vector{Vector{Float64}}` : [i][j] refers to the swirl induced velocity at the rotor disk at the jth radial station of the ith rotor
 
 """
-function solverotorsystem!(Js, Ts, Qs, us, vs, rotorsystem, omegas, freestream, environment)#, interstream::Interstream)
+function solverotors!(Js, Ts, Qs, us, vs, rotorsystem, omegas, freestream, environment)#, interstream::Interstream)
     # extract rotor info
     rlists = rotorsystem.rlists[rotorsystem.index]
     orientations = rotorsystem.orientations
@@ -707,11 +732,11 @@ function solverotorsystem!(Js, Ts, Qs, us, vs, rotorsystem, omegas, freestream, 
     # calculate Js
     Js .= vinflows ./ omegas * 2 * pi ./ [2 * rotor.Rtip for rotor in rotorsystem.rotors[rotorsystem.index]]
 
-    return Js, Ts, Qs, us, vs
+    return nothing
 end
 
 """
-In-place instance of `solverotorsystem`.
+In-place instance of `solverotors`.
 
 Inputs:
 
@@ -734,7 +759,7 @@ Modifies:
 * `vs::Vector{Vector{Float64}}` : [i][j] refers to the swirl induced velocity at the rotor disk at the jth radial station of the ith rotor
 
 """
-function solverotorsystem!(Js, Ts, Qs, rotorsystem, omegas, freestream, environment)#, interstream::Interstream)
+function solverotors!(Js, Ts, Qs, rotorsystem, omegas, freestream, environment)#, interstream::Interstream)
     # extract rotor info
     rlists = rotorsystem.rlists[rotorsystem.index]
     orientations = rotorsystem.orientations
@@ -762,7 +787,7 @@ end
 
 solverotor(rotor, sections, operatingpoints) = CC.solve.(Ref(rotor), sections, operatingpoints)
 
-function solverotorsystem_outputs(rotorsystem, omegas, freestream, environment)
+function solverotors_outputs(rotorsystem, omegas, freestream, environment)
     # extract rotor info
     rlists = rotorsystem.rlists[rotorsystem.index]
     orientations = rotorsystem.orientations

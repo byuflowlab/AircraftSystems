@@ -7,16 +7,20 @@ README: this is a template file. Convenience methods are provided to prepare a s
 =###############################################################################################
 
 # initialize parameters
-struct RotorSweepParameters{V1,V2,V3,V4,V5,V6,V7} <: Parameters
+struct RotorSweepParameters{V1,V2,V3,V4,V5} <: Parameters
     omegas::V1
     Js::V2
-    CTs::V3
-    CQs::V4
-    ηs::V5
-    rotornames::V6
-    plotdirectory::V7
-    plotbasename::V7
-    plotextension::V7
+    Ts::V2
+    Qs::V2
+    CTs::V2
+    CQs::V2
+    ηs::V2
+    us::V3
+    vs::V3
+    rotornames::V4
+    plotdirectory::V5
+    plotbasename::V5
+    plotextension::V5
 end
 
 # function (rs::RotorSweepParameters{V1, V2, V3, V4, V5})(Js, omega...)
@@ -28,16 +32,17 @@ end
 # rs(Js, omega, nblades...)
 
 # build freestream_function
-function get_J(parameters::RotorSweepParameters{V1,V2,V3,V4,V5,V6}, ri, stepi) where V1 where V2 <:AbstractArray{<:Any,1} where V3 where V4 where V5 where V6
-    parameters.Js[stepi]
-end
+# function get_J(parameters::RotorSweepParameters{V1,V2,V3,V4,V5,V6}, ri, stepi) where {V1, V2 <:AbstractArray{<:Any,1}, V3, V4, V5, V6}
+#     parameters.Js[stepi]
+# end
 
-function get_J(parameters::RotorSweepParameters{V1,V2,V3,V4,V5,V6}, ri, stepi) where V1 where V2 <:AbstractArray{<:Any,2} where V3 where V4 where V5 where V6
+# function get_J(parameters::RotorSweepParameters{V1,V2,V3,V4}, ri, stepi) where {V1, V2 <:AbstractArray{<:Any,2}, V3, V4, V5}
+function get_J(parameters, ri, stepi)
     parameters.Js[ri,stepi]
 end
 
 """
-rotor_sweep_template <: Template
+    rotor_sweep_template <: Template
 
 Inputs:
 
@@ -53,7 +58,7 @@ Inputs:
 * `airfoilnames::Vector{Vector{String}}` : ith element is a vector of strings defining the airfoils at each radial section of the ith rotor
 
 """
-function rotor_sweep_template(Js, omegas, nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, Res_list = [fill([5e4, 1e5, 1e6], length(radii))];
+function rotor_sweep_template(Js, omegas, nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, length(radii))];
         rotornames = ["rotor 1"],
         plotdirectory = joinpath(topdirectory, "data","plots",TODAY),
         plotbasename = "default",
@@ -63,7 +68,7 @@ function rotor_sweep_template(Js, omegas, nblades, rhub, rtip, radii, chords, tw
     )
     # prepare subsystems
     wings = nothing
-    rotors = CCBladeSystem([nblades], [rhub], [rtip], [radii], [chords], [twists], [airfoilcontours], [airfoilnames], [1], [[0.0,0.0,0.0]], [[-1.0,0.0,0.0]], [false], Res_list = Res_list; kwargs...)
+    rotors = CCBladeSystem([nblades], [rhub], [rtip], [radii], [chords], [twists], [airfoilcontours], [airfoilnames], [1], [[0.0,0.0,0.0]], [[-1.0,0.0,0.0]], [false]; kwargs...)
     nonliftingbodies = nothing
     structures = nothing
     motors = nothing
@@ -73,18 +78,20 @@ function rotor_sweep_template(Js, omegas, nblades, rhub, rtip, radii, chords, tw
     aircraft = Aircraft(wings, rotors, nonliftingbodies, structures, motors, batteries)
 
     # compile actions
-    actions = [solve_rotor]
+    actions = [solve_rotor_nondimensional]
 
     # initialize parameters
     steprange = 1:length(Js) # use time to define each part of the sweep
-    omegas_zero, Js_zero, CTs, CQs, ηs = solve_rotor(aircraft, steprange)
-
+    # omegas_zero, Js_zero, CTs, CQs, ηs = solve_rotor(aircraft, steprange)
+    omegas_zero, Js_zero, Ts, Qs, CTs, CQs, ηs, us, vs = solve_rotor_nondimensional(aircraft, steprange)
     # check data
+    @assert typeof(Js) <: AbstractArray{<:Any,2} "Js must be a 2-dimensional array; got $(typeof(Js))"
     @assert length(omegas_zero) == length(omegas) "`omegas` has improper dimensions. \n\tExpected: $(size(omegas_zero))\n\tGot: $(size(omegas))"
     @assert length(Js_zero) == length(Js) "`Js` has improper dimensions. \n\tExpected: $(size(Js_zero))\n\tGot: $(size(Js))"
-    @assert isdir(plotdirectory) "plotdirectory does not exist at $plotdirectory\n\ttry: `mkdir $plotdirectory`"
+    # @warn isdir(plotdirectory) "plotdirectory does not exist at $plotdirectory\n\ttry: `mkdir $plotdirectory`"
+    if !isdir(plotdirectory); mkpath(plotdirectory); @warn "plot directory $plotdirectory does not exist; creating..."; end
     # build parameters
-    parameters = RotorSweepParameters(omegas, Js, CTs, CQs, ηs, rotornames, plotdirectory, plotbasename, plotextension)
+    parameters = RotorSweepParameters(omegas, Js, Ts, Qs, CTs, CQs, ηs, us, vs, rotornames, plotdirectory, plotbasename, plotextension)
 
     function freestream_function(aircraft, parameters, environment, steprange, stepi)
         J = get_J(parameters, 1, stepi)
@@ -106,7 +113,7 @@ function rotor_sweep_template(Js, omegas, nblades, rhub, rtip, radii, chords, tw
     end
 
     # assemble postactions
-    postactions = [plot_rotorsweep]
+    postactions = [post_plot_rotor_sweep]
 
     # build objective_function
     objective_function(aircraft, parameters, freestream, environment, steprange) = 0.0
