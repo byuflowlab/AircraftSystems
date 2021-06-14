@@ -1,0 +1,95 @@
+#=##############################################################################################
+Filename: solve_vlm_bem.jl
+Author: Ryan Anderson
+Contact: rymanderson@gmail.com
+README: `<: Action` function calculates aerodynamic forces on a blade-element momentum-vortex
+        lattice system; only accounts for rotor-on-wing effects
+=###############################################################################################
+
+"""
+solve_vlm_bem <: Action
+
+Solves for the aerodynamic forces at each step.
+
+Inputs:
+
+* `aircraft::Aircraft` : `Aircraft` system object
+* `parameters<:Parameters` `Parameters` struct
+* `freestream::Freestream` : `Freestream` object
+* `environment::Environment` `Environment` object
+* `steprange::AbstractArray` : array of steps for which the simulation is run
+* `stepi::Int` : index of the current step
+* `stepsymbol::String` : defines the step, e.g. `alpha` or `time`
+
+`parameters <: Parameters` requires the following elements:
+
+* `omegas::Vector{Float64}` : a vector of length `length(steprange)` containing a vector of rotational velocities for each rotor
+* `Js::Vector{Vector{Float64}}` : a vector of length `length(steprange)` containing a vector of advance ratios for each rotor
+* `Ts::Vector{Vector{Float64}}` : a vector of length `length(steprange)` containing a vector of dimensional thrust values for each rotor
+* `Qs::Vector{Vector{Float64}}` : a vector of length `length(steprange)` containing a vector of dimensional torque values for each rotor
+* `us::Vector{Vector{Float64}}` : each [i][j][k]th element is the axial induced velocity at ith step of the jth rotor at the kth radial section
+* `vs::Vector{Vector{Float64}}` : each [i][j][k]th element is the swirl induced velocity at ith step of the jth rotor at the kth radial section
+* `wakefunction::Function` : function accepts position X and returns the rotor induced velocity
+* `CLs::Vector{Vector{Float64}}` : a vector of length `length(steprange)` containing lift coefficients at each step
+* `CDs::Vector{Vector{Float64}}` : a vector of length `length(steprange)` containing drag coefficients at each step
+* `CYs::Vector{Vector{Float64}}` : a vector of length `length(steprange)` containing side force coefficients at each step
+* `cls::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local lift coefficients at each lifting line section, corresponding to each lifting surface
+* `cds::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local drag coefficients at each lifting line section, corresponding to each lifting surface
+* `cys::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local side force coefficients at each lifting line section, corresponding to each lifting surface
+* `cmxs::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local x-axis (roll) moment coefficients at each lifting line section, corresponding to each lifting surface
+* `cmys::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local y-axis (pitch) moment coefficients at each lifting line section, corresponding to each lifting surface
+* `cmzs::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local z-axis (yaw) moment force coefficients at each lifting line section, corresponding to each lifting surface
+
+"""
+function solve_vlm_bem(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol)
+    flags = Vector{Bool}(undef,4)
+    # solves rotors
+    flags[1] = solve_rotor(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol)
+    # get wake function
+    flags[2] = solve_rotor_wake(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol)
+    # solve VLM
+    flags[3] = solve_CF(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol)
+    # extract lift and moment distribution
+    flags[4] = lift_moment_distribution(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol)
+
+    return prod(flags)
+end
+
+"""
+solve_vlm_bem(system, steprange)
+
+Method returns initialized elements required for the `parameters <: Parameters` struct during simulation.
+
+Inputs:
+
+* `system::System` : system to be simulated
+* `steprange::AbstractArray` : defines each step of the simulation
+
+Outputs:
+
+* `omegas::Vector{Float64}` : a vector of length `length(steprange)` containing a vector of rotational velocities for each rotor
+* `Js::Vector{Vector{Float64}}` : a vector of length `length(steprange)` containing a vector of advance ratios for each rotor
+* `Ts::Vector{Vector{Float64}}` : a vector of length `length(steprange)` containing a vector of dimensional thrust values for each rotor
+* `Qs::Vector{Vector{Float64}}` : a vector of length `length(steprange)` containing a vector of dimensional torque values for each rotor
+* `us::Vector{Vector{Vector{Float64}}}` : each [i][j][k]th element is the axial induced velocity at ith step of the jth rotor at the kth radial section
+* `vs::Vector{Vector{Vector{Float64}}}` : each [i][j][k]th element is the swirl induced velocity at ith step of the jth rotor at the kth radial section
+* `wakefunction::Function` : function accepts position X and returns the rotor induced velocity
+* `CLs::Vector{Vector{Float64}}` : a vector of length `length(steprange)` containing lift coefficients at each step
+* `CDs::Vector{Vector{Float64}}` : a vector of length `length(steprange)` containing drag coefficients at each step
+* `CYs::Vector{Vector{Float64}}` : a vector of length `length(steprange)` containing side force coefficients at each step
+* `cls::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local lift coefficients at each lifting line section, corresponding to each lifting surface
+* `cds::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local drag coefficients at each lifting line section, corresponding to each lifting surface
+* `cys::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local side force coefficients at each lifting line section, corresponding to each lifting surface
+* `cmxs::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local x-axis (roll) moment coefficients at each lifting line section, corresponding to each lifting surface
+* `cmys::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local y-axis (pitch) moment coefficients at each lifting line section, corresponding to each lifting surface
+* `cmzs::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local z-axis (yaw) moment force coefficients at each lifting line section, corresponding to each lifting surface
+
+"""
+function solve_vlm_bem(aircraft, steprange)
+    params_solve_rotor = solve_rotor(aircraft, steprange) # omegas, Js, Ts, Qs, us, vs
+    params_solve_rotor_wake = solve_rotor_wake(aircraft, steprange) # wakefunctions, us, vs
+    params_solve_CF = solve_CF(aircraft, steprange) # CLs, CDs, CYs
+    params_lift_moment_distribution = lift_moment_distribution(aircraft, steprange) # cls, cds, cys, cmxs, cmys, cmzs
+
+    return params_solve_rotor..., params_solve_rotor_wake[1], params_solve_CF..., params_lift_moment_distribution...
+end

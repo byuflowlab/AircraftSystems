@@ -3,16 +3,17 @@ Describes a function used in `runsimulation!` with:
 
 Inputs:
 
-* `system::System` : aircraft system struct
+* `aircraft::Aircraft` : aircraft system struct
 * `parameters <: Parameters` : inherits from the `Parameters` type; object containing data required by `<: Action` functions
 * `freestream::Freestream` : freestream object
 * `environment::Environment` : environment object
-* `timerange::AbstractArray` : range of times defining simulation
-* `ti::Int` : index of the current timestep
+* `steprange::AbstractArray` : range of steps defining simulation
+* `stepi::Int` : index of the current step
+* `stepsymbol::String` : defines the step, e.g. `alpha` or `time`
 
 Modifies:
 
-* `system::System`
+* `aircraft::Aircraft`
 * `parameters <: Parameters`
 
 Outputs:
@@ -22,7 +23,7 @@ Outputs:
 Dispatch is as follows:
 
 ```
-function myaction!(system, parameters, freestream, environment, timerange, ti) <: Action
+function myaction!(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol) <: Action
     ...
     return flag
 end

@@ -17,7 +17,7 @@ Inputs:
 
 """
 struct Freestream{F, VF <: AbstractArray}
-    Vinf::F
+    vinf::F
     alpha::F
     beta::F
     Omega::VF
@@ -34,7 +34,7 @@ Outputs:
 
 """
 function freestream2vector(freestream)
-    vinf = LA.norm(freestream.Vinf)
+    vinf = LA.norm(freestream.vinf)
     alpha = freestream.alpha
     beta = freestream.beta
     Vinf = vinf .*
