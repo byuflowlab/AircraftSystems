@@ -1,5 +1,6 @@
 import AircraftSystems
 AS = AircraftSystems
+import FileIO
 FM = AS.FM
 using LaTeXStrings
 plt = AS.plt
@@ -11,8 +12,8 @@ using Test
 # @testset "rotors" begin
 
 # # test rotor_sweep_template
-# nJs = 17
-# Js = ones(1,nJs) .* range(0.5, stop=4, length=nJs)'
+nJs = 17
+Js = ones(1,nJs) .* range(0.01, stop=3.0, length=nJs)'
 # omegas = fill(50.0, length(Js))
 # nblades = 3
 # radii = [0.148, 0.254237, 0.381356, 0.508475, 0.635593, 0.762712, 0.889831, 1.0] .* 236e-3/2
@@ -26,8 +27,71 @@ using Test
 # airfoilnames = fill(airfoilname, length(radii))
 # polardirectory = joinpath(AS.topdirectory, "data", "airfoil", "polars", "20210524")
 
-# simulationdata = AS.rotor_sweep_template(Js, omegas, nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, Res_list = [fill([5e4, 1e5, 1e6], length(radii))]; polardirectory = polardirectory)
-# objective = AS.runsimulation!(simulationdata...)
+# Eppler propeller
+omegas = ones(1,length(Js)) .* 2000
+nblades = [6]
+radii = [[0.148, 0.254237, 0.381356, 0.508475, 0.635593, 0.762712, 0.889831, 1.0] .* 236e-3/2]
+rhub = [radii[1][1]]
+rtip = [radii[1][end]]
+chords = [[9.88, 11.88, 15.59, 18.81, 19.55, 18.32, 13.96, 0.01] * 1e-3]
+twists = [[35.0, 32.5, 26.5, 23.5, 19, 16.5, 14.0, 10.0]] # * pi/180 provide in degrees to match airfoil files
+
+# set collective to 25 deg. at 3/4 radius
+this_r = radii[1]
+this_t = twists[1]
+twists_075 = AS.FM.linear(this_r, this_t, 0.75 * radii[1][end])
+# twists[1] .+= 25.0 - twists_075
+
+airfoilcontour = joinpath(AS.topdirectory, "data", "airfoil", "contours", "e212-il.dat")
+airfoilcontours = [fill(airfoilcontour, length(radii[1]))]
+airfoilname = "eppler212"
+airfoilnames = [fill(airfoilname, length(radii[1]))]
+index = [1]
+rotor_X = [[-201.8e-3, 300e-3, 0.0]]
+rotor_orientation = [[-1.0, 0.0, 0.0]]
+spindirections = [true]
+
+# PROWIM propeller
+
+# kevins_path = joinpath(AS.topdirectory, "data", "airfoil")
+# # epema_data = FileIO.load(joinpath(kevins_path, "epema_data_from_kevin.jld2"))
+# # af = epema_data[:"af"][1] # just one radial section will suffice as they are identical
+
+# epema_data = FileIO.load(joinpath(kevins_path, "E212_from_kevin.jld2"))
+# af = epema_data[:"NDtable"]
+# af_cl = af[1]
+# af_cd = af[2]
+# af_cm = af[3]
+# # prepare memory
+# cfarray = Array{Float64,3}[](undef,4)
+# # extract alpha, Re, M numbers
+# alpha = af[1].var_input[1]
+# Re = af[1].var_input[2]
+# Mach = af[1].var_input[3]
+# # extract raw coefficients
+# for (i,coefficient) in enumerate(af)
+#     c = coefficient
+#     cfarray[i] = c.spl_response.coefs[2:end-1,:,:] # or [2:end-1, 2:end-1, 2:end-1]
+# end
+# cl = cfarray[1]
+# cd = cfarray[2]
+# info = "eppler212 data extracted from moore2019multipropopt"
+# # build ccblade object
+# eppler212_airfoil = AS.CC.AlphaReMachAF(alpha, Re, Mach, cl, cd, info)
+# # name files
+# airfoilname = "eppler212_kevin"
+# filenames = AS.airfoilfilenames(airfoilname, Re, Mach; viternaextrapolation=false, rotationcorrection=false, aoaset=false, extension = ".txt")
+# # create files
+# AS.CC.write_af(filenames, eppler212_airfoil; radians=false)
+
+polardirectory = joinpath(AS.topdirectory, "data", "airfoil", "polars", AS.TODAY)
+plotstepi = 1:length(Js)
+
+Res_list = [fill([5e4, 1e5, 1e6, 1e7, 1e8], length(radii[1]))]
+Ms_list = [fill([0.0, 0.1], length(radii[1]))]
+
+simulationdata = AS.rotor_sweep_template(Js, omegas, nblades[1], rhub[1], rtip[1], radii[1], chords[1], twists[1], airfoilcontours[1], airfoilnames[1], Res_list, Ms_list; polardirectory = polardirectory)
+objective = AS.runsimulation!(simulationdata...)
 
 # @test isapprox(objective, 0.0)
 
@@ -164,43 +228,73 @@ using Test
 
 # @testset "wings_and_rotors" begin
 
-# simulation controls
-alphas = [0.0, 4.0, 10.0] .* pi/180
-ploti = 1:length(alphas)
-# wing definition
-wing_b = 640e-3 * 2
-wing_TR = 1.0 # hershey bar
-wing_c = 240e-3
-wing_AR = wing_b / wing_c
-wing_θroot = 0.0
-wing_θtip = 0.0
-# rotor definition
-omegas = ones(1,length(alphas)) .* 50
-nblades = [2]
-radii = [[0.148, 0.254237, 0.381356, 0.508475, 0.635593, 0.762712, 0.889831, 1.0] .* 236e-3/2]
-rhub = [radii[1][1]]
-rtip = [radii[1][end]]
-chords = [[9.88, 11.88, 15.59, 18.81, 19.55, 18.32, 13.96, 0.01] * 1e-3]
-twists = [[35.0, 32.5, 26.5, 23.5, 19, 16.5, 14.0, 10.0]] # * pi/180 provide in degrees to match airfoil files
+# # simulation controls
+# alphas = [0.0, 4.0, 10.0] .* pi/180
+# ploti = 1:length(alphas)
+# # wing definition
+# wing_b = 640e-3 * 2
+# wing_TR = 1.0 # hershey bar
+# wing_c = 240e-3
+# wing_AR = wing_b / wing_c
+# wing_θroot = 0.0
+# wing_θtip = 0.0
+# # environment
+# environment = AS.Environment()
+# ν = environment.ν
+# # freestream definition
+# Re_c = 0.8e6
+# vinf = Re_c * ν / wing_c
+# vinfs = fill(vinf, length(alphas))
+# # rotor definition
+# omegas = ones(1,length(alphas)) .* 1000
+# nblades = [4]
+# radii = [[0.148, 0.254237, 0.381356, 0.508475, 0.635593, 0.762712, 0.889831, 1.0] .* 236e-3/2]
+# rhub = [radii[1][1]]
+# rtip = [radii[1][end]]
+# chords = [[9.88, 11.88, 15.59, 18.81, 19.55, 18.32, 13.96, 0.01] * 1e-3]
+# twists = [[35.0, 32.5, 26.5, 23.5, 19, 16.5, 14.0, 10.0]] # * pi/180 provide in degrees to match airfoil files
 
-airfoilcontour = joinpath(AS.topdirectory, "data", "airfoil", "contours", "naca4412.dat")
-airfoilcontours = [fill(airfoilcontour, length(radii[1]))]
-airfoilname = "naca4412"
-airfoilnames = [fill(airfoilname, length(radii[1]))]
-index = [1]
-rotor_X = [[0.0, 300e-3, 0.0]]
-rotor_orientation = [[-1.0, 0.0, 0.0]]
-spindirections = [true]
+# airfoilcontour = joinpath(AS.topdirectory, "data", "airfoil", "contours", "naca4412.dat")
+# airfoilcontours = [fill(airfoilcontour, length(radii[1]))]
+# airfoilname = "naca4412"
+# airfoilnames = [fill(airfoilname, length(radii[1]))]
+# index = [1]
+# rotor_X = [[-201.8e-3, 300e-3, 0.0]]
+# rotor_orientation = [[-1.0, 0.0, 0.0]]
+# spindirections = [true]
 
-polardirectory = joinpath(AS.topdirectory, "data", "airfoil", "polars", "20210524")
-plotstepi = 1:length(alphas)
+# polardirectory = joinpath(AS.topdirectory, "data", "airfoil", "polars", "20210524")
+# plotstepi = 1:length(alphas)
 
-simulationdata = AS.vlm_bem_template(plotstepi, alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, omegas, nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, index, rotor_X, rotor_orientation, spindirections, Res_list = [fill([5e4, 1e5, 1e6], length(radii))],
-        polardirectory = polardirectory
-    )
-objective = AS.runsimulation!(simulationdata...)
+# simulationdata = AS.vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, omegas, nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, index, rotor_X, rotor_orientation, spindirections, Res_list = [fill([5e4, 1e5, 1e6], length(radii))],
+#         polardirectory = polardirectory
+#     )
+# objective = AS.runsimulation!(simulationdata...)
 
 # end # test wings_and_rotors
+
+# # test rotor wake
+# parameters = simulationdata[2]
+# wakefun_aoa4 = parameters.wakefunctions[2]
+# x = range(-0.2, stop=1.0, length=25)
+# y = range(0.0, stop=wing_b/2, length=17)
+# z = range(-0.2, stop=0.2, length=13)
+# lx = length(x)
+# ly = length(y)
+# lz = length(z)
+# xs = [x[i] for i in 1:lx, j in 1:ly, k in 1:lz]
+# ys = [y[j] for i in 1:lx, j in 1:ly, k in 1:lz]
+# zs = [z[k] for i in 1:lx, j in 1:ly, k in 1:lz]
+# Vs = wakefun_aoa4.([[x[i], y[j], z[k]] for i in 1:lx, j in 1:ly, k in 1:lz])
+# # Vs ./ AS.LA.norm.(Vs)
+# us = [Vs[i,j,k][1] for i in 1:lx, j in 1:ly, k in 1:lz]
+# vs = [Vs[i,j,k][2] for i in 1:lx, j in 1:ly, k in 1:lz]
+# ws = [Vs[i,j,k][3] for i in 1:lx, j in 1:ly, k in 1:lz]
+
+# fig = plt.figure("test_wakefunction")
+# fig.clear()
+# ax = fig.add_subplot(111, projection="3d")
+# ax.quiver3D(xs, ys, zs, us, vs, ws, length=0.1)#, normalize=true)
 
 # test rotor wake
 parameters = simulationdata[2]

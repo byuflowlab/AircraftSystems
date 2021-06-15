@@ -1,5 +1,5 @@
 """
-plot_rotorperformance <: PostAction
+    post_plot_rotor_sweep <: PostAction
 
 Inputs:
 
@@ -29,7 +29,7 @@ Outputs:
 * `plotextension::String` : extension of saved figure files
 
 """
-function plot_rotorsweep(aircraft, parameters, steprange, stepsymbol)
+function post_plot_rotor_sweep(aircraft, parameters, steprange, stepsymbol)
     # extract info
     CTs = parameters.CTs
     CQs = parameters.CQs
@@ -53,7 +53,7 @@ function plot_rotorsweep(aircraft, parameters, steprange, stepsymbol)
     # plot
     for (i,ax) in enumerate(axs)
         for jrotor in 1:nrotors
-            Js = get_J(parameters, jrotor, :)
+            Js = parameters.Js[jrotor,:]
             ax.plot(Js, data[i][jrotor,:], label = rotornames[jrotor])
         end
     end
@@ -62,4 +62,38 @@ function plot_rotorsweep(aircraft, parameters, steprange, stepsymbol)
     savepath = joinpath(plotdirectory, plotbasename * "_rotorsweep" * plotextension)
     fig.savefig(savepath)
     return false
+end
+
+"""
+    post_plot_rotor_sweep(system, steprange) <: PostAction
+
+Method returns initialized elements required for the `parameters <: Parameters` struct during simulation.
+
+Inputs:
+
+* `aircraft::Aircraft` : system to be simulated
+* `steprange::AbstractArray` : defines each step of the simulation
+
+Outputs:
+
+* `Js::AbstractArray` : array of advance ratios of the ith rotor at the jth step
+* `CTs::Array{Float64,2}` : array of thrust coefficients of the ith rotor at the jth step
+* `CQs::Array{Float64,2}` : array of torque coefficients of the ith rotor at the jth step
+* `ηs::Array{Float64,2}` : array of propulsive efficiencies of the ith rotor at the jth step
+* `rotornames::Vector{String}` : vector of rotor names for use in plot legend
+* `plotdirectory::String` : directory where plots are saved
+* `plotbasename::String` : first portion of the saved figure file name
+* `plotextension::String` : extension of saved figure files
+
+"""
+function post_plot_rotor_sweep(aircraft, steprange)
+
+    _, Js, _, _, CTs, CQs, ηs, _, _ = solve_rotor_nondimensional(aircraft, steprange)
+    nrotors = length(aircraft.rotorsystem.index)
+    rotornames = ["rotor$i" for i in 1:nrotors]
+    plotdirectory = ""
+    plotbasename = "defaultplot"
+    plotextension = ".pdf"
+
+    return Js, CTs, CQs, ηs, rotornames, plotdirectory, plotbasename, plotextension
 end

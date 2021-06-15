@@ -71,7 +71,7 @@ function cl_alpha_sweep_template(alphas, wing_b, wing_TR, wing_AR, wing_θroot, 
     end
 
     # compile postactions
-    postactions = [plot_cl_alpha_sweep]
+    postactions = [post_plot_cl_alpha_sweep]
 
     # build objective_function
     objective_function(aircraft, parameters, freestream, environment, alphas) = 0.0

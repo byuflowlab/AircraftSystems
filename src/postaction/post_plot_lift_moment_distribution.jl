@@ -1,12 +1,12 @@
 #=##############################################################################################
-Filename: plot_lift_moment_distributions.jl
+Filename: post_plot_lift_moment_distribution.jl
 Author: Ryan Anderson
 Contact: rymanderson@gmail.com
 README: `<: PostAction` function plots the lift distribution of all lifting surfaces at the specified steps
 =###############################################################################################
 
 """
-plot_lift_moment_distributions <: PostAction
+post_plot_lift_moment_distribution <: PostAction
 
 * `aircraft::Aircraft` : aircraft system struct
 * `parameters <: Parameters` : inherits from the `Parameters` type; object containing data required by `<: Action` functions
@@ -43,7 +43,7 @@ Outputs:
 # * `cy_ylim::Vector{Float64}` : y axis limits for ploting c_y
 
 """
-function plot_lift_moment_distributions(aircraft, parameters, steprange, stepsymbol)
+function post_plot_lift_moment_distribution(aircraft, parameters, steprange, stepsymbol)
     # extract info
     cfs = parameters.cfs
     cms = parameters.cms
@@ -75,13 +75,13 @@ end
 # @assert ispath(plotdirectory) "plotdirectory does not exist"
 
 """
-plot_lift_moment_distributions(system, steprange)
+post_plot_lift_moment_distribution(system, steprange)
 
 Method returns initialized elements required for the `parameters <: Parameters` struct during simulation.
 
 Inputs:
 
-* `system::System` : system to be simulated
+* `aircraft::Aircraft` : system to be simulated
 * `steprange::AbstractArray` : defines each step of the simulation
 
 Outputs:
@@ -103,7 +103,7 @@ Outputs:
 # * `cd_ylim::Vector{Float64}` : y axis limits for ploting c_d
 # * `cy_ylim::Vector{Float64}` : y axis limits for ploting c_y
 """
-function plot_lift_moment_distributions(aircraft, steprange)
+function post_plot_lift_moment_distribution(aircraft, steprange)
     # extract info
     nsteps = length(steprange)
     nwings = length(aircraft.wingsystem.system.surfaces)
