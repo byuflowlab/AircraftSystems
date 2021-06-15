@@ -1,5 +1,6 @@
 import AircraftSystems
 AS = AircraftSystems
+import FileIO
 FM = AS.FM
 using LaTeXStrings
 plt = AS.plt
@@ -26,8 +27,9 @@ Js = ones(1,nJs) .* range(0.01, stop=3.0, length=nJs)'
 # airfoilnames = fill(airfoilname, length(radii))
 # polardirectory = joinpath(AS.topdirectory, "data", "airfoil", "polars", "20210524")
 
+# Eppler propeller
 omegas = ones(1,length(Js)) .* 2000
-nblades = [4]
+nblades = [6]
 radii = [[0.148, 0.254237, 0.381356, 0.508475, 0.635593, 0.762712, 0.889831, 1.0] .* 236e-3/2]
 rhub = [radii[1][1]]
 rtip = [radii[1][end]]
@@ -49,10 +51,46 @@ rotor_X = [[-201.8e-3, 300e-3, 0.0]]
 rotor_orientation = [[-1.0, 0.0, 0.0]]
 spindirections = [true]
 
+# PROWIM propeller
+
+# kevins_path = joinpath(AS.topdirectory, "data", "airfoil")
+# # epema_data = FileIO.load(joinpath(kevins_path, "epema_data_from_kevin.jld2"))
+# # af = epema_data[:"af"][1] # just one radial section will suffice as they are identical
+
+# epema_data = FileIO.load(joinpath(kevins_path, "E212_from_kevin.jld2"))
+# af = epema_data[:"NDtable"]
+# af_cl = af[1]
+# af_cd = af[2]
+# af_cm = af[3]
+# # prepare memory
+# cfarray = Array{Float64,3}[](undef,4)
+# # extract alpha, Re, M numbers
+# alpha = af[1].var_input[1]
+# Re = af[1].var_input[2]
+# Mach = af[1].var_input[3]
+# # extract raw coefficients
+# for (i,coefficient) in enumerate(af)
+#     c = coefficient
+#     cfarray[i] = c.spl_response.coefs[2:end-1,:,:] # or [2:end-1, 2:end-1, 2:end-1]
+# end
+# cl = cfarray[1]
+# cd = cfarray[2]
+# info = "eppler212 data extracted from moore2019multipropopt"
+# # build ccblade object
+# eppler212_airfoil = AS.CC.AlphaReMachAF(alpha, Re, Mach, cl, cd, info)
+# # name files
+# airfoilname = "eppler212_kevin"
+# filenames = AS.airfoilfilenames(airfoilname, Re, Mach; viternaextrapolation=false, rotationcorrection=false, aoaset=false, extension = ".txt")
+# # create files
+# AS.CC.write_af(filenames, eppler212_airfoil; radians=false)
+
 polardirectory = joinpath(AS.topdirectory, "data", "airfoil", "polars", AS.TODAY)
 plotstepi = 1:length(Js)
 
-simulationdata = AS.rotor_sweep_template(Js, omegas, nblades[1], rhub[1], rtip[1], radii[1], chords[1], twists[1], airfoilcontours[1], airfoilnames[1], Res_list = [fill([5e4, 1e5, 1e6, 1e7, 1e8], length(radii[1]))]; polardirectory = polardirectory)
+Res_list = [fill([5e4, 1e5, 1e6, 1e7, 1e8], length(radii[1]))]
+Ms_list = [fill([0.0, 0.1], length(radii[1]))]
+
+simulationdata = AS.rotor_sweep_template(Js, omegas, nblades[1], rhub[1], rtip[1], radii[1], chords[1], twists[1], airfoilcontours[1], airfoilnames[1], Res_list, Ms_list; polardirectory = polardirectory)
 objective = AS.runsimulation!(simulationdata...)
 
 # @test isapprox(objective, 0.0)

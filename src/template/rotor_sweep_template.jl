@@ -58,7 +58,8 @@ Inputs:
 * `airfoilnames::Vector{Vector{String}}` : ith element is a vector of strings defining the airfoils at each radial section of the ith rotor
 
 """
-function rotor_sweep_template(Js, omegas, nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, length(radii))];
+function rotor_sweep_template(Js, omegas, nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames;
+        Res_list = [fill([5e4, 1e5, 1e6], length(radii))],
         rotornames = ["rotor 1"],
         plotdirectory = joinpath(topdirectory, "data","plots",TODAY),
         plotbasename = "default",
@@ -68,7 +69,73 @@ function rotor_sweep_template(Js, omegas, nblades, rhub, rtip, radii, chords, tw
     )
     # prepare subsystems
     wings = nothing
-    rotors = CCBladeSystem([nblades], [rhub], [rtip], [radii], [chords], [twists], [airfoilcontours], [airfoilnames], [1], [[0.0,0.0,0.0]], [[-1.0,0.0,0.0]], [false]; kwargs...)
+    rotors = CCBladeSystem([nblades], [rhub], [rtip], [radii], [chords], [twists], [airfoilcontours], [airfoilnames], [1], [[0.0,0.0,0.0]], [[-1.0,0.0,0.0]], [false], Res_list; kwargs...)
+    nonliftingbodies = nothing
+    structures = nothing
+    motors = nothing
+    batteries = nothing
+
+    # build system struct
+    aircraft = Aircraft(wings, rotors, nonliftingbodies, structures, motors, batteries)
+
+    # compile actions
+    actions = [solve_rotor_nondimensional]
+
+    # initialize parameters
+    steprange = 1:length(Js) # use time to define each part of the sweep
+    # omegas_zero, Js_zero, CTs, CQs, ηs = solve_rotor(aircraft, steprange)
+    omegas_zero, Js_zero, Ts, Qs, CTs, CQs, ηs, us, vs = solve_rotor_nondimensional(aircraft, steprange)
+    # check data
+    @assert typeof(Js) <: AbstractArray{<:Any,2} "Js must be a 2-dimensional array; got $(typeof(Js))"
+    @assert length(omegas_zero) == length(omegas) "`omegas` has improper dimensions. \n\tExpected: $(size(omegas_zero))\n\tGot: $(size(omegas))"
+    @assert length(Js_zero) == length(Js) "`Js` has improper dimensions. \n\tExpected: $(size(Js_zero))\n\tGot: $(size(Js))"
+    # @warn isdir(plotdirectory) "plotdirectory does not exist at $plotdirectory\n\ttry: `mkdir $plotdirectory`"
+    if !isdir(plotdirectory); mkpath(plotdirectory); @warn "plot directory $plotdirectory does not exist; creating..."; end
+    # build parameters
+    parameters = RotorSweepParameters(omegas, Js, Ts, Qs, CTs, CQs, ηs, us, vs, rotornames, plotdirectory, plotbasename, plotextension)
+
+    function freestream_function(aircraft, parameters, environment, steprange, stepi)
+        J = get_J(parameters, 1, stepi)
+        omega = parameters.omegas[1] # get omega for the first rotor
+        n = omega / 2 / pi
+        D = aircraft.rotorsystem.rotors[1].Rtip * 2
+        # calculate freestream
+        Vinf = J * n * D
+        alpha = 0.0
+        beta = 0.0
+        Omega = zeros(3)
+        freestream = Freestream(Vinf, alpha, beta, Omega)
+        return freestream
+    end
+
+    # build environment_function
+    function environment_function(aircraft, parameters, steprange, stepi)
+        Environment()
+    end
+
+    # assemble postactions
+    postactions = [post_plot_rotor_sweep]
+
+    # build objective_function
+    objective_function(aircraft, parameters, freestream, environment, steprange) = 0.0
+
+    return aircraft, parameters, actions, freestream_function, environment_function, postactions, objective_function, steprange, stepsymbol
+end
+
+"""
+Multiple dispatch for use with multiple Mach numbers
+"""
+function rotor_sweep_template(Js, omegas, nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, Res_list, Ms_list;
+    rotornames = ["rotor 1"],
+    plotdirectory = joinpath(topdirectory, "data","plots",TODAY),
+    plotbasename = "default",
+    plotextension = ".pdf",
+    stepsymbol = L"J",
+    kwargs...
+)
+    # prepare subsystems
+    wings = nothing
+    rotors = CCBladeSystem([nblades], [rhub], [rtip], [radii], [chords], [twists], [airfoilcontours], [airfoilnames], [1], [[0.0,0.0,0.0]], [[-1.0,0.0,0.0]], [false], Res_list, Ms_list; kwargs...)
     nonliftingbodies = nothing
     structures = nothing
     motors = nothing
