@@ -36,7 +36,7 @@ function runsimulation!(aircraft, parameters, actions, freestream_function, envi
     end
     # step
     for (stepi, step) in enumerate(steprange)
-        if verbose; println("\tstep: $stepi\t$stepsymbol=$step"); end
+        if verbose; println("\tstep: $stepi\t\t$stepsymbol=$step"); end
         environment = environment_function(aircraft, parameters, steprange, stepi)
         freestream = freestream_function(aircraft, parameters, environment, steprange, stepi)
         for action! in actions

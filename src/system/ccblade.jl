@@ -94,6 +94,7 @@ function CCBladeSystem(nblades_list, rhub_list, rtip_list, radii_list, chords_li
     @assert length(nblades_list) == length(rtip_list) "list of nblades and list of tip radii must be the same length"
     rotors = Vector{CC.Rotor}(undef,length(nblades_list))
     for i in 1:length(rotors)
+        println("Sherlock! \n\trhub_list = $rhub_list\n\trtip_list = $rtip_list\n\tnblades_list = $nblades_list")
         rotors[i] = CC.Rotor(rhub_list[i], rtip_list[i], nblades_list[i]; precone=0.0, turbine=false, mach=CC.PrandtlGlauert(), re=nothing, rotation=nothing, tip=CC.PrandtlTipHub()) #mach=CC.PrandtlGlauert()
     end
     # build CCBlade.Section lists
@@ -719,7 +720,7 @@ Inputs:
 * viternaextrapolation = false : toggle viterna extrapolation
 * rotationcorrection = false : toggle rotation correction
 * savefigure = false : save the figure
-* savepath = joinpath(topdirectory, "data", "airfoil", "plots", TODAY) : directory to save the figure
+* savepath = joinpath(topdirectory, "data", "airfoil", "polars", TODAY) : directory to save the figure
 * extension = ".pdf" : figure extension
 * tag = "" : string to append to the series legend
 * clearfigure = true : clear the figure before ploting (set false if you want to compare series)
@@ -728,11 +729,12 @@ Inputs:
 function plotairfoil(α, cl, cd, filename, airfoilname, Re, M;
         radians = false,
         viternaextrapolation = false, rotationcorrection = false,
-        savefigure = false, savepath = joinpath(topdirectory, "data", "airfoil", "plots", TODAY),
+        savefigure = true, savepath = joinpath(topdirectory, "data", "airfoil", "polars", TODAY),
         extension = ".pdf", tag = "", clearfigure = true, closefigure = false
     )
     # set up units
-    aoaunits = radians ? "" : L" [^\circ]"
+    aoaunits = L" [^\circ]"
+    conversionfactor = radians ? 180.0 / pi : 1
     # set up figure
     fig = plt.figure(filename)
     if clearfigure
@@ -753,8 +755,8 @@ function plotairfoil(α, cl, cd, filename, airfoilname, Re, M;
     rotationcorrection ? labeltag *= " w/ rot. corr." : labeltag *= " w/o rot. corr."
     labeltag *= tag
     # plot data
-    axes[1].plot(α, cl, label = labeltag)
-    axes[2].plot(α, cd, label = labeltag)
+    axes[1].plot(α .* conversionfactor, cl, label = labeltag)
+    axes[2].plot(α .* conversionfactor, cd, label = labeltag)
     # show figure
     axes[1].legend(loc="upper left", bbox_to_anchor=(1.03,0.9), prop=Dict("size" => 9))
     fig.subplots_adjust(left=0.1, right=0.7, top=0.9, bottom=0.1)
