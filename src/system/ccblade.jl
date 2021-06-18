@@ -210,14 +210,14 @@ Inputs:
 * `airfoilnames::Vector{String}`:
 """
 function rotor2sections(rtip, radii, chords, twists, Res, airfoilcontours, airfoilnames; kwargs...)
-    cr75 = FM.linear(radii ./ rtip, chords, 0.75) / rtip
+    cr75 = FM.linear(radii ./ rtip, chords, 0.75) / FM.linear(radii ./ rtip, radii, 0.75)
     polars = rotor2polars(radii, chords, cr75, Res, airfoilcontours, airfoilnames; kwargs...)
     sections = CC.Section.(radii, chords, twists, polars)
     return sections
 end
 
 function rotor2sections(rtip, radii, chords, twists, Res, Ms, airfoilcontours, airfoilnames; kwargs...)
-    cr75 = FM.linear(radii ./ rtip, chords, 0.75) / rtip
+    cr75 = FM.linear(radii ./ rtip, chords, 0.75) / FM.linear(radii ./ rtip, radii, 0.75)
     polars = rotor2polars(radii, chords, cr75, Res, Ms, airfoilcontours, airfoilnames; kwargs...)
     sections = CC.Section.(radii, chords, twists, polars)
     return sections
@@ -229,7 +229,7 @@ Inputs:
 
 """
 function rotor2sections(rtip, radii, chords, twists, airfoilfunctions; kwargs...)
-    cr75 = FM.linear(radii ./ rtip, chords, 0.75) / rtip
+    cr75 = FM.linear(radii ./ rtip, chords, 0.75) / FM.linear(radii ./ rtip, radii, 0.75)
     sections = CC.Section.(radii, chords, twists, airfoilfunctions)
     return sections
 end
@@ -545,7 +545,7 @@ Inputs:
 
 * `Res::Vector{Int}` : vector of Reynold's numbers at which to find files
 * `airfoilname::String` : name of the airfoil
-* `cr75` : 75% r/R chord over tip radius
+* `cr75` : 75% r/R chord over local radius
 
 Optional inputs:
 
@@ -799,17 +799,17 @@ function plotairfoil(α, cl, cd, filename, airfoilname, Re, M;
     conversionfactor = radians ? 180.0 / pi : 1
     # set up figure
     fig = plt.figure(filename)
-    if clearfigure
+    if !clearfigure && length(fig.get_axes()) == 2
+        axes = fig.get_axes()
+    else
         fig.clear()
         fig.suptitle(airfoilname * ": Re = $Re, M = $M")
-        axes = []
-        push!(axes, fig.add_subplot(211))
+        fig.add_subplot(211)
+        fig.add_subplot(212)
+        axes = fig.get_axes()
         axes[1].set_ylabel(L"c_l")
-        push!(axes, fig.add_subplot(212))
         axes[2].set_ylabel(L"c_d")
         axes[2].set_xlabel(L"\alpha" * aoaunits)
-    else
-        axes = fig.get_axes()
     end
     # set labels
     labeltag = ""
