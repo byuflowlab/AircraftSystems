@@ -53,11 +53,13 @@ function post_plot_rotor_sweep(aircraft, parameters, steprange, stepsymbol)
     # plot
     for (i,ax) in enumerate(axs)
         for jrotor in 1:nrotors
+            cratio = jrotor / nrotors
             Js = parameters.Js[jrotor,:]
-            ax.plot(Js, data[i][jrotor,:], label = rotornames[jrotor])
+            ax.plot(Js, data[i][jrotor,:], color = (0.05, 0.85-cratio*0.7, 0.15 + 0.75 * cratio), label = rotornames[jrotor])
         end
     end
-    axs[end].legend()
+    axs[end].legend(loc="upper left", bbox_to_anchor=(1.01,1))
+    fig.set_size_inches(12, 8, forward=true)
     # save
     savepath = joinpath(plotdirectory, plotbasename * "_rotorsweep" * plotextension)
     fig.savefig(savepath)

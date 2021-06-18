@@ -4,6 +4,7 @@ import FileIO
 FM = AS.FM
 using LaTeXStrings
 plt = AS.plt
+plt.pygui(false)
 VL = AS.VL
 using Test
 
@@ -12,8 +13,8 @@ using Test
 # @testset "rotors" begin
 
 # # test rotor_sweep_template
-nJs = 17
-Js = ones(1,nJs) .* range(0.01, stop=2.0, length=nJs)'
+nJs = 27
+Js = ones(3,nJs) .* range(0.01, stop=2.0, length=nJs)'
 # omegas = fill(50.0, length(Js))
 # nblades = 3
 # radii = [0.148, 0.254237, 0.381356, 0.508475, 0.635593, 0.762712, 0.889831, 1.0] .* 236e-3/2
@@ -38,11 +39,11 @@ Js = ones(1,nJs) .* range(0.01, stop=2.0, length=nJs)'
 # twists = [[35.0, 32.5, 26.5, 23.5, 19, 16.5, 14.0, 10.0]] * pi/180 # provide in degrees to match airfoil files
 
 # Epema propeller
-omegas = ones(1,length(Js)) .* 5000 * 2 * pi / 60 # rad/s
-nblades = [6]
-rtip = [0.406 / 2]
-radii = [[0.207, 0.3, 0.4, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0] .* rtip[1]]
-rhub = [radii[1][1]]
+omegas = ones(3,nJs) .* 5000 * 2 * pi / 60 # rad/s
+nblades = [6, 6, 6]
+rtip = ones(3) * 0.406 / 2
+radii = fill([0.207, 0.3, 0.4, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0] .* rtip[1], 3)
+rhub = fill(radii[1][1], 3)
 
 chords_raw = [
     0.20689655 0.15571575695159628
@@ -124,7 +125,7 @@ chords_raw = [
     0.998607242339833 0.06920700308959835;
     1.0 0.06817713697219355
 ] .* rtip[1]
-chords = [AS.FM.linear(chords_raw[:,1], chords_raw[:,2], radii[1])]
+chords = fill(AS.FM.linear(chords_raw[:,1], chords_raw[:,2], radii[1]), 3)
 
 twists_raw = [
     0.20689655          52.651941261622 # tacked on to reach hub radius
@@ -172,19 +173,23 @@ twists_raw = [
     0.9790550674951789  22.302424660818083;
     1.0000000000000000  21.9829106386545
 ]
-twists = [AS.FM.linear(twists_raw[:,1], twists_raw[:,2], radii[1]) .* pi/180] # radians
-# set collective to 30 deg. at 70\% radius
-twists_07 = AS.FM.linear(radii[1], twists[1], 0.7 * rtip[1])
-twists[1] .+= 30.0 * pi/180 - twists_07
+twist = AS.FM.linear(twists_raw[:,1] .* rtip[1], twists_raw[:,2], radii[1]) .* pi/180 # radians
+# set collective to 25 deg. at 70\% radius
+twists_07_desired = [25.0, 30.0, 35.0] .* pi/180
+twists_07 = AS.FM.linear(radii[1], twist, 0.7 * rtip[1])
+twists = Vector{Vector{typeof(twist[1])}}(undef, 3)
+for (i, twistval) in enumerate(twists_07_desired)
+    twists[i] = twist .+ twistval .- twists_07
+end
 
 airfoilcontour = joinpath(AS.topdirectory, "data", "airfoil", "contours", "e212-il.dat")
-airfoilcontours = [fill(airfoilcontour, length(radii[1]))]
+airfoilcontours = fill(fill(airfoilcontour, length(radii[1])), 3)
 airfoilname = "eppler212_kevin"
-airfoilnames = [fill(airfoilname, length(radii[1]))]
-index = [1]
-positions = [[0.0, 0.35 * 2.58 / 2, 0.0]]
-orientations = [[-1.0, 0.0, 0.0]]
-spindirections = [true]
+airfoilnames = fill(fill(airfoilname, length(radii[1])), 3)
+index = [1,2,3]
+positions = [[0.0, 0.35 * 2.58 / 2, -10.0], [0.0, 0.35 * 2.58 / 2, 10.0], [0.0, 0.35 * 2.58 / 2, 0.0]]
+orientations = fill([-1.0, 0.0, 0.0],3)
+spindirections = fill(true,3)
 
 function write_kevins_polars()
     kevins_path = joinpath(AS.topdirectory, "data", "airfoil")
@@ -224,7 +229,7 @@ function write_kevins_polars()
         end
     end
 
-    return alphas, Res, Ms, filepaths
+    return alphas, Res, Ms, filenames, filepaths
 end
 
 function write_kevins_polars_extrapolated()
@@ -262,22 +267,34 @@ function write_kevins_polars_extrapolated()
         end
     end
 
-    return alphas, Res, Ms, filepaths
+    # create airfoil object
+    airfoilobject = AS.CC.AlphaReMachAF(filepaths; radians = false)
+
+    return alphas, Res, Ms, filenames, filepaths, airfoilobject
 end
 
-# alphas, Res, Machs, filepaths = write_kevins_polars()
-# alphas, Res, Machs, filepaths = write_kevins_polars_extrapolated()
+# alphas, Res, Machs, filenames, filepaths = write_kevins_polars() # use to obtain Kevin's unextrapolated data
+# alphas, Res, Machs, filenames, filepaths, airfoilobject = write_kevins_polars_extrapolated() # use to obtain Kevin's extrapolated data
+# airfoilfunctions = [fill(airfoilobject, length(radii[1]))]
 
 polardirectory = joinpath(AS.topdirectory, "data", "airfoil", "polars", AS.TODAY)
 plotstepi = 1:length(Js)
 
-Res_list = [fill(Res, length(radii[1]))]
-Ms_list = [fill(Machs, length(radii[1]))]
+Res_list = fill(fill(Res, length(radii[1])), 3)
+Ms_list = fill(fill(Machs, length(radii[1])), 3)
 
-simulationdata = AS.rotor_sweep_template(Js, omegas, nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, index, positions, orientations, spindirections, Res_list, Ms_list; polardirectory = polardirectory, closefigure=false)
+
+# try with Kevin's extrapolated data directly:
+# simulationdata = AS.rotor_sweep_template(Js, omegas, nblades, rhub, rtip, radii, chords, twists, airfoilfunctions, index, positions, orientations, spindirections; polardirectory = polardirectory, closefigure=true)
+# try by extrapolating Kevin's data myself:
+simulationdata = AS.rotor_sweep_template(Js, omegas, nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, index, positions, orientations, spindirections, Res_list, Ms_list;
+    polardirectory = polardirectory,
+    closefigure=true,
+    rotornames = [L"\theta_{r/R=0.7} = 25^\circ", L"\theta_{r/R=0.7} = 30^\circ", L"\theta_{r/R=0.7} = 35^\circ"])
 objective = AS.runsimulation!(simulationdata...)
 
-epema_data = [
+epema_data = Vector{Array{Float64,2}}(undef,3)
+epema_data[1] = [
     0.39907904834996144 0.4526289577244005;
     0.4973138910207212 0.5378398458549013;
     0.600153491941673 0.6145449943665193;
@@ -289,10 +306,39 @@ epema_data = [
     1.2033768227168071 0.27476118939925875;
 ]
 
+epema_data[2] = [
+    0.5981966719565649 0.5397182236147184;
+    0.696552040863189 0.6025364977471156;
+    0.7979670461445826 0.6600372504094993;
+    0.8993738869526614 0.7132826795801419;
+    1.0007643988141104 0.7580174617673022;
+    1.097527695424323 0.79104765501018;
+    1.1988753438008684 0.8134419888656995;
+]
+
+epema_data[3] = [
+    0.6979053023151386 0.5078563665032071;
+    0.7993468421348057 0.5791869205137494;
+    0.8976899643314572 0.6356222094085349;
+    1.0006337672410712 0.6899322858994442;
+    1.0974235983895575 0.7367922804904807;
+    1.1987855345944043 0.7666334304565471;
+    1.2986003031060718 0.7900907787376703;
+    1.3999622393109181 0.8199319287037368;
+    1.499756596639299 0.8327509682555072;
+    1.601034846992667 0.8189750524312269;
+    1.6990922126232961 0.7264740191150731;
+    1.8012256915564038 0.35844323905067577
+]
+
+
 fig = plt.figure("rotorsweep")
 axs = fig.get_axes()
-axs[3].scatter(epema_data[:,1], epema_data[:,2], label="Epema")
-axs[3].legend()
+for (i,data) in enumerate(epema_data)
+    cratio = i / length(epema_data)
+    axs[3].scatter(data[:,1], data[:,2], color = (0.05, 0.85-cratio*0.7, 0.15 + 0.75 * cratio), label="Epema")
+end
+axs[3].legend(loc="upper left", bbox_to_anchor=(1.05,1))
 savedirectory = joinpath(AS.topdirectory, "data", "plots", AS.TODAY)
 if !isdir(savedirectory); mkpath(savedirectory); end
 fig.savefig(joinpath(savedirectory, "epema_rotor_sweep.pdf"))
