@@ -25,3 +25,5 @@ Manifest.toml
 
 # Temporary data
 data/
+
+.DS_Store

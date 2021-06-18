@@ -6,6 +6,7 @@ using LaTeXStrings
 plt = AS.plt
 VL = AS.VL
 using Test
+using PyPlot
 
 # topdirectory = normpath(joinpath(@__DIR__,".."))
 
@@ -322,112 +323,16 @@ ax.quiver3D(xs, ys, zs, us, vs, ws, length=0.1)#, normalize=true)
 
 @testset "Epema Blown Wing Validation" begin
 
-    function run_epema_validation(alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, 
-                        rotor_omegas, nblades, rhub, rtip, radii, chords, twists, 
-                        airfoilcontours, airfoilnames, index, rotor_X, rotor_orientation, 
-                        spindirections, Vinf; 
-                        Res_list = [fill([5e4, 1e5, 1e6], length(radii))],
-                        surfacenames = ["default wing"],
-                        rotornames = ["rotor 1"],
-                        plotdirectory = joinpath(topdirectory,"data","plots",TODAY),
-                        plotbasename = "default",
-                        plotextension = ".pdf",
-                        stepsymbol = L"\alpha ",
-                        kwargs...
-                        );
-
-        # prepare subsystems
-        wings = simplewingsystem(wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip; kwargs...)
-        rotors = CCBladeSystem(nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, index, rotor_X, rotor_orientation, spindirections, Res_list = Res_list; kwargs...)
-        nonliftingbodies = nothing
-        structures = nothing
-        motors = nothing
-        batteries = nothing
-        # build system struct
-        aircraft = Aircraft(wings, rotors, nonliftingbodies, structures, motors, batteries)
-        # compile actions
-        actions = [solve_vlm_bem]
-        # initialize parameters
-        steprange = alphas
-        params_solve_vlm_bem = solve_vlm_bem(aircraft, steprange)
-        params_solve_vlm_bem[1] .*= omegas
-        #= Contains:
-            * `rotor_omegas::Vector{Float64}` : a vector of length `length(steprange)` containing a vector of rotational velocities for each rotor
-            * `Js::Vector{Vector{Float64}}` : a vector of length `length(steprange)` containing a vector of advance ratios for each rotor
-            * `Ts::Vector{Vector{Float64}}` : a vector of length `length(steprange)` containing a vector of dimensional thrust values for each rotor
-            * `Qs::Vector{Vector{Float64}}` : a vector of length `length(steprange)` containing a vector of dimensional torque values for each rotor
-            * `us::Vector{Vector{Float64}}` : each [i][j,k]th element is the axial induced velocity at the jth radial station of the ith rotor at the kth step
-            * `vs::Vector{Vector{Float64}}` : each [i][j,k]th element is the swirl induced velocity at the jth radial station of the ith rotor at the kth step
-            * `wakefunction::Function` : function accepts position X and returns the rotor induced velocity
-            * `CLs::Vector{Vector{Float64}}` : a vector of length `length(steprange)` containing lift coefficients at each step
-            * `CDs::Vector{Vector{Float64}}` : a vector of length `length(steprange)` containing drag coefficients at each step
-            * `CYs::Vector{Vector{Float64}}` : a vector of length `length(steprange)` containing side force coefficients at each step
-            * `cls::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local lift coefficients at each lifting line section, corresponding to each lifting surface
-            * `cds::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local drag coefficients at each lifting line section, corresponding to each lifting surface
-            * `cys::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local side force coefficients at each lifting line section, corresponding to each lifting surface
-            * `cmxs::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local x-axis (roll) moment coefficients at each lifting line section, corresponding to each lifting surface
-            * `cmys::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local y-axis (pitch) moment coefficients at each lifting line section, corresponding to each lifting surface
-            * `cmzs::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local z-axis (yaw) moment force coefficients at each lifting line section, corresponding to each lifting surface
-        =#
-        params_plot_cl_alpha_sweep = plot_cl_alpha_sweep(aircraft, steprange)
-        #= Contains:
-            * `CLs::Vector{Float64}` : CL corresponding to the ith step
-            * `CDs::Vector{Float64}` : CD corresponding to the ith step
-            * `CYs::Vector{Float64}` : CY corresponding to the ith step
-            * `plotdirectory::String` : directory where plots are saved
-            * `plotbasename::String` : first portion of the saved figure file name
-            * `plotextension::String` : extension of saved figure files
-        =#
-        params_plot_lift_moment_distributions = plot_lift_moment_distributions(aircraft, steprange)
-        #= Contains:
-            * `cls::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local lift coefficients at each lifting line section, corresponding to each lifting surface
-            * `cds::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local drag coefficients at each lifting line section, corresponding to each lifting surface
-            * `cys::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local side force coefficients at each lifting line section, corresponding to each lifting surface
-            * `cmxs::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local x-axis (roll) moment coefficients at each lifting line section, corresponding to each lifting surface
-            * `cmys::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local y-axis (pitch) moment coefficients at each lifting line section, corresponding to each lifting surface
-            * `cmzs::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local z-axis (yaw) moment force coefficients at each lifting line section, corresponding to each lifting surface
-            * `cfs::Vector{Array{Float64,2}}` : vector with length equal to the number of lifting surfaces, each member containing an array of size (3,nspanwisepanels) of force coefficients cd, cy, cl
-            * `cms::Vector{Array{Float64,2}}` : vector with length equal to the number of lifting surfaces, each member containing an array of size (3,nspanwisepanels) of moment coefficients cmx, cmy,
-            * `surfacenames::Vector{String}` : names of each lifting surface to be shown in the legend
-            * `plotdirectory::String` : path to the folder where plots will be saved
-            * `plotbasename::String` : first part of saved figure file names
-            * `plotextension::String` : extension of saved figure file names
-            * `plotstepi::Vector{Int}` : which steps at which to plot
-        =#
-        # prepare plot directory
-        if !isdir(plotdirectory); mkpath(plotdirectory); end
-        println("==== MSG ====\n\tplotdirectory = $plotdirectory")
-        # build parameters struct
-        parameters = VLM_BEM(params_solve_vlm_bem..., params_plot_lift_moment_distributions[7:9]..., plotdirectory, params_plot_lift_moment_distributions[11:12]..., plotstepi)
-        # build freestream_function
-        function freestream_function(aircraft, parameters, environment, alphas, stepi)
-            # calculate freestream
-            vinf = Vinf # + ti # arbitrary for lift distribution?
-            alpha = alphas[stepi]
-            beta = 0.0
-            Omega = zeros(3)
-            freestream = Freestream(vinf, alpha, beta, Omega)
-            return freestream
-        end
-        # build environment_function
-        function environment_function(aircraft, parameters, alphas, stepi)
-            Environment() # arbitrary
-        end
-        # compile postactions
-        postactions = [plot_cl_alpha_sweep, plot_lift_moment_distributions]
-        # build objective_function
-        objective_function(aircraft, parameters, freestream, environment, alphas) = 0.0
-
-        return aircraft, parameters, actions, freestream_function, environment_function, postactions, objective_function, alphas, stepsymbol
-    end
-
-    include(joinpath(AS.topdirectory, test, "EpemaData.jl"))
+    include(joinpath(AS.topdirectory, "test", "EpemaData.jl"))
 
     wing = EpemaData.wing
     rotor = EpemaData.rotor
     setup = EpemaData.setup
     results = EpemaData.results
 
+    Vinf = setup[:"Vinf"]
+    vinfs = [Vinf]
+    plotstepi = [1]
     alphas = [setup[:"wing_aoa"]]
     wing_b = wing[:"span"]
     wing_TR = wing["chord_tip"] / wing[:"chord_root"]
@@ -435,32 +340,45 @@ ax.quiver3D(xs, ys, zs, us, vs, ws, length=0.1)#, normalize=true)
     wing_θroot = 0.0
     wing_θtip = 0.0
     rotor_omegas = [AS.get_omega(Vinf=setup[:"Vinf"], J=setup[:"J"], D=rotor[:"diameter"])]
-    nblades = rotor[:"Nblades"]
-    rhub = rotor[:"radius_hub"] / 2
-    rtip = rotor[:"radius"]
+    nblades = [rotor[:"Nblades"]]
+    rhub = [rotor[:"radius_hub"] / 2]
+    rtip = [rotor[:"radius"]]
     chord_data = rotor["r/R vs chord/R"]
     twist_data = rotor["r/R vs twist"]
 
-    radii = [chord_data[:,1] * rtip]
-    chords = [chord_data[:,2] * rtip]
-    twists = [FM.Akima(twist_data[:,1]*rtip, twist_data[:,2], radii)]
-    airfoilcontour = joinpath(AS.topdirectory, "data", "airfoil", "contours", "naca4412.dat")
-    airfoilcontours = fill(airfoilcontour, length(radii[1]))
+    radii = [chord_data[:,1] * rtip[1]]
+    chords = [chord_data[:,2] * rtip[1]]
+    twists = [FM.linear(twist_data[:,1]*rtip[1], twist_data[:,2], radii[1])]
+    airfoilcontour = joinpath(AS.topdirectory, "data", "airfoil", "contours", "e212-il.csv")
+    airfoilcontours = [fill(airfoilcontour, length(radii[1]))]
     airfoilname = "eppler212"
     airfoilnames = [fill(airfoilname, length(radii[1]))]
     index = [1]
-    rotor_positions = [0.0; rotor[:"y"]; 0.0]
-    rotor_orientations = [-1.0; 0.0; 0.0] # positive x downstream
+    rotor_positions = [[0.0; rotor[:"y"]; 0.0]]
+    rotor_orientations = [[-1.0; 0.0; 0.0]] # positive x downstream
     spindirections = [true]
-    Vinf = setup[:"Vinf"]
 
-    args = run_epema_validation(alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip,
+    args = AS.vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip,
                             rotor_omegas, nblades, rhub, rtip, radii, chords, twists,
-                            airfoilcontours, airfoilnames, index, rotor_positions, rotor_orientation,
-                            spindirections, Vinf, 
-                            Res_list = [fill([EpemaData.setup[:"Re"]], length(radii))])
+                            airfoilcontours, airfoilnames, index, rotor_positions, rotor_orientations,
+                            spindirections,
+                            Res_list = [fill([EpemaData.setup[:"Re"]], length(radii))],
+                            surfacenames = ["epema wing"])
 
+    outs = AS.runsimulation!(args...)
 
-    outs = AS.runsimulation!(args)
+    aircraft = args[1]
+    parameters = args[2]
+
+    #! The values from Epema are normalized, I haven't normalized our results yet.
+    figure()
+    plot(aircraft.wingsystem.lifting_line_rs[1][2,2:end], parameters.cfs[1][3,:], label="BEM+VLM (not normalized yet)")
+    plot(EpemaData.results[:"lift distribution VLM"][:,1]*EpemaData.wing[:"span"]/2, EpemaData.results[:"lift distribution VLM"][:,2], label="Epema VLM model")
+    scatter(EpemaData.results[:"normalized cl experimental"][:,1]*EpemaData.wing[:"span"]/2, EpemaData.results[:"normalized cl experimental"][:,2], label="Epema experimental")
+    xlabel(L"y")
+    ylabel(L"c_l")
+    legend()
+
+        # no tests for now - eventually would like to add some tests on cl values, as well as add results to the plot
 
 end

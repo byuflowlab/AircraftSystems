@@ -40,6 +40,8 @@ function lift_moment_distribution(aircraft, parameters, freestream, environment,
     # store to `parameters`
     nwings = length(aircraft.wingsystem.system.surfaces)
     for iwing in 1:nwings
+        parameters.cfs[iwing] = cfs[iwing]
+        parameters.cms[iwing] = cms[iwing]
         parameters.cls[iwing][:,stepi] = cfs[iwing][3,:]
         parameters.cds[iwing][:,stepi] = cfs[iwing][1,:]
         parameters.cys[iwing][:,stepi] = cfs[iwing][2,:]
