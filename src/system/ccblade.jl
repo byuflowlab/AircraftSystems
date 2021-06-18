@@ -94,6 +94,7 @@ function CCBladeSystem(nblades_list, rhub_list, rtip_list, radii_list, chords_li
     @assert length(nblades_list) == length(rtip_list) "list of nblades and list of tip radii must be the same length"
     rotors = Vector{CC.Rotor}(undef,length(nblades_list))
     for i in 1:length(rotors)
+        println("Sherlock! \n\trhub_list = $rhub_list\n\trtip_list = $rtip_list\n\tnblades_list = $nblades_list")
         rotors[i] = CC.Rotor(rhub_list[i], rtip_list[i], nblades_list[i]; precone=0.0, turbine=false, mach=CC.PrandtlGlauert(), re=nothing, rotation=nothing, tip=CC.PrandtlTipHub()) #mach=CC.PrandtlGlauert()
     end
     # build CCBlade.Section lists
@@ -119,7 +120,7 @@ end
 Multiple dispatch for multiple Mach numbers.
 """
 function CCBladeSystem(nblades_list, rhub_list, rtip_list, radii_list, chords_list, twists_list, airfoilcontours_list, airfoilnames_list, index, positions, orientations, spindirections, Res_list, Ms_list;
-    kwargs...
+    kwargs...#, closefigure = true
 )
     # check input sizes
     for (iorientation, orientation) in enumerate(orientations)
@@ -294,10 +295,7 @@ function rotor2polars(radii, chords, cr75, Res_list, Ms_list, contourfiles, airf
             filepaths_corrected = joinpath.(Ref(polardirectory), filenames_corrected)
             i_existingfiles_corrected = isfile.(filepaths_corrected)
             if prod(i_existingfiles_corrected)
-                println("Sherlock!\n\tfilepaths_corrected = $(filepaths_corrected)")
                 airfoilobjects[i_radius] = CC.AlphaReMachAF(filepaths_corrected; radians = radians)
-                # println("\n\tairfoilobjects[i_radius].Re = $(airfoilobjects[i_radius].Re)")
-                # println("\n\tairfoilobjects[i_radius].Mach = $(airfoilobjects[i_radius].Mach)")
                 continue
             end
         end
@@ -379,7 +377,7 @@ function airfoil2xfoil(Res, contourfile, airfoilname;
         M = 0, ν = 1.5e-5, Re_digits = -4,
         xfoil_iter = 300, xfoil_npan = 200, xfoil_clmaxstop = true, xfoil_clminstop = true,
         radians = false, useoldfiles = true, polardirectory = joinpath(topdirectory, "data", "airfoil", "polars", TODAY),
-        plotoutput = true, saveplots = true, plotextension = ".pdf",
+        plotoutput = true, saveplots = true, plotextension = ".pdf", closefigure = false,
         verbose = true, v_lvl = 0, kwargs...
     )
     # if verbose; println("\t"^v_lvl, "Preparing $contourfile:\n","\t"^v_lvl,"------------------------------------\n"); end
@@ -415,7 +413,7 @@ function airfoil2xfoil(Res, contourfile, airfoilname;
                 plotairfoil(thisobject, filenames_uncorrected[i_Re], airfoilname, Re, M;
                     viternaextrapolation = false, rotationcorrection = false,
                     savefigure = saveplots, savepath = polardirectory,
-                    extension = plotextension)
+                    extension = plotextension, closefigure = closefigure)
             end
         end
     end
@@ -432,7 +430,7 @@ function airfoil2xfoil(Res, Ms, contourfile, airfoilname;
         ν = 1.5e-5, Re_digits = -4,
         xfoil_iter = 300, xfoil_npan = 200, xfoil_clmaxstop = true, xfoil_clminstop = true,
         radians = false, useoldfiles = true, polardirectory = joinpath(topdirectory, "data", "airfoil", "polars", TODAY),
-        plotoutput = true, saveplots = true, plotextension = ".pdf",
+        plotoutput = true, saveplots = true, plotextension = ".pdf", closefigure = true,
         verbose = true, v_lvl = 0, kwargs...
     )
     # if verbose; println("\t"^v_lvl, "Preparing $contourfile:\n","\t"^v_lvl,"------------------------------------\n"); end
@@ -469,7 +467,7 @@ function airfoil2xfoil(Res, Ms, contourfile, airfoilname;
                     plotairfoil(thisobject, filenames_uncorrected[i_Re, i_M], airfoilname, Re, M;
                         viternaextrapolation = false, rotationcorrection = false,
                         savefigure = saveplots, savepath = polardirectory,
-                        extension = plotextension)
+                        extension = plotextension, closefigure = closefigure)
                 end
             end
         end
@@ -511,7 +509,7 @@ Outputs:
 function correctalignpolars(Res, airfoilname, cr75;
         M = 0, viternaextrapolation=true, rotationcorrection=true, rotationcorrection_J = 2.0,
         radians = false, savefiles = true, polardirectory = joinpath(topdirectory, "data", "airfoil", "polars", TODAY),
-        plotoutput = true, saveplots = true, plotextension = ".pdf", kwargs...
+        plotoutput = true, saveplots = true, plotextension = ".pdf", closefigure = false, kwargs...
     )
 
     # bookkeeping for filenames
@@ -541,7 +539,8 @@ function correctalignpolars(Res, airfoilname, cr75;
                 plotairfoil(α, cl, cd, filenames[i_Re], airfoilname, Re, M;
                     viternaextrapolation = true, rotationcorrection = false,
                     savefigure = saveplots, savepath = polardirectory,
-                    extension = plotextension, tag = "", clearfigure = true
+                    extension = plotextension, tag = "", clearfigure = true,
+                    closefigure = false
                 )
             end
         end
@@ -553,7 +552,8 @@ function correctalignpolars(Res, airfoilname, cr75;
                 plotairfoil(α, cl, cd, filenames[i_Re], airfoilname, Re, M;
                     viternaextrapolation = viternaextrapolation, rotationcorrection = true,
                     savefigure = saveplots, savepath = polardirectory,
-                    extension = plotextension, tag = "", clearfigure = false
+                    extension = plotextension, tag = "", clearfigure = false,
+                    closefigure = closefigure
                 )
             end
         end
@@ -589,7 +589,7 @@ Multiple dispatch for multiple Mach numbers.
 function correctalignpolars(Res, Ms, airfoilname, cr75;
     viternaextrapolation=true, rotationcorrection=true, rotationcorrection_J = 2.0,
     radians = false, savefiles = true, polardirectory = joinpath(topdirectory, "data", "airfoil", "polars", TODAY),
-    plotoutput = true, saveplots = true, plotextension = ".pdf", kwargs...
+    plotoutput = true, saveplots = true, plotextension = ".pdf", closefigure = true, kwargs...
 )
     # bookkeeping for filenames
     filenames_uncorrected = airfoilfilenames(airfoilname, Res, Ms; viternaextrapolation=false, rotationcorrection=false, aoaset=false)
@@ -619,7 +619,7 @@ function correctalignpolars(Res, Ms, airfoilname, cr75;
                     plotairfoil(α, cl, cd, filenames[i_Re, i_M], airfoilname, Re, M;
                         viternaextrapolation = true, rotationcorrection = false,
                         savefigure = saveplots, savepath = polardirectory,
-                        extension = plotextension, tag = "", clearfigure = true
+                        extension = plotextension, tag = "", clearfigure = true, closefigure = false
                     )
                 end
             end
@@ -628,10 +628,10 @@ function correctalignpolars(Res, Ms, airfoilname, cr75;
                     cl[i_α], cd[i_α] = CC.rotation_correction(CC.DuSeligEggers(), cl[i_α], cd[i_α], cr75, 0.75, pi/rotationcorrection_J, this_α)
                 end
                 if plotoutput
-                    plotairfoil(α, cl, cd, filenames[i_Re], airfoilname, Re, M;
+                    plotairfoil(α, cl, cd, filenames[i_Re, i_M], airfoilname, Re, M;
                         viternaextrapolation = viternaextrapolation, rotationcorrection = true,
                         savefigure = saveplots, savepath = polardirectory,
-                        extension = plotextension, tag = "", clearfigure = false
+                        extension = plotextension, tag = "", clearfigure = false, closefigure = closefigure
                     )
                 end
             end
@@ -720,7 +720,7 @@ Inputs:
 * viternaextrapolation = false : toggle viterna extrapolation
 * rotationcorrection = false : toggle rotation correction
 * savefigure = false : save the figure
-* savepath = joinpath(topdirectory, "data", "airfoil", "plots", TODAY) : directory to save the figure
+* savepath = joinpath(topdirectory, "data", "airfoil", "polars", TODAY) : directory to save the figure
 * extension = ".pdf" : figure extension
 * tag = "" : string to append to the series legend
 * clearfigure = true : clear the figure before ploting (set false if you want to compare series)
@@ -729,11 +729,12 @@ Inputs:
 function plotairfoil(α, cl, cd, filename, airfoilname, Re, M;
         radians = false,
         viternaextrapolation = false, rotationcorrection = false,
-        savefigure = false, savepath = joinpath(topdirectory, "data", "airfoil", "plots", TODAY),
-        extension = ".pdf", tag = "", clearfigure = true
+        savefigure = true, savepath = joinpath(topdirectory, "data", "airfoil", "polars", TODAY),
+        extension = ".pdf", tag = "", clearfigure = true, closefigure = false
     )
     # set up units
-    aoaunits = radians ? "" : L" [^\circ]"
+    aoaunits = L" [^\circ]"
+    conversionfactor = radians ? 180.0 / pi : 1
     # set up figure
     fig = plt.figure(filename)
     if clearfigure
@@ -754,8 +755,8 @@ function plotairfoil(α, cl, cd, filename, airfoilname, Re, M;
     rotationcorrection ? labeltag *= " w/ rot. corr." : labeltag *= " w/o rot. corr."
     labeltag *= tag
     # plot data
-    axes[1].plot(α, cl, label = labeltag)
-    axes[2].plot(α, cd, label = labeltag)
+    axes[1].plot(α .* conversionfactor, cl, label = labeltag)
+    axes[2].plot(α .* conversionfactor, cd, label = labeltag)
     # show figure
     axes[1].legend(loc="upper left", bbox_to_anchor=(1.03,0.9), prop=Dict("size" => 9))
     fig.subplots_adjust(left=0.1, right=0.7, top=0.9, bottom=0.1)
@@ -766,6 +767,8 @@ function plotairfoil(α, cl, cd, filename, airfoilname, Re, M;
         savename = splitext(filename)[1] * extension
         fig.savefig(joinpath(savepath, savename))
     end
+    if closefigure; plt.close(filename); end
+
     return nothing
 end
 

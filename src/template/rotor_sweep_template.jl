@@ -125,9 +125,9 @@ end
 """
 Multiple dispatch for use with multiple Mach numbers
 """
-function rotor_sweep_template(Js, omegas, nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, Res_list, Ms_list;
+function rotor_sweep_template(Js, omegas, nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, index, positions, orientations, spindirections, Res_list, Ms_list;
     rotornames = ["rotor 1"],
-    plotdirectory = joinpath(topdirectory, "data","plots",TODAY),
+    plotdirectory = joinpath(topdirectory, "data", "airfoil", "polars", TODAY),
     plotbasename = "default",
     plotextension = ".pdf",
     stepsymbol = L"J",
@@ -135,7 +135,7 @@ function rotor_sweep_template(Js, omegas, nblades, rhub, rtip, radii, chords, tw
 )
     # prepare subsystems
     wings = nothing
-    rotors = CCBladeSystem([nblades], [rhub], [rtip], [radii], [chords], [twists], [airfoilcontours], [airfoilnames], [1], [[0.0,0.0,0.0]], [[-1.0,0.0,0.0]], [false], Res_list, Ms_list; kwargs...)
+    rotors = CCBladeSystem(nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, index, positions, orientations, spindirections, Res_list, Ms_list; kwargs...)
     nonliftingbodies = nothing
     structures = nothing
     motors = nothing
