@@ -4,7 +4,7 @@ Author: Ryan Anderson
 Contact: rymanderson@gmail.com
 README: `<: PostAction` function plots the lift distribution of all lifting surfaces at the specified steps
 =###############################################################################################
-
+using Infiltrator
 """
 post_plot_lift_moment_distribution <: PostAction
 
@@ -57,12 +57,12 @@ function post_plot_lift_moment_distribution(aircraft, parameters, steprange, ste
     for stepi = 1:length(steprange) # loop over all steps
         for isurface in 1:nsurfaces
             # update cfs and cms
-            cfs[isurface][:,1] .= cds[isurface][:,stepi]
-            cfs[isurface][:,2] .= cys[isurface][:,stepi]
-            cfs[isurface][:,3] .= cls[isurface][:,stepi]
-            cms[isurface][:,1] .= cmxs[isurface][:,stepi]
-            cms[isurface][:,2] .= cmys[isurface][:,stepi]
-            cms[isurface][:,3] .= cmzs[isurface][:,stepi]
+            cfs[isurface][1,:] .= cds[isurface][:,stepi]
+            cfs[isurface][2,:] .= cys[isurface][:,stepi]
+            cfs[isurface][3,:] .= cls[isurface][:,stepi]
+            cms[isurface][1,:] .= cmxs[isurface][:,stepi]
+            cms[isurface][2,:] .= cmys[isurface][:,stepi]
+            cms[isurface][3,:] .= cmzs[isurface][:,stepi]
             # run existing plot function
             flag = plot_lift_moment_distribution(aircraft, parameters, nothing, nothing, steprange, stepi, stepsymbol)
         end

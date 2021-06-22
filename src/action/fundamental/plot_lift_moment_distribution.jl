@@ -77,7 +77,7 @@ function plot_lift_moment_distribution(aircraft, parameters, freestream, environ
         for (isurface,cf) in enumerate(cfs)
             rs_plot = get_midpoints(lifting_line_rs[isurface][2,:])
             for icf = 1:3
-                axs[(isurface - 1) * nsurfaces + icf].plot(rs_plot, cf[:,icf], color=(0.05, 0.85-cratio*0.7, 0.15 + 0.75 * cratio), label="$stepsymbol = $(round(steprange[stepi],digits=3))")
+                axs[(isurface - 1) * nsurfaces + icf].plot(rs_plot, cf[icf,:], color=(0.05, 0.85-cratio*0.7, 0.15 + 0.75 * cratio), label="$stepsymbol = $(round(steprange[stepi],digits=3))")
             end
         end
         # save
@@ -116,7 +116,7 @@ function plot_lift_moment_distribution(aircraft, parameters, freestream, environ
         for (isurface,cm) in enumerate(cms)
             rs_plot = get_midpoints(lifting_line_rs[isurface][2,:])
             for icf = 1:3
-                axs[(isurface - 1) * nsurfaces + icf].plot(rs_plot, cm[:,icf], color=(0.05, 0.85-cratio*0.7, 0.15 + 0.75 * cratio), label="$stepsymbol = $(round(steprange[stepi],digits=3))")
+                axs[(isurface - 1) * nsurfaces + icf].plot(rs_plot, cm[icf,:], color=(0.05, 0.85-cratio*0.7, 0.15 + 0.75 * cratio), label="$stepsymbol = $(round(steprange[stepi],digits=3))")
             end
         end
         # save

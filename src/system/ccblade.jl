@@ -1216,3 +1216,56 @@ function induced2wakefunction(rotorsystem, us, vs;
         return Vwake
     end
 end
+
+
+"""
+    `get_omega(;Vinf=nothing, D=nothing, J=nothing)`
+
+Returns rotational velocity in [rad/s] given velocity and advance ratio.
+"""
+function get_omega(;Vinf=nothing, D=nothing, J=nothing)
+
+    @assert Vinf != nothing "User must supply a velocity with the `Vinf` keyword argument."
+    @assert D != nothing "User must supply a diameter with the `D` keyword argument."
+    @assert J != nothing "User must supply an advance ratio with the `J` keyword argument."
+
+    return 2pi * Vinf / (D * J)
+end
+
+
+"""
+    `get_J(;Vinf=nothing, D=nothing, omega=nothing, n=nothing)`
+
+Returns advance ratio given velocity and rotational velocity. Must supply either `omega` or `n`.
+"""
+function get_J(;Vinf=nothing, D=nothing, omega=nothing, n=nothing)
+
+    @assert Vinf != nothing "User must supply a velocity with the `Vinf` keyword argument."
+    @assert D != nothing "User must supply a diameter with the `D` keyword argument."
+
+    if n == nothing
+        @assert omega != nothing "User must supply either `omega` or `n` as a keyword argument."
+        n = omega / (2pi)
+    end
+
+    return Vinf / (n * D)
+end
+
+
+"""
+    `get_Vinf(;D=nothing, J=nothing, omega=nothing, n=nothing)`
+
+Returns velocity in [m/s] given advance ratio and rotational velocity. Must supply either `omega` or `n`.
+"""
+function get_Vinf(;D=nothing, J=nothing, omega=nothing, n=nothing)
+
+    @assert D != nothing "User must supply a diameter with the `D` keyword argument."
+    @assert J != nothing "User must supply an advance ratio with the `J` keyword argument."
+
+    if n == nothing
+        @assert omega != nothing "User must supply either `omega` or `n` as a keyword argument."
+        n = omega / (2pi)
+    end
+
+    return n * D / J
+end
