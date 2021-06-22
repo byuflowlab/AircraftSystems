@@ -13,8 +13,6 @@ using Test
 # @testset "rotors" begin
 
 # # test rotor_sweep_template
-nJs = 27
-Js = ones(3,nJs) .* range(0.01, stop=2.0, length=nJs)'
 # omegas = fill(50.0, length(Js))
 # nblades = 3
 # radii = [0.148, 0.254237, 0.381356, 0.508475, 0.635593, 0.762712, 0.889831, 1.0] .* 236e-3/2

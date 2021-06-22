@@ -1,4 +1,6 @@
 # Epema propeller
+nJs = 27
+Js = ones(3,nJs) .* range(0.01, stop=2.0, length=nJs)'
 omegas = ones(3,nJs) .* 5000 * 2 * pi / 60 # rad/s
 nblades = [6, 6, 6]
 rtip = ones(3) * 0.406 / 2
@@ -245,21 +247,24 @@ for (i, file) in enumerate(contourpaths)
     contourdata[i] = AS.DF.readdlm(file, ','; header = true)[1]
 end
 # plot contours
-fig = plt.figure("epema_airfoils")
-fig.add_subplot(111)
-axs = fig.get_axes()
-labels = [L"r/R = " * n for n in epema_rRs_dot]
-for (i,data) in enumerate(contourdata)
-    cratio = i / length(contourdata)
-    axs[1].plot(data[:,1], data[:,2], color = (0.05, 0.85-cratio*0.7, 0.15 + 0.75 * cratio), label = labels[i])
-end
-axs[1].legend(loc="upper left", bbox_to_anchor=(1.05,1))
-axs[1].set_xlabel(L"x/c")
-axs[1].set_ylabel(L"y/c")
-axs[1].set_aspect("equal")
-fig.set_size_inches(12,3,forward=true)
-fig.tight_layout()
-fig.savefig(joinpath(ENV["NOTEBOOK_IMG_PATH"], "epema_airfoils.pdf"))
+# function plot_contour(, epema_rRs_dot)
+    fig = plt.figure("epema_airfoils")
+    fig.add_subplot(111)
+    axs = fig.get_axes()
+    labels = [L"r/R = " * n for n in epema_rRs_dot]
+    for (i,data) in enumerate(contourdata)
+        cratio = i / length(contourdata)
+        axs[1].plot(data[:,1], data[:,2], color = (0.05, 0.85-cratio*0.7, 0.15 + 0.75 * cratio), label = labels[i])
+    end
+    axs[1].legend(loc="upper left", bbox_to_anchor=(1.05,1))
+    axs[1].set_xlabel(L"x/c")
+    axs[1].set_ylabel(L"y/c")
+    axs[1].set_aspect("equal")
+    fig.set_size_inches(14,3,forward=true)
+    fig.tight_layout()
+    return fig
+    # fig.savefig(joinpath(ENV["NOTEBOOK_IMG_PATH"], "epema_airfoils.pdf"))
+# end
 
 polardirectory = joinpath(AS.topdirectory, "data", "airfoil", "polars", AS.TODAY)
 plotstepi = 1:length(Js)

@@ -59,7 +59,8 @@ function post_plot_rotor_sweep(aircraft, parameters, steprange, stepsymbol)
         end
     end
     axs[end].legend(loc="upper left", bbox_to_anchor=(1.01,1))
-    fig.set_size_inches(12, 8, forward=true)
+    fig.set_size_inches(14, 8, forward=true)
+    fig.tight_layout()
     # save
     savepath = joinpath(plotdirectory, plotbasename * "_rotorsweep" * plotextension)
     fig.savefig(savepath)
