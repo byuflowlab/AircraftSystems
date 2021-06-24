@@ -6,9 +6,9 @@ README: define an `Action` object to solve a CCBlade rotor
 =###############################################################################################
 
 """
-    nondimensionalize_rotor_c <: Action
+    nondimensionalize_rotor_c(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol) <: Action
 
-Inputs:
+# Arguments:
 
 * `aircraft::Aircraft` : `Aircraft` system object
 * `parameters<:Parameters` `Parameters` struct
@@ -41,16 +41,16 @@ function nondimensionalize_rotor_c(aircraft, parameters, freestream, environment
 end
 
 """
-nondimensionalize_rotor_c(system, steprange)
+    nondimensionalize_rotor_c(aircraft, steprange)
 
 Method returns initialized elements required for the `parameters <: Parameters` struct during simulation.
 
-Inputs:
+# Arguments:
 
 * `aircraft::Aircraft` : system to be simulated
 * `steprange::AbstractArray` : defines each step of the simulation
 
-Outputs:
+# Returns:
 
 * `omegas::Vector{Float64}` : a vector of rotational speeds in rad/s at the current step
 * `Js::Array{Float64,2}` : each i,jth element is the advance ratio of the ith rotor at the jth step
@@ -60,6 +60,7 @@ Outputs:
 
 """
 function nondimensionalize_rotor_c(aircraft, steprange)
+    
     omegas, Js, CTs, CQs, _, _ = solve_rotor(aircraft, steprange)
     ηs = deepcopy(CQs)
 

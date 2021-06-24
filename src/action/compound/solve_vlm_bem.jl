@@ -7,11 +7,11 @@ README: `<: Action` function calculates aerodynamic forces on a blade-element mo
 =###############################################################################################
 
 """
-solve_vlm_bem <: Action
+    solve_vlm_bem(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol) <: Action
 
 Solves for the aerodynamic forces at each step.
 
-Inputs:
+# Arguments:
 
 * `aircraft::Aircraft` : `Aircraft` system object
 * `parameters<:Parameters` `Parameters` struct
@@ -42,6 +42,7 @@ Inputs:
 
 """
 function solve_vlm_bem(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol)
+    
     flags = Vector{Bool}(undef,4)
     # solves rotors
     flags[1] = solve_rotor_nondimensional(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol)
@@ -56,16 +57,16 @@ function solve_vlm_bem(aircraft, parameters, freestream, environment, steprange,
 end
 
 """
-solve_vlm_bem(system, steprange)
+    solve_vlm_bem(aircraft, steprange)
 
 Method returns initialized elements required for the `parameters <: Parameters` struct during simulation.
 
-Inputs:
+# Arguments:
 
 * `aircraft::Aircraft` : system to be simulated
 * `steprange::AbstractArray` : defines each step of the simulation
 
-Outputs:
+# Returns:
 
 * `omegas::Vector{Float64}` : a vector of rotational speeds in rad/s at the current step
 * `Js::Array{Float64,2}` : each [i,j]th element is the advance ratio of the ith rotor at the jth step
@@ -89,6 +90,7 @@ Outputs:
 
 """
 function solve_vlm_bem(aircraft, steprange)
+    
     params_solve_rotor_nondimensional = solve_rotor_nondimensional(aircraft, steprange) # omegas, Js, Ts, Qs, us, vs
     params_solve_rotor_wake = solve_rotor_wake(aircraft, steprange) # wakefunctions, us, vs
     params_solve_CF = solve_CF(aircraft, steprange) # CLs, CDs, CYs

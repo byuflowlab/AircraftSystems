@@ -7,6 +7,41 @@ README: this is a template file. Convenience methods are provided to calculate t
 =###############################################################################################
 
 # initialize parameters
+"""
+    VLM_BEM{V1,V2,V3,V4,V5,V6,V7,V8,V9,V10} <: Parameters
+
+Parameters for a blown wing system.
+
+# Fields:
+* `omegas::V1`
+* `Js::V2`
+* `Ts::V2`
+* `Qs::V2`
+* `CTs::V2`
+* `CQs::V2`
+* `ηs::V2`
+* `us::V3`
+* `vs::V3`
+* `wakefunctions::V4`
+* `CLs::V5`
+* `CDs::V5`
+* `CYs::V5`
+* `cls::V6`
+* `cds::V6`
+* `cys::V6`
+* `cmxs::V6`
+* `cmys::V6`
+* `cmzs::V6`
+* `cfs::V7`
+* `cms::V7`
+* `surfacenames::V8`
+* `rotornames::V8`
+* `plotdirectory::V9`
+* `plotbasename::V9`
+* `plotextension::V9`
+* `plotstepi::V10`
+
+"""
 struct VLM_BEM{V1,V2,V3,V4,V5,V6,V7,V8,V9,V10} <: Parameters
     omegas::V1
     Js::V2
@@ -46,48 +81,84 @@ end
 # rs(alphas, omega, nblades...)
 
 """
-vlm_bem_template <: Template
+    vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, 
+            omegas, nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, 
+            index, rotor_X, rotor_orientation, spindirections, 
+            Res_list = [fill([5e4, 1e5, 1e6], length(radii))];
+            surfacenames = ["default wing"],
+            rotornames = ["rotor 1"],
+            plotdirectory = joinpath(topdirectory, "data","plots",TODAY),
+            plotbasename = "default",
+            plotextension = ".pdf",
+            stepsymbol = L"\alpha ",
+            kwargs...)
 
-Inputs:
+# Arguments:
 
-* `alphas::Vector{Float64}`
-* `wing_b::Float64`
-* `wing_TR::Float64`
-* `wing_AR::Float64`
-* `wing_θroot::Float64`
-* `wing_θtip::Float64`
+* `vinfs`
+* `plotstepi`
+* `alphas::Vector{Float64}`: angles of attack 
+* `wing_b::Float64`: wing span
+* `wing_TR::Float64`: wing taper ratio
+* `wing_AR::Float64`: wing aspect ratio
+* `wing_θroot::Float64`: wing root twist
+* `wing_θtip::Float64`: wing tip twist
+* `omegas`
+* `nblades::Int`
+* `rhub`
+* `rtip`
+* `radii`
+* `chords`
+* `twists`
+* `airfoilcontours`
+* `airfoilnames`
+* `index`
+* `rotor_position`
+* `rotor_orientation`
+* `spindirections`
 
-Keyword Arguments:
+# Keyword Arguments:
 
-* `plotdirectory = joinpath(topdirectory, "data","plots")`: directory to which plots are saved
-* `plotbasename = "default"`: first part of saved plot filenames
-* `plotextension = ".pdf"`: saved plots file extension
+* `Res_list`
+* `surfacenames`
+* `rotornames`
+* `plotdirectory`: directory to which plots are saved
+* `plotbasename`: first part of saved plot filenames
+* `plotextension`: saved plots file extension
+* `stepsymbol`
 
 """
-function vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, omegas, nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, index, rotor_X, rotor_orientation, spindirections, Res_list = [fill([5e4, 1e5, 1e6], length(radii))];
-    surfacenames = ["default wing"],
-    rotornames = ["rotor 1"],
-    plotdirectory = joinpath(topdirectory, "data","plots",TODAY),
-    plotbasename = "default",
-    plotextension = ".pdf",
-    stepsymbol = L"\alpha ",
-    kwargs...
-);
+function vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, 
+            omegas, nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, 
+            index, rotor_position, rotor_orientation, spindirections, 
+            Res_list = [fill([5e4, 1e5, 1e6], length(radii))];
+            surfacenames = ["default wing"],
+            rotornames = ["rotor 1"],
+            plotdirectory = joinpath(topdirectory, "data","plots",TODAY),
+            plotbasename = "default",
+            plotextension = ".pdf",
+            stepsymbol = L"\alpha ",
+            kwargs...)
+
     # prepare subsystems
-    wings = simplewingsystem(wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip; kwargs...)
+    wings = simplewingsystem(; wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, kwargs...)
     rotors = CCBladeSystem(nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, index, rotor_X, rotor_orientation, spindirections, Res_list = Res_list; kwargs...)
     nonliftingbodies = nothing
     structures = nothing
     motors = nothing
     batteries = nothing
+
     # build system struct
     aircraft = Aircraft(wings, rotors, nonliftingbodies, structures, motors, batteries)
+
     # compile actions
     actions = [solve_vlm_bem]
+
     # initialize parameters
     steprange = alphas
     params_solve_vlm_bem = solve_vlm_bem(aircraft, steprange)
     params_solve_vlm_bem[1] .*= omegas
+
     #= Contains:
         * `omegas::Vector{Float64}` : a vector of rotational speeds in rad/s at the current step
         * `Js::Array{Float64,2}` : each [i,j]th element is the advance ratio of the ith rotor at the jth step
@@ -109,6 +180,7 @@ function vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, wing_AR, wi
         * `cmys::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local y-axis (pitch) moment coefficients at each lifting line section, corresponding to each lifting surface
         * `cmzs::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local z-axis (yaw) moment force coefficients at each lifting line section, corresponding to each lifting surface
     =#
+
     params_post_plot_cl_alpha_sweep = post_plot_cl_alpha_sweep(aircraft, steprange)
     #= Contains:
         * `CLs::Vector{Float64}` : CL corresponding to the ith step
@@ -118,6 +190,7 @@ function vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, wing_AR, wi
         * `plotbasename::String` : first portion of the saved figure file name
         * `plotextension::String` : extension of saved figure files
     =#
+
     params_post_plot_lift_moment_distribution = post_plot_lift_moment_distribution(aircraft, steprange)
     #= Contains:
         * `cls::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local lift coefficients at each lifting line section, corresponding to each lifting surface
@@ -134,6 +207,7 @@ function vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, wing_AR, wi
         * `plotextension::String` : extension of saved figure file names
         * `plotstepi::Vector{Int}` : which steps at which to plot
     =#
+
     params_post_plot_rotor_sweep = post_plot_rotor_sweep(aircraft, steprange)
     #= Contains:
         * `Js::AbstractArray` : array of advance ratios of the ith rotor at the jth step
@@ -145,19 +219,24 @@ function vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, wing_AR, wi
         * `plotbasename::String` : first portion of the saved figure file name
         * `plotextension::String` : extension of saved figure files
     =#
+
     # prepare plot directory
     if !isdir(plotdirectory); mkpath(plotdirectory); end
     println("==== MSG ====\n\tplotdirectory = $plotdirectory")
+    
     # build parameters struct
     parameters = VLM_BEM(omegas, params_solve_vlm_bem[2:end]..., params_post_plot_lift_moment_distribution[7:9]..., params_post_plot_rotor_sweep[5], plotdirectory, params_post_plot_lift_moment_distribution[11:12]..., plotstepi)
+    
     # build freestream_function
     function freestream_function(aircraft, parameters, environment, alphas, stepi)
+
         # calculate freestream
         vinf = vinfs[stepi] # + ti # arbitrary for lift distribution?
         alpha = alphas[stepi]
         beta = 0.0
         Omega = zeros(3)
         freestream = Freestream(vinf, alpha, beta, Omega)
+        
         # update reference
         # vwake = parameters.wakefunctions[stepi]
         reference = aircraft.wingsystem.system.reference[1]
@@ -171,12 +250,15 @@ function vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, wing_AR, wi
 
         return freestream
     end
+
     # build environment_function
     function environment_function(aircraft, parameters, alphas, stepi)
         Environment() # arbitrary
     end
+
     # compile postactions
     postactions = [post_plot_cl_alpha_sweep, post_plot_lift_moment_distribution, post_plot_rotor_sweep]
+
     # build objective_function
     objective_function(aircraft, parameters, freestream, environment, alphas) = 0.0
 
