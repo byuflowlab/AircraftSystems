@@ -10,7 +10,7 @@ wing["chord_tip"] = 0.161 # m
 wing["mac"] = 0.24 # m
 wing["airfoil"] = "NACA 64_2-015A"
 wing["chords"] = [0.0 wing["chord_root"]; 0.3429 wing["chord_root"]; 1.0 wing["chord_tip"]]
-wing["chords"][:,1] .*= wing["span"]
+wing["chords"][:,1] .*= wing["span"]/2
 
 rotor = Dict{String,Union{Int, String, Float64, Vector{Float64}, Array{Float64,2}}}()
 rotor["Nblades"] = 6

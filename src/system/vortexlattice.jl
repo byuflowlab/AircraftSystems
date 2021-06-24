@@ -141,83 +141,116 @@ weightedmean(set, weights) = sum(set .* weights) / sum(weights)
 get_midpoints(a) = [(a[i] + a[i+1])/2 for i in 1:length(a)-1]
 
 """
+    simplewingsystem(; wing_b=2.0, wing_TR=0.8, wing_AR=8.0, wing_θroot=0.0, wing_θtip=0.0,
+        xle=[0.0, 0.0], yle=[0.0, wing_b/2], zle=[0.0, 0.0], 
+        cmac=wing_b / wing_AR, # AR = b/c => c = b/AR
+        Sref=wing_b * cmac,
+        chord=[cmac * 2 / (1 + wing_TR), cmac * 2 / (1/wing_TR + 1)], twist=[wing_θroot, wing_θtip], phi=[0.0,0.0],
+        staticmargin=0.10,
+        Vinf=1.0, #freestream velocity
+        Vref=Vinf, # in case you want the reference velocity to be different than the freestream velocity
+        alpha=0.0, # angle of attack in radians
+        beta=0.0, # sideslip angle in radians
+        Omega=[0.0, 0.0, 0.0], # rotational velocity around the reference location
+        wing_camber=fill((xc) -> 0, 2), # camberline function for each section
+        wing_npanels=50, wing_nchordwisepanels=1,
+        symmetric=true, # if true, we don't need to mirror geometry. Good option if parameters/geometry is symmetric and you don't care about lateral stability derivatives
+        spacing_s = symmetric ? VL.Cosine() : VL.Sine(), # if mirrored, sine spacing becomes cosine spacing
+        spacing_c=VL.Uniform(), # should only ever need uniform chordwise spacing
+        mirror=!symmetric,
+        kwargs...)
+
 Convenience constructor for a single wing `VortexLatticeSystem`.
 
-Inputs:
+Keyword Arguments:
 
-* `wing_b = 2.0` : wing span
-* `wing_TR = 0.8` : wing taper ratio
-* `wing_AR = 8.0` : wing aspect ratio
-* `wing_θroot = 0.0` : wing root twist
-* `wing_θtip = 0.0` : wing tip twist
-
-Optional Inputs:
-
-* `wing_camber = fill((xc) -> 0, 2)` : camberline function for each section
-* `wing_npanels = 50` : number of spanwise panels for the wing
-* `wing_nchordwisepanels = 1` : number of chordwise panels for the wing
-* `wing_spacing_s = VL.Cosine()` : spanwise panel spacing scheme for the wing
-* `wing_spacing_c = VL.Uniform()` : chordwise panel spacing scheme for the wing
-* `symmetric = true` : mirrors the geometry over the x-z plane
+* `wing_b`: wing span
+* `wing_TR`: wing taper ratio
+* `wing_AR`: wing aspect ratio
+* `wing_θroot`: wing root twist (radians)
+* `wing_θtip`: wing tip twist (radians)
+* `xle`: leading-edge x-coordinates
+* `yle`: leading-edge y-coordinates
+* `zle`: leading-edge z-coordinates
+* `cmac`: mean aerodynamic chord
+* `Sref`: reference wing area
+* `wing_chord`: chord at each wing section
+* `wing_twist`: twist at each wing section
+* `wing_phi`: wing section rotation about the x-axis
+* `staticmargin`: static margin of the wing
+* `Vinf`: freestream velocity
+* `Vref`: reference velocity; defaults to freestream velocity
+* `alpha`: angle of attack (radians)
+* `beta`: sideslip angle (radians)
+* `Omega`: rotational velocity around the reference location
+* `wing_camber`: camberline function for each section
+* `wing_npanels`: number of spanwise panels for the wing
+* `wing_nchordwisepanels`: number of chordwise panels for the wing
+* `symmetric::Bool`: Flag for each surface indicating whether a mirror image across the X-Z plane should be used when calculating induced velocities. Defaults to true. From my understanding, this solves the half span and uses a mirrored aproach for induced velocities, whereas mirror will physically mirror the geometry for you and solve it all together (Tyler).
+* `mirror::Bool`: mirrors the geometry over the x-z plane
+* `wing_spacing_s::Int`: spanwise panel spacing scheme for the wing; defaults to Cosine (or Sine if mirror==true, which results in Cosine anyway)
+* `wing_spacing_c::Int`: chordwise panel spacing scheme for the wing; defaults to Uniform()
 
 """
-function simplewingsystem(wing_b = 2.0, wing_TR = 0.8, wing_AR = 8.0, wing_θroot = 0.0, wing_θtip = 0.0;
-    wing_camber = fill((xc) -> 0, 2), # camberline function for each section
-    wing_npanels = 50, wing_nchordwisepanels = 1,
-    wing_spacing_s = VL.Cosine(), wing_spacing_c = VL.Uniform(),
-    symmetric = true, kwargs...
-)
-    # build wing object
-    xle = [0.0, 0.0]
-    yle = [0.0, wing_b/2]
-    zle = [0.0, 0.0]
-    cmac = wing_b / wing_AR # AR = b/c => c = b/AR
+function simplewingsystem(; wing_b=2.0, wing_TR=0.8, wing_AR=8.0, wing_θroot=0.0, wing_θtip=0.0,
+            xle=[0.0, 0.0], yle=[0.0, wing_b/2], zle=[0.0, 0.0], 
+            cmac=wing_b/wing_AR, # AR = b/c => c = b/AR
+            Sref=wing_b*cmac,
+            wing_chord=[cmac*2/(1+wing_TR), cmac*2/(1/wing_TR+1)], wing_twist=[wing_θroot, wing_θtip], wing_phi=[0.0,0.0],
+            staticmargin=0.10,
+            Vinf=1.0, 
+            Vref=Vinf, # in case you want the reference velocity to be different than the freestream velocity
+            alpha=0.0,
+            beta=0.0,
+            Omega=[0.0, 0.0, 0.0], 
+            wing_camber=fill((xc) -> 0, length(xle)),
+            wing_npanels=50, wing_nchordwisepanels=1,
+            symmetric=true, # if true, we don't need to mirror geometry. Good option if parameters/geometry is symmetric and you don't care about lateral stability derivatives
+            mirror=!symmetric,
+            spacing_s = symmetric ? VL.Cosine() : VL.Sine(), # if mirrored, sine spacing becomes cosine spacing
+            spacing_c=VL.Uniform(), # should only ever need uniform chordwise spacing
+            kwargs...)
+
     #=
     cr + ct = cmac * 2
     ct = λ * cr
     cr = cmac * 2 / (1 + λ)
     ct = cmac * 2 / (1/λ + 1)
     =#
-    chord = [cmac * 2 / (1 + wing_TR), cmac * 2 / (1/wing_TR + 1)]
-    theta = [wing_θroot, wing_θtip]
-    phi = [0.0, 0.0]
-
-    # discretization parameters
-    ns = wing_npanels
-    nc = wing_nchordwisepanels
-
+    
+    # Check for errors
+    @assert size(xle) == size(yle)    "size of leading edge xs and ys not consistent"
+    @assert size(yle) == size(zle)    "size of leading edge ys and zs not consistent"
+    @assert size(xle) == size(wing_chord)    "size of leading edge xs and wing_chord not consistent"
+    @assert size(xle) == size(wing_twist)    "size of leading edge xs and wing_twist not consistent"
+    @assert size(xle) == size(wing_phi)    "size of leading edge xs and wing_phi not consistent"
+    @assert yle[1] == 0.0    "yle must begin at the root (0.0)"
+    @assert yle[end] == wing_b/2    "yle must end at the tip (span/2)"
+    @assert !(symmetric && mirror)    "symmetric and mirror cannot both be true"
+  
     # construct surfaces and grids
-    grid, surface = VL.wing_to_surface_panels(xle, yle, zle, chord, theta, phi, ns, nc;
-        fc = wing_camber, spacing_s=wing_spacing_s, spacing_c=wing_spacing_c)
+    grid, surface = VL.wing_to_surface_panels(xle, yle, zle, wing_chord, wing_twist, wing_phi, wing_npanels, wing_nchordwisepanels;
+                        fc = wing_camber, spacing_s, spacing_c, mirror)
+
     grids = [grid]
     surfaces = [surface]
 
-    symmetric = symmetric
-
     # reference parameters
-    Sref = wing_b * cmac
-    cref = cmac
-    bref = wing_b
-    staticmargin = 0.10
     cgx = cmac * (0.25 - staticmargin)
     rref = [cgx, 0.0, 0.0]
-    Vinf = 1.0
-    reference = VL.Reference(Sref, cref, bref, rref, Vinf)
+    reference = VL.Reference(Sref, cmac, wing_b, rref, Vref)
 
     # initialize freestream parameters
-    Vinf = 1.0
-    alpha = 0.0*pi/180
-    beta = 0.0
-    Omega = [0.0; 0.0; 0.0]
     fs = VL.Freestream(Vinf, alpha, beta, Omega)
 
     # perform steady state analysis
-    vlmsystem = VL.steady_analysis(surfaces, reference, fs; symmetric=symmetric)
+    vlmsystem = VL.steady_analysis(surfaces, reference, fs; symmetric)
     lifting_line_rs, lifting_line_chords = VL.lifting_line_geometry(grids)
     wingsystem = VortexLatticeSystem(vlmsystem, lifting_line_rs, lifting_line_chords, nothing)
 
     return wingsystem
 end
+
 
 """
 Convenience constructor for a simple airplane `VortexLatticeSystem`.
