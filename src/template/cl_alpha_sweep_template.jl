@@ -42,10 +42,11 @@ end
         plotdirectory = joinpath(topdirectory, "data","plots",TODAY),
         plotbasename = "default",
         plotextension = ".pdf",
-        stepsymbol = L"\alpha[^\circ]",
+        stepsymbol = L"/alpha[^/circ]", # these forward slashes actually represent backslashes, but those cause an error in the docstrings
         kwargs...)
 
-Arguments:
+# Arguments:
+
 * `alphas`
 * `wing_b`
 * `wing_TR`
@@ -53,7 +54,8 @@ Arguments:
 * `wing_θroot`
 * `wing_θtip`
 
-Keyword Arguments:
+# Keyword Arguments:
+
 * `plotdirectory`
 * `plotbasename`
 * `plotextension`
