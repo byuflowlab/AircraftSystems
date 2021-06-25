@@ -1,5 +1,5 @@
 #=##############################################################################################
-Filename: solve_CF.jl
+Filename: solve_wing_CF.jl
 Author: Ryan Anderson
 Contact: rymanderson@gmail.com
 README: define an `Action` object to solve a CCBlade rotor
@@ -26,7 +26,7 @@ Inputs:
 * `CYs::Vector{Vector{Float64}}` : a vector of length `length(steprange)` containing side force coefficients at each step
 
 """
-function solve_CF(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol)
+function solve_wing_CF(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol)
     # interpret freestream
     vlmfreestream = VL.Freestream(freestream)
     # get reference
@@ -45,7 +45,7 @@ function solve_CF(aircraft, parameters, freestream, environment, steprange, step
 end
 
 """
-solve_CF(system, steprange)
+solve_wing_CF(system, steprange)
 
 Method returns initialized elements required for the `parameters <: Parameters` struct during simulation.
 
@@ -61,7 +61,7 @@ Outputs:
 * `CYs::Array{Float64,1}` : ith element is the side force coefficient of the aircraft at the ith step
 
 """
-function solve_CF(aircraft, steprange)
+function solve_wing_CF(aircraft, steprange)
 
     CLs = zeros(length(steprange))
     CDs = zeros(length(steprange))

@@ -10,7 +10,7 @@ lift_moment_distribution <: Action
 
 Solves for the aerodynamic force distribution at each step.
 
-NOTE: THIS ACTION DOES NOT SOLVE THE VORTEX LATTICE. Call `solve_CF` prior to calling this action.
+NOTE: THIS ACTION DOES NOT SOLVE THE VORTEX LATTICE. Call `solve_wing_CF` prior to calling this action.
 
 Inputs:
 

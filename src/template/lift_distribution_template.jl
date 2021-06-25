@@ -71,9 +71,9 @@ function lift_distribution_template(ploti, alphas, wing_b, wing_TR, wing_AR, win
     # build system struct
     aircraft = Aircraft(wings, rotors, nonliftingbodies, structures, motors, batteries)
     # compile actions
-    actions = [solve_CF, lift_moment_distribution]
+    actions = [solve_wing_CF, lift_moment_distribution]
     # initialize parameters
-    CLs, CDs, CYs = solve_CF(aircraft, alphas) # let steprange be replaced by alphas
+    CLs, CDs, CYs = solve_wing_CF(aircraft, alphas) # let steprange be replaced by alphas
     cls, cds, cys, cmxs, cmys, cmzs = lift_moment_distribution(aircraft, alphas) # let steprange be replaced by alphas
     _, _, _, _, _, _, cfs, cms, _, _, _, _ = post_plot_lift_moment_distribution(aircraft, alphas)
     # check sizes and instantiate struct

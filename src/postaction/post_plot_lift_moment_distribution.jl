@@ -4,7 +4,7 @@ Author: Ryan Anderson
 Contact: rymanderson@gmail.com
 README: `<: PostAction` function plots the lift distribution of all lifting surfaces at the specified steps
 =###############################################################################################
-using Infiltrator
+# using Infiltrator
 """
 post_plot_lift_moment_distribution <: PostAction
 

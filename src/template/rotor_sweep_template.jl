@@ -127,7 +127,7 @@ Multiple dispatch for use with multiple Mach numbers
 """
 function rotor_sweep_template(Js, omegas, nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, index, positions, orientations, spindirections, Res_list, Ms_list;
     rotornames = ["rotor 1"],
-    plotdirectory = joinpath(topdirectory, "data", "airfoil", "polars", TODAY),
+    plotdirectory = joinpath(topdirectory, "data", "plots", TODAY),
     plotbasename = "default",
     plotextension = ".pdf",
     stepsymbol = L"J",

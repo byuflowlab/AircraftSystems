@@ -454,7 +454,7 @@ function airfoil2xfoil(Res, contourfile, airfoilname;
     if verbose; println("\t"^v_lvl, "Reading $contourfile\n"); end
     xy = DF.readdlm(contourfile, ',', Float64, '\n'; skipstart = skipstart)
     for (i_Re, Re) in enumerate(Res)
-        if verbose; println("\n\t"^v_lvl, "==================== Re = $Re ===================="); end
+        if verbose; println("\n\t"^v_lvl, "==================== Re = $Re, M = $M ===================="); end
         if !i_existingfiles_uncorrected[i_Re] || !useoldfiles
             # write uncorrected polar
             cl, cd, cdp, cm, conv = XF.alpha_sweep(xy[:,1], xy[:,2], xfoil_alpha, Re;
@@ -508,7 +508,7 @@ function airfoil2xfoil(Res, Ms, contourfile, airfoilname;
     xy = DF.readdlm(contourfile, ',', Float64, '\n'; skipstart = skipstart)
     for (i_M, M) in enumerate(Ms)
         for (i_Re, Re) in enumerate(Res)
-            if verbose; println("\n\t"^v_lvl, "==================== Re = $Re ===================="); end
+            if verbose; println("\n\t"^v_lvl, "==================== Re = $Re, M = $M ===================="); end
             if !i_existingfiles_uncorrected[i_Re] || !useoldfiles
                 # write uncorrected polar
                 cl, cd, cdp, cm, conv = XF.alpha_sweep(xy[:,1], xy[:,2], xfoil_alpha, Re;
@@ -893,7 +893,7 @@ function plotrotor(filename, rotorname, rs, chords, twists;
         savename = splitext(filename)[1] * extension
         fig.savefig(joinpath(savepath, savename))
     end
-    if closefigure; fig.close(); end
+    if closefigure; plt.close(filename); end
 
     return nothing
 end
