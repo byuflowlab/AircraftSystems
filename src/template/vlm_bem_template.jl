@@ -130,7 +130,7 @@ end
 """
 function vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, 
             omegas, nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, 
-            index, rotor_position, rotor_orientation, spindirections, 
+            index, rotor_positions, rotor_orientation, spindirections, 
             Res_list = [fill([5e4, 1e5, 1e6], length(radii))];
             surfacenames = ["default wing"],
             rotornames = ["rotor 1"],
@@ -142,7 +142,7 @@ function vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, wing_AR, wi
 
     # prepare subsystems
     wings = simplewingsystem(; wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, kwargs...)
-    rotors = CCBladeSystem(nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, index, rotor_X, rotor_orientation, spindirections, Res_list = Res_list; kwargs...)
+    rotors = CCBladeSystem(nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, index, rotor_positions, rotor_orientation, spindirections; Res_list, kwargs...)
     nonliftingbodies = nothing
     structures = nothing
     motors = nothing
@@ -236,7 +236,7 @@ function vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, wing_AR, wi
         beta = 0.0
         Omega = zeros(3)
         freestream = Freestream(vinf, alpha, beta, Omega)
-        
+
         # update reference
         # vwake = parameters.wakefunctions[stepi]
         reference = aircraft.wingsystem.system.reference[1]

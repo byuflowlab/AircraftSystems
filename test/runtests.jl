@@ -591,7 +591,7 @@ using Infiltrator
                             surfacenames,
                             polardirectory,
                             # other wing keyword arguments
-                            xle, yle, zle, wing_chord, wing_twist, wing_phi)
+                            xle, yle, zle, wing_chord, wing_twist, wing_phi, Vref=Vinf)
 
     outs = AS.runsimulation!(args...)
 

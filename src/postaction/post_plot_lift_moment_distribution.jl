@@ -15,12 +15,12 @@ README: `<: PostAction` function plots the lift distribution of all lifting surf
 * `steprange::AbstractArray`: range of simulation times
 * `stepsymbol::String`: defines the step, e.g. `alpha` or `time`
 
-Modifies:
+# Modifies:
 
 * `aircraft::Aircraft`
 * `parameters <: Parameters`
 
-Outputs:
+# Returns:
 
 * `flag::Bool`: true if an action experiences errors
 * saves plots in `parameters.plotdirectory`
