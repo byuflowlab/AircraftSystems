@@ -166,20 +166,22 @@ function rotor_sweep_template(Js, omegas, nblades, rhub, rtip, radii, chords, tw
 end
 
 """
-    rotor_sweep_template(Js, omegas, nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, index, positions, orientations, spindirections, Res_list, Ms_list;
-        rotornames = ["rotor 1"],
-        plotdirectory = joinpath(topdirectory, "data", "airfoil", "polars", TODAY),
-        plotbasename = "default",
-        plotextension = ".pdf",
-        stepsymbol = L"J",
+    rotor_sweep_template(Js, omegas, nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, 
+        index, positions, orientations, spindirections, Res_list, Ms_list;
+        rotornames=["rotor 1"],
+        plotdirectory=joinpath(topdirectory, "data", "plots", TODAY),
+        plotbasename="default",
+        plotextension=".pdf",
+        stepsymbol=L"J",
         kwargs...)
 
 Multiple dispatch for use with multiple Mach numbers.
 
 """
-function rotor_sweep_template(Js, omegas, nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, index, positions, orientations, spindirections, Res_list, Ms_list;
+function rotor_sweep_template(Js, omegas, nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, 
+            index, positions, orientations, spindirections, Res_list, Ms_list;
             rotornames=["rotor 1"],
-            plotdirectory=joinpath(topdirectory,"data","airfoil","polars",TODAY),
+            plotdirectory=joinpath(topdirectory, "data", "plots", TODAY),
             plotbasename="default",
             plotextension=".pdf",
             stepsymbol=L"J",
@@ -209,7 +211,9 @@ function rotor_sweep_template(Js, omegas, nblades, rhub, rtip, radii, chords, tw
     @assert size(omegas_zero) == size(omegas) "`omegas` has improper dimensions. \n\tExpected: $(size(omegas_zero))\n\tGot: $(size(omegas))"
     @assert size(Js_zero) == size(Js) "`Js` has improper dimensions. \n\tExpected: $(size(Js_zero))\n\tGot: $(size(Js))"
     # @warn isdir(plotdirectory) "plotdirectory does not exist at $plotdirectory\n\ttry: `mkdir $plotdirectory`"
+    
     if !isdir(plotdirectory); mkpath(plotdirectory); @warn "plot directory $plotdirectory does not exist; creating..."; end
+    
     # build parameters
     parameters = RotorSweepParameters(omegas, Js, Ts, Qs, CTs, CQs, ηs, us, vs, rotornames, plotdirectory, plotbasename, plotextension)
 
@@ -218,12 +222,14 @@ function rotor_sweep_template(Js, omegas, nblades, rhub, rtip, radii, chords, tw
         omega = parameters.omegas[1] # get omega for the first rotor
         n = omega / 2 / pi
         D = aircraft.rotorsystem.rotors[1].Rtip * 2
+        
         # calculate freestream
         Vinf = J * n * D
         alpha = 0.0
         beta = 0.0
         Omega = zeros(3)
         freestream = Freestream(Vinf, alpha, beta, Omega)
+
         return freestream
     end
 
@@ -241,17 +247,18 @@ function rotor_sweep_template(Js, omegas, nblades, rhub, rtip, radii, chords, tw
     return aircraft, parameters, actions, freestream_function, environment_function, postactions, objective_function, steprange, stepsymbol
 end
 
+
 """
 Multiple dispatch for pre-created polars
 """
 function rotor_sweep_template(Js, omegas, nblades, rhub, rtip, radii, chords, twists, airfoilfunctions, index, positions, orientations, spindirections;
-    rotornames = ["rotor 1"],
-    plotdirectory = joinpath(topdirectory, "data", "airfoil", "polars", TODAY),
-    plotbasename = "default",
-    plotextension = ".pdf",
-    stepsymbol = L"J",
-    kwargs...
-)
+            rotornames = ["rotor 1"],
+            plotdirectory = joinpath(topdirectory, "data", "airfoil", "polars", TODAY),
+            plotbasename = "default",
+            plotextension = ".pdf",
+            stepsymbol = L"J",
+            kwargs...)
+
     # prepare subsystems
     wings = nothing
     rotors = CCBladeSystem(nblades, rhub, rtip, radii, chords, twists, airfoilfunctions, index, positions, orientations, spindirections; kwargs...)
@@ -270,6 +277,7 @@ function rotor_sweep_template(Js, omegas, nblades, rhub, rtip, radii, chords, tw
     steprange = 1:size(Js)[2] # use time to define each part of the sweep
     # omegas_zero, Js_zero, CTs, CQs, ηs = solve_rotor(aircraft, steprange)
     omegas_zero, Js_zero, Ts, Qs, CTs, CQs, ηs, us, vs = solve_rotor_nondimensional(aircraft, steprange)
+    
     # check data
     @assert typeof(Js) <: AbstractArray{<:Any,2} "Js must be a 2-dimensional array; got $(typeof(Js))"
     @assert size(omegas_zero) == size(omegas) "`omegas` has improper dimensions. \n\tExpected: $(size(omegas_zero))\n\tGot: $(size(omegas))"

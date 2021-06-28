@@ -6,11 +6,13 @@ README: this is a template file. Convenience methods are provided to calculate t
         distribution of a single wing over the specified alphas.
 =###############################################################################################
 
+
 # initialize parameters
 """
     LiftDistribution{V1,V2,V3,V4,V5,V6,V7,V8,V9,V10,V11,V12,V13,V14} <: Parameters
 
 # Fields
+
 * `CLs::V1`
 * `CDs::V2`
 * `CYs::V3`
@@ -55,6 +57,7 @@ end
 # rs  = RotorSweepParameter(args...)
 
 # rs(alphas, omega, nblades...)
+
 
 """
     lift_distribution_template(ploti, alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip;
@@ -104,10 +107,10 @@ function lift_distribution_template(ploti, alphas, wing_b, wing_TR, wing_AR, win
     aircraft = Aircraft(wings, rotors, nonliftingbodies, structures, motors, batteries)
 
     # compile actions
-    actions = [solve_CF, lift_moment_distribution]
-
+    actions = [solve_wing_CF, lift_moment_distribution]
+    
     # initialize parameters
-    CLs, CDs, CYs = solve_CF(aircraft, alphas) # let steprange be replaced by alphas
+    CLs, CDs, CYs = solve_wing_CF(aircraft, alphas) # let steprange be replaced by alphas
     cls, cds, cys, cmxs, cmys, cmzs = lift_moment_distribution(aircraft, alphas) # let steprange be replaced by alphas
     _, _, _, _, _, _, cfs, cms, _, _, _, _ = post_plot_lift_moment_distribution(aircraft, alphas)
 

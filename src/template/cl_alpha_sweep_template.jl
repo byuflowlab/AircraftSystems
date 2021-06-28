@@ -81,10 +81,10 @@ function cl_alpha_sweep_template(alphas, wing_b, wing_TR, wing_AR, wing_θroot, 
     aircraft = Aircraft(wings, rotors, nonliftingbodies, structures, motors, batteries)
 
     # compile actions
-    actions = [solve_CF]
+    actions = [solve_wing_CF]
 
     # initialize parameters
-    CLs, CDs, CYs = solve_CF(aircraft, alphas) # let steprange be replaced by alphas
+    CLs, CDs, CYs = solve_wing_CF(aircraft, alphas) # let steprange be replaced by alphas
 
     # check sizes and instantiate struct
     @assert length(CLs) == length(alphas) "length of parameter CLs and alphas inconsistent"

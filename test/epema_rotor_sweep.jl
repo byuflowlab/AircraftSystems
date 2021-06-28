@@ -144,10 +144,12 @@ for (i, twistval) in enumerate(twists_07_desired)
     twists[i] = twist .+ twistval .- twists_07
 end
 
-airfoilcontour = joinpath(AS.topdirectory, "data", "airfoil", "contours", "e212-il.dat")
-airfoilcontours = fill(fill(airfoilcontour, length(radii[1])), 3)
-airfoilname = "eppler212_kevin"
-airfoilnames = fill(fill(airfoilname, length(radii[1])), 3)
+rs_desired = [0.207, 0.3, 0.4, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0]
+locations = string.(Int.(round.(rs_desired .* 1000, digits=0)))
+locations[1:end-1] = "0" .* locations[1:end-1]
+contourfilenames = "epema_interpolated_npoints60_" .* locations
+airfoilcontours = fill(joinpath.(AS.topdirectory, "data", "airfoil", "contours", AS.TODAY, contourfilenames .* ".dat"),3)
+airfoilnames = fill(contourfilenames, 3)
 
 function write_kevins_polars()
     kevins_path = joinpath(AS.topdirectory, "data", "airfoil")
@@ -235,39 +237,11 @@ end
 # alphas, Res, Machs, filenames, filepaths, airfoilobject = write_kevins_polars_extrapolated() # use to obtain Kevin's extrapolated data
 # airfoilfunctions = [fill(airfoilobject, length(radii[1]))]
 
-# run xfoil on epema digitized data
-# get contours
-epema_rRs = ["0230", "0405", "0790", "1000"]
-epema_rRs_dot = ["0.230", "0.405", "0.790", "1.000"]
-contourdirectory = joinpath(AS.topdirectory, "data", "airfoil", "contours")
-contourfiles = ["epema_" * n * ".dat" for n in epema_rRs]
-contourpaths = joinpath.(contourdirectory, contourfiles)
-contourdata = Vector{Array{Float64,2}}(undef,length(contourfiles))
-for (i, file) in enumerate(contourpaths)
-    contourdata[i] = AS.DF.readdlm(file, ','; header = true)[1]
-end
-# plot contours
-# function plot_contour(, epema_rRs_dot)
-    fig = plt.figure("epema_airfoils")
-    fig.add_subplot(111)
-    axs = fig.get_axes()
-    labels = [L"r/R = " * n for n in epema_rRs_dot]
-    for (i,data) in enumerate(contourdata)
-        cratio = i / length(contourdata)
-        axs[1].plot(data[:,1], data[:,2], color = (0.05, 0.85-cratio*0.7, 0.15 + 0.75 * cratio), label = labels[i])
-    end
-    axs[1].legend(loc="upper left", bbox_to_anchor=(1.05,1))
-    axs[1].set_xlabel(L"x/c")
-    axs[1].set_ylabel(L"y/c")
-    axs[1].set_aspect("equal")
-    fig.set_size_inches(14,3,forward=true)
-    fig.tight_layout()
-    return fig
-    # fig.savefig(joinpath(ENV["NOTEBOOK_IMG_PATH"], "epema_airfoils.pdf"))
-# end
-
 polardirectory = joinpath(AS.topdirectory, "data", "airfoil", "polars", AS.TODAY)
 plotstepi = 1:length(Js)
+
+Res = [5e4]
+Machs = [0.0]
 
 Res_list = fill(fill(Res, length(radii[1])), 3)
 Ms_list = fill(fill(Machs, length(radii[1])), 3)
@@ -282,7 +256,8 @@ spindirections = fill(true,3)
 # try by extrapolating Kevin's data myself:
 simulationdata = AS.rotor_sweep_template(Js, omegas, nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, index, positions, orientations, spindirections, Res_list, Ms_list;
     polardirectory = polardirectory,
-    closefigure=true,
+    closefigure = true,
+    useoldfiles = true,
     rotornames = [L"\theta_{r/R=0.7} = 25^\circ", L"\theta_{r/R=0.7} = 30^\circ", L"\theta_{r/R=0.7} = 35^\circ"])
 objective = AS.runsimulation!(simulationdata...)
 

@@ -49,7 +49,7 @@ function solve_vlm_bem(aircraft, parameters, freestream, environment, steprange,
     # get wake function
     flags[2] = solve_rotor_wake(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol)
     # solve VLM
-    flags[3] = solve_CF(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol)
+    flags[3] = solve_wing_CF(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol)
     # extract lift and moment distribution
     flags[4] = lift_moment_distribution_blownwing(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol)
 
@@ -93,8 +93,8 @@ function solve_vlm_bem(aircraft, steprange)
     
     params_solve_rotor_nondimensional = solve_rotor_nondimensional(aircraft, steprange) # omegas, Js, Ts, Qs, us, vs
     params_solve_rotor_wake = solve_rotor_wake(aircraft, steprange) # wakefunctions, us, vs
-    params_solve_CF = solve_CF(aircraft, steprange) # CLs, CDs, CYs
+    params_solve_wing_CF = solve_wing_CF(aircraft, steprange) # CLs, CDs, CYs
     params_lift_moment_distribution = lift_moment_distribution(aircraft, steprange) # cls, cds, cys, cmxs, cmys, cmzs
 
-    return params_solve_rotor_nondimensional..., params_solve_rotor_wake[1], params_solve_CF..., params_lift_moment_distribution...
+    return params_solve_rotor_nondimensional..., params_solve_rotor_wake[1], params_solve_wing_CF..., params_lift_moment_distribution...
 end
