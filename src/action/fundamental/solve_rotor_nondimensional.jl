@@ -5,6 +5,7 @@ Contact: rymanderson@gmail.com
 README: define an `Action` object to solve a CCBlade rotor
 =###############################################################################################
 
+
 """
     solve_rotor_nondimensional(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol) <: Action
 
@@ -20,7 +21,7 @@ README: define an `Action` object to solve a CCBlade rotor
 
 `parameters <: Parameters` requires the following elements:
 
-* `omegas::Vector{Float64}`: a vector of length `length(steprange)` containing a vector of rotational velocities for each rotor
+* `omegas::Array{Float64,2}`: [i,j]th element is the rotational velocities for the ith rotor at the jth step
 * `Js::Vector{Vector{Float64}}`: a vector of length `length(steprange)` containing a vector of advance ratios for each rotor
 * `Ts::Array{Float64,2}`: each [i,j]th element is the thrust of the ith rotor at the jth step
 * `Qs::Array{Float64,2}`: each [i,j]th element is the torque of the ith rotor at the jth step
@@ -39,7 +40,7 @@ function solve_rotor_nondimensional(aircraft, parameters, freestream, environmen
     ηs = view(parameters.ηs,:,stepi)
     us = parameters.us[stepi]
     vs = parameters.vs[stepi]
-    omegas = parameters.omegas[stepi]
+    omegas = view(parameters.omegas,:,stepi)
 
     # println("Sherlock!\n\tBEFORE:\n\n\t\tJs = $Js\n\n\t\tTs = $Ts\n\n\t\tCTs = $CTs\n\n\t\tomegas = $omegas")
 
@@ -49,6 +50,7 @@ function solve_rotor_nondimensional(aircraft, parameters, freestream, environmen
 
     return false
 end
+
 
 """
     solve_rotor_nondimensional(aircraft, steprange) <: Action
