@@ -658,7 +658,7 @@ function correctalignpolars(Res, Ms, airfoilname, cr75;
     filepaths_uncorrected = joinpath.(Ref(polardirectory), filenames_uncorrected)
     i_existingfiles_uncorrected = isfile.(filepaths_uncorrected)
 
-    @assert prod(i_existingfiles_uncorrected) "1 or more uncorrected polar files do not exist; run `airfoil2xfoil` first"
+    @assert prod(i_existingfiles_uncorrected) "The following uncorrected polar files do not exist; run `airfoil2xfoil` first\n\t$(filepaths_uncorrected[.!i_existingfiles_uncorrected])"
 
     filenames = airfoilfilenames(airfoilname, Res, Ms; viternaextrapolation=viternaextrapolation, rotationcorrection=rotationcorrection, aoaset=false)
     filepaths = joinpath.(Ref(polardirectory), filenames)

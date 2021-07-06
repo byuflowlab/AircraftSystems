@@ -4,10 +4,9 @@ import FileIO
 FM = AS.FM
 using LaTeXStrings
 plt = AS.plt
-# plt.pygui(false)
+plt.pygui(false)
 VL = AS.VL
-using Test
-using PyPlot
+# using Test
 
 # @testset "rotors" begin
 
