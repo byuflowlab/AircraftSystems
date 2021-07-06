@@ -4,13 +4,15 @@ import FileIO
 FM = AS.FM
 using LaTeXStrings
 plt = AS.plt
-plt.pygui(false)
+# plt.pygui(false)
 VL = AS.VL
 # using Test
 
 # @testset "rotors" begin
 
 include("epema_rotor_sweep.jl")
+
+include("rotor_wakefunction.jl")
 
 # end # test rotors
 

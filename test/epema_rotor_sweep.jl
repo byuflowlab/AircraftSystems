@@ -151,8 +151,9 @@ end
 rs_desired = [0.207, 0.3, 0.4, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0]
 locations = string.(Int.(round.(rs_desired .* 1000, digits=0)))
 locations[1:end-1] = "0" .* locations[1:end-1]
-# contourfilenames = "epema_interpolated_npoints10_" .* locations
-contourfilenames = "epema_interpolated_bspline_n30_" .* locations
+# contourfilenames = "epema_interpolated_bspline_n30_" .* locations
+# try just repeating the r/R = 0.7 airfoil and see how this looks
+contourfilenames = fill("epema_interpolated_bspline_n30_" * locations[8],length(locations))
 airfoilcontours = fill(joinpath.(AS.topdirectory, "data", "airfoil", "contours", "20210702", contourfilenames .* ".dat"),3)
 airfoilnames = fill(contourfilenames, 3)
 
@@ -252,7 +253,7 @@ Res_list = fill(fill(Res, length(radii[1])), 3)
 Ms_list = fill(fill(Machs, length(radii[1])), 3)
 
 index = [1,2,3]
-positions = [[0.0, 0.35 * 2.58 / 2, -10.0], [0.0, 0.35 * 2.58 / 2, 10.0], [0.0, 0.35 * 2.58 / 2, 0.0]]
+positions = [[0.0, 0.0, -10.0], [0.0, 0.0, 0.0], [0.0, 0.0, 10.0]]
 orientations = fill([-1.0, 0.0, 0.0],3)
 spindirections = fill(true,3)
 
@@ -363,7 +364,7 @@ axs[3].legend(loc="upper left", bbox_to_anchor=(1.01,1))
 # save figure
 savedirectory = joinpath(AS.topdirectory, "data", "plots", AS.TODAY)
 if !isdir(savedirectory); mkpath(savedirectory); end
-savename = "epema_rotor_sweep_extratwist_$(round(twist_extra * 180/pi; digits = 0)).pdf"
+savename = "epema_rotor_sweep_extratwist_$(round(twist_extra * 180/pi; digits = 0))_repeate07af.pdf"
 fig.savefig(joinpath(savedirectory, savename), bbox_inches="tight")
 
 # check Re
