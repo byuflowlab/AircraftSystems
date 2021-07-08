@@ -33,14 +33,13 @@ function solve_wing_CF(aircraft, parameters, freestream, environment, steprange,
     
     # interpret freestream
     vlmfreestream = VL.Freestream(freestream)
-    
+
     # get reference
     reference = aircraft.wingsystem.system.reference[1]
-    
+
     # solve vortex lattice
-    vwake = parameters.wakefunctions[stepi]
-    VL.steady_analysis!(aircraft.wingsystem.system, aircraft.wingsystem.system.surfaces, aircraft.wingsystem.system.reference[1], vlmfreestream; symmetric=true, additional_velocity = vwake)
-    
+    VL.steady_analysis!(aircraft.wingsystem.system, aircraft.wingsystem.system.surfaces, aircraft.wingsystem.system.reference[1], vlmfreestream; symmetric=true, additional_velocity = parameters.wakefunctions[stepi])
+
     # extract forces and moments
     CF, CM = VL.body_forces(aircraft.wingsystem.system; frame=VL.Wind())
     
