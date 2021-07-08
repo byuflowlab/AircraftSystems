@@ -47,6 +47,8 @@ Res_list = [fill([1e6], length(radii[1]))]
 surfacenames = ["epema wing"]
 polardirectory=joinpath(AS.topdirectory, "data","airfoil","polars","20210708")
 
+wing_npanels = 50
+
 args = AS.vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip,
                         rotor_omegas, nblades, rhub, rtip, radii, rotor_chords, rotor_twists,
                         airfoilcontours, airfoilnames, index, rotor_positions, rotor_orientations,
@@ -55,7 +57,7 @@ args = AS.vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, wing_AR, w
                         surfacenames,
                         polardirectory,
                         # other wing keyword arguments
-                        xle, yle, zle, wing_chord, wing_twist, wing_phi, Vinf, Vref, radians=true, runxfoil=false)
+                        xle, yle, zle, wing_chord, wing_twist, wing_phi, Vinf, Vref, wing_npanels, radians=true, runxfoil=false)
 
 outs = AS.runsimulation!(args...)
 
