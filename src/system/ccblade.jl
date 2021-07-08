@@ -858,7 +858,7 @@ function correctalignpolars(Res, Ms, airfoilname, cr75;
     filepaths_uncorrected = joinpath.(Ref(polardirectory), filenames_uncorrected)
     i_existingfiles_uncorrected = isfile.(filepaths_uncorrected)
 
-    @assert prod(i_existingfiles_uncorrected) "1 or more uncorrected polar files do not exist; run `airfoil2xfoil` first"
+    @assert prod(i_existingfiles_uncorrected) "The following uncorrected polar files do not exist; run `airfoil2xfoil` first\n\t$(filepaths_uncorrected[.!i_existingfiles_uncorrected])"
 
     filenames = airfoilfilenames(airfoilname, Res, Ms; viternaextrapolation, rotationcorrection, aoaset=false)
     filepaths = joinpath.(Ref(polardirectory), filenames)
@@ -1117,7 +1117,7 @@ function plotairfoil(α, cl, cd, filename, airfoilname, Re, M;
     if savefigure
         if !isdir(savepath); mkpath(savepath); end
         savename = splitext(filename)[1] * extension
-        fig.savefig(joinpath(savepath, savename))
+        fig.savefig(joinpath(savepath, savename), bbox_inches="tight")
     end
 
     if closefigure; plt.close(filename); end
@@ -1189,7 +1189,7 @@ function plotrotor(filename, rotorname, rs, chords, twists;
     if savefigure
         if !isdir(savepath); mkpath(savepath); end
         savename = splitext(filename)[1] * extension
-        fig.savefig(joinpath(savepath, savename))
+        fig.savefig(joinpath(savepath, savename), bbox_inches="tight")
     end
     
     if closefigure; plt.close(filename); end
