@@ -7,23 +7,24 @@ README: this is a template file. Convenience methods are provided to calculate t
 =###############################################################################################
 
 # initialize parameters
-struct LiftDistribution{V1,V2,V3,V4,V5,V6,V7,V8,V9,V10,V11,V12,V13,V14} <: Parameters
+struct LiftDistribution{V1,V2,V3,V4,V5,V6,V7} <: Parameters
     CLs::V1
-    CDs::V2
-    CYs::V3
-    cls::V4
-    cds::V5
-    cys::V6
-    cmxs::V7
-    cmys::V8
-    cmzs::V9
-    cfs::V10
-    cms::V11
-    plotdirectory::V12
-    plotbasename::V12
-    plotextension::V12
-    plotstepi::V13
-    surfacenames::V14
+    CDs::V1
+    CYs::V1
+    cls::V2
+    cds::V2
+    cys::V2
+    cmxs::V2
+    cmys::V2
+    cmzs::V2
+    cfs::V3
+    cms::V3
+    wakefunctions::V4
+    plotdirectory::V5
+    plotbasename::V5
+    plotextension::V5
+    plotstepi::V6
+    surfacenames::V7
 end
 
 # function (rs::RotorSweepParameters{V1, V2, V3, V4, V5})(alphas, omega...)
@@ -73,7 +74,7 @@ function lift_distribution_template(ploti, alphas, wing_b, wing_TR, wing_AR, win
     # compile actions
     actions = [solve_wing_CF, lift_moment_distribution]
     # initialize parameters
-    CLs, CDs, CYs = solve_wing_CF(aircraft, alphas) # let steprange be replaced by alphas
+    wakefunctions, CLs, CDs, CYs = solve_wing_CF(aircraft, alphas) # let steprange be replaced by alphas
     cls, cds, cys, cmxs, cmys, cmzs = lift_moment_distribution(aircraft, alphas) # let steprange be replaced by alphas
     _, _, _, _, _, _, cfs, cms, _, _, _, _ = post_plot_lift_moment_distribution(aircraft, alphas)
     # check sizes and instantiate struct
@@ -93,7 +94,7 @@ function lift_distribution_template(ploti, alphas, wing_b, wing_TR, wing_AR, win
     # prepare plot directory
     if !isdir(plotdirectory); mkpath(plotdirectory); end
     # build parameters struct
-    parameters = LiftDistribution(CLs, CDs, CYs, cls, cds, cys, cmxs, cmys, cmzs, cfs, cms, plotdirectory, plotbasename, plotextension, ploti, surfacenames)
+    parameters = LiftDistribution(CLs, CDs, CYs, cls, cds, cys, cmxs, cmys, cmzs, cfs, cms, wakefunctions, plotdirectory, plotbasename, plotextension, ploti, surfacenames)
     # build freestream_function
     function freestream_function(aircraft, parameters, environment, alphas, stepi)
         # calculate freestream
@@ -109,7 +110,7 @@ function lift_distribution_template(ploti, alphas, wing_b, wing_TR, wing_AR, win
         Environment() # arbitrary
     end
     # compile postactions
-    postactions = [plot_clalphasweep, post_plot_lift_moment_distribution]
+    postactions = [post_plot_cl_alpha_sweep, post_plot_lift_moment_distribution]
     # build objective_function
     objective_function(aircraft, parameters, freestream, environment, alphas) = 0.0
 

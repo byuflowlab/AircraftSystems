@@ -63,9 +63,10 @@ Outputs:
 """
 function solve_wing_CF(aircraft, steprange)
 
+    wakefunctions = Vector{Any}(nothing,length(steprange))
     CLs = zeros(length(steprange))
     CDs = zeros(length(steprange))
     CYs = zeros(length(steprange))
 
-    return CLs, CDs, CYs
+    return wakefunctions, CLs, CDs, CYs
 end

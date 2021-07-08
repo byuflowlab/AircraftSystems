@@ -40,7 +40,7 @@ function post_plot_cl_alpha_sweep(aircraft, parameters, alpharange, stepsymbol)
     # check data
     @assert isdir(plotdirectory) "plotdirectory $plotdirectory does not exist"
     # prepare figure
-    fig = plt.figure("clalphasweep")
+    fig = plt.figure(plotbasename * "_clalphasweep")
     fig.clear()
     fig.add_subplot(311, ylabel = L"C_L")
     fig.add_subplot(312, ylabel = L"C_D")
@@ -52,7 +52,7 @@ function post_plot_cl_alpha_sweep(aircraft, parameters, alpharange, stepsymbol)
     end
     # save
     savepath = joinpath(plotdirectory, plotbasename * "_clalphasweep" * plotextension)
-    fig.savefig(savepath)
+    fig.savefig(savepath, bbox_inches="tight")
     return false
 end
 

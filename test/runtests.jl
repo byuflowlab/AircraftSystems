@@ -8,19 +8,22 @@ plt = AS.plt
 VL = AS.VL
 # using Test
 
+plotdirectory = "/Users/randerson/Box/research/projects/AircraftSystems/data/plots/$(AS.TODAY)"
+notebookdirectory = ENV["NOTEBOOK_IMG_PATH"]
+
 # @testset "rotors" begin
 
 include("epema_rotor_sweep.jl")
 
-include("rotor_wakefunction.jl")
+# include("rotor_wakefunction.jl")
 
 # end # test rotors
 
 # @testset "wings" begin
 
-# include("prowim_propsoff_clalpha.jl")
+include("prowim_propsoff_clalpha.jl")
 
-# include("prowim_propsoff_liftdist.jl")
+include("prowim_propsoff_liftdist.jl")
 
 # end # test wings
 
@@ -29,10 +32,7 @@ include("rotor_wakefunction.jl")
 
 # @testset "wings_and_rotors" begin
 
-# include("proowim_propson_liftdist.jl")
-
-# test rotor wake
-# include("rotor_wakefunction.jl")
+include("prowim_propson_liftdist.jl")
 
 # end # test wings_and_rotors
 

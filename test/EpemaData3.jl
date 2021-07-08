@@ -883,7 +883,7 @@ function plot_contours(rotor, Npoints, Npoints_smoothed, plotdirectory;
         a.plot(linex, line.(linex), label = "midpoint line")
         a.legend()
         savepath = joinpath(plotdirectory, plotnames[i] * extension)
-        fig.savefig(savepath)
+        fig.savefig(savepath, bbox_inches="tight")
     end
     return rotor
 end
@@ -917,7 +917,7 @@ function plot_interpolated_contours(rotor, Npoints_condition, Npoints_smoothed, 
     a.set_ylabel(L"y/c")
     fig.tight_layout()
     savepath = joinpath(plotdirectory, plotname)
-    fig.savefig(savepath)
+    fig.savefig(savepath, bbox_inches="tight")
     return nothing
 end
 

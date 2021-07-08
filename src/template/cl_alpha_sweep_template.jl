@@ -7,13 +7,14 @@ README: this is a template file. Convenience methods are provided to prepare a s
 =###############################################################################################
 
 # initialize parameters
-struct CLAlphaSweep{V1,V2,V3,V4,V5,V6} <: Parameters
+struct CLAlphaSweep{V1,V2,V3} <: Parameters
     CLs::V1
-    CDs::V2
-    CYs::V3
-    plotdirectory::V4
-    plotbasename::V5
-    plotextension::V6
+    CDs::V1
+    CYs::V1
+    wakefunctions::V2
+    plotdirectory::V3
+    plotbasename::V3
+    plotextension::V3
 end
 
 # function (rs::RotorSweepParameters{V1, V2, V3, V4, V5})(alphas, omega...)
@@ -46,13 +47,13 @@ function cl_alpha_sweep_template(alphas, wing_b, wing_TR, wing_AR, wing_θroot, 
     actions = [solve_wing_CF]
 
     # initialize parameters
-    CLs, CDs, CYs = solve_wing_CF(aircraft, alphas) # let steprange be replaced by alphas
+    wakefunctions, CLs, CDs, CYs = solve_wing_CF(aircraft, alphas) # let steprange be replaced by alphas
 
     # check sizes and instantiate struct
     @assert length(CLs) == length(alphas) "length of parameter CLs and alphas inconsistent"
     @assert length(CDs) == length(alphas) "length of parameter CDs and alphas inconsistent"
     @assert length(CYs) == length(alphas) "length of parameter CYs and alphas inconsistent"
-    parameters = CLAlphaSweep(CLs, CDs, CYs, plotdirectory, plotbasename, plotextension)
+    parameters = CLAlphaSweep(CLs, CDs, CYs, wakefunctions, plotdirectory, plotbasename, plotextension)
 
     # build freestream_function
     function freestream_function(aircraft, parameters, environment, alphas, stepi)

@@ -151,12 +151,14 @@ end
 rs_desired = [0.207, 0.3, 0.4, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0]
 locations = string.(Int.(round.(rs_desired .* 1000, digits=0)))
 locations[1:end-1] = "0" .* locations[1:end-1]
+# use all the distinct polars:
 # contourfilenames = "epema_interpolated_bspline_n30_" .* locations
-# try just repeating the r/R = 0.7 airfoil and see how this looks
+# or try just repeating the r/R = 0.7 airfoil and see how this looks:
 contourfilenames = fill("epema_interpolated_bspline_n30_" * locations[8],length(locations))
 airfoilcontours = fill(joinpath.(AS.topdirectory, "data", "airfoil", "contours", "20210702", contourfilenames .* ".dat"),3)
 airfoilnames = fill(contourfilenames, 3)
 
+# or try resurrecting Kevin's data
 function write_kevins_polars()
     kevins_path = joinpath(AS.topdirectory, "data", "airfoil")
     # epema_data = FileIO.load(joinpath(kevins_path, "epema_data_from_kevin.jld2"))
@@ -257,14 +259,16 @@ positions = [[0.0, 0.0, -10.0], [0.0, 0.0, 0.0], [0.0, 0.0, 10.0]]
 orientations = fill([-1.0, 0.0, 0.0],3)
 spindirections = fill(true,3)
 
-# try with Kevin's extrapolated data directly:
-# simulationdata = AS.rotor_sweep_template(Js, omegas, nblades, rhub, rtip, radii, chords, twists, airfoilfunctions, index, positions, orientations, spindirections; polardirectory = polardirectory, closefigure=true)
-# try by extrapolating Kevin's data myself:
+plotbasename = "epema"
 simulationdata = AS.rotor_sweep_template(Js, omegas, nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, index, positions, orientations, spindirections, Res_list, Ms_list;
     polardirectory = polardirectory,
     closefigure = true,
     useoldfiles = true,
-    rotornames = [L"\theta_{r/R=0.7} = 25^\circ", L"\theta_{r/R=0.7} = 30^\circ", L"\theta_{r/R=0.7} = 35^\circ"])
+    rotornames = [L"\theta_{r/R=0.7} = 25^\circ", L"\theta_{r/R=0.7} = 30^\circ", L"\theta_{r/R=0.7} = 35^\circ"],
+    plotdirectory = joinpath(AS.topdirectory, "data","plots",TODAY),
+    plotbasename = plotbasename,
+    plotextension = ".pdf"
+    )
 objective = AS.runsimulation!(simulationdata...)
 
 epema_data = Vector{Array{Float64,2}}(undef,3)
@@ -339,20 +343,56 @@ epema_ct[3] = [
     1.7992831541218635 0.015429122468659573;
 ]
 
-fig = plt.figure("rotorsweep")
+# Epema xrotor data
+ct_xrotor = [
+    [
+        0.3985663082437276 0.32015429122468664;
+        0.49749103942652323 0.2989392478302797;
+        0.5992831541218637 0.2626808100289297;
+        0.6996415770609317 0.22873674059787855;
+        0.7985663082437275 0.19749276759884285;
+        0.9003584229390678 0.14773384763741565;
+        0.9978494623655914 0.10183220829315337;
+        1.0996415770609316 0.054387656702025056;
+    ],
+    [
+        0.5992831541218637 0.3502410800385729;
+        0.6967741935483871 0.31205400192864036;
+        0.7985663082437275 0.2808100289296047;
+        0.9003584229390678 0.2464802314368371;
+        0.9978494623655914 0.21947926711668278;
+        1.0967741935483868 0.18090646094503376;
+        1.1985663082437275 0.13654773384763746
+    ],
+    [
+        0.6967741935483871 0.3988428158148506;
+        0.7985663082437275 0.37801350048216015;
+        0.8974910394265232 0.3529411764705883;
+        0.9978494623655914 0.3232401157184186;
+        1.0967741935483868 0.2950819672131148;
+        1.1985663082437275 0.2595949855351978;
+        1.3992831541218638 0.18399228543876572;
+        1.496774193548387 0.1307618129218901;
+        1.5985663082437271 0.08563162970106075;
+        1.697491039426523 0.035486981677917084;
+    ]
+]
+
+fig = plt.figure(plotbasename * "_rotorsweep")
 axs = fig.get_axes()
 
 # plot CTs
 for (i,data) in enumerate(epema_ct)
     cratio = i / length(epema_ct)
-    axs[1].scatter(data[:,1], data[:,2], color = (0.05, 0.85-cratio*0.7, 0.15 + 0.75 * cratio), label="Experiment")
+    axs[1].scatter(data[:,1], data[:,2], marker = "o", s = 100, facecolors="none", edgecolors = (0.05, 0.85-cratio*0.7, 0.15 + 0.75 * cratio), label="Experiment")
+    axs[1].scatter(ct_xrotor[i][:,1], marker = "x", ct_xrotor[i][:,2], color = (0.05, 0.85-cratio*0.7, 0.15 + 0.75 * cratio), label="XROTOR")
 end
 axs[1].legend(loc="upper left", bbox_to_anchor=(1.01,1))
 
 # plot efficiencies
 for (i,data) in enumerate(epema_data)
     cratio = i / length(epema_data)
-    axs[3].scatter(data[:,1], data[:,2], color = (0.05, 0.85-cratio*0.7, 0.15 + 0.75 * cratio), label="Experiment")
+    axs[3].scatter(data[:,1], data[:,2], marker = "o", s = 100, facecolors="none", edgecolors = (0.05, 0.85-cratio*0.7, 0.15 + 0.75 * cratio), label="Experiment")
 end
 axs[3].legend(loc="upper left", bbox_to_anchor=(1.01,1))
 

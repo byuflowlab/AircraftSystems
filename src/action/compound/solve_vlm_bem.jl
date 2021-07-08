@@ -94,5 +94,5 @@ function solve_vlm_bem(aircraft, steprange)
     params_solve_wing_CF = solve_wing_CF(aircraft, steprange) # CLs, CDs, CYs
     params_lift_moment_distribution = lift_moment_distribution(aircraft, steprange) # cls, cds, cys, cmxs, cmys, cmzs
 
-    return params_solve_rotor_nondimensional..., params_solve_rotor_wake[1], params_solve_wing_CF..., params_lift_moment_distribution...
+    return params_solve_rotor_nondimensional..., params_solve_rotor_wake[1], params_solve_wing_CF[2:end]..., params_lift_moment_distribution...
 end

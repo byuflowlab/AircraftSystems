@@ -35,6 +35,7 @@ Inputs:
 function plot_lift_moment_distribution(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol)
     # extract plot indices
     plotstepi = parameters.plotstepi
+    basename = parameters.plotbasename
     if stepi in plotstepi
         # extract info
         surfacenames = parameters.surfacenames
@@ -48,7 +49,7 @@ function plot_lift_moment_distribution(aircraft, parameters, freestream, environ
         # cd_ylim = parameters.cd_ylim
         # cy_ylim = parameters.cy_ylim
         # create axes
-        fig = plt.figure("liftdistribution")
+        fig = plt.figure(basename * "_liftdistribution")
         nsurfaces = length(surfacenames)
         nsubplotbase = 300 + 10 * nsurfaces
         if stepi == parameters.plotstepi[1]
@@ -82,14 +83,14 @@ function plot_lift_moment_distribution(aircraft, parameters, freestream, environ
         end
         # save
         if stepi == plotstepi[end] # last step
-            axs[3].legend(loc="upper left", bbox_to_anchor=(1.05,1)) # set legend
+            axs[3].legend(loc="upper left", bbox_to_anchor=(1.01,1)) # set legend
             fig.tight_layout() # clean up white space
-            savepath = joinpath(plotdirectory, plotbasename * "_cl_dist" * plotextension)
-            fig.savefig(savepath)
+            savepath = joinpath(plotdirectory, plotbasename * "_liftdistribution" * plotextension)
+            fig.savefig(savepath, bbox_inches="tight")
         end
 
         # cms plot
-        fig = plt.figure("momentdistribution")
+        fig = plt.figure(basename * "_momentdistribution")
         nsurfaces = length(surfacenames)
         nsubplotbase = 300 + 10 * nsurfaces
         if stepi == parameters.plotstepi[1]
@@ -121,10 +122,10 @@ function plot_lift_moment_distribution(aircraft, parameters, freestream, environ
         end
         # save
         if stepi == plotstepi[end]
-            axs[2].legend(loc="upper left", bbox_to_anchor=(1.05,1)) # set legend
+            axs[2].legend(loc="upper left", bbox_to_anchor=(1.01,1)) # set legend
             fig.tight_layout() # clean up white space
-            savepath = joinpath(plotdirectory, plotbasename * "_cm_dist" * plotextension)
-            fig.savefig(savepath)
+            savepath = joinpath(plotdirectory, plotbasename * "_momentdistribution" * plotextension)
+            fig.savefig(savepath, bbox_inches="tight")
         end
     end
     return false

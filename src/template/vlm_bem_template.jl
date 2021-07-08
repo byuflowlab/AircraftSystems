@@ -64,7 +64,7 @@ Keyword Arguments:
 * `plotextension = ".pdf"`: saved plots file extension
 
 """
-function vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, omegas, nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, index, rotor_X, rotor_orientation, spindirections, Res_list = [fill([5e4, 1e5, 1e6], length(radii))];
+function vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, omegas, nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, index, rotor_X, rotor_orientation, spindirections, Res_list, Ms_list;
     surfacenames = ["default wing"],
     rotornames = ["rotor 1"],
     plotdirectory = joinpath(topdirectory, "data","plots",TODAY),
@@ -75,7 +75,7 @@ function vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, wing_AR, wi
 );
     # prepare subsystems
     wings = simplewingsystem(wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip; kwargs...)
-    rotors = CCBladeSystem(nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, index, rotor_X, rotor_orientation, spindirections, Res_list = Res_list; kwargs...)
+    rotors = CCBladeSystem(nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, index, rotor_X, rotor_orientation, spindirections, Res_list, Ms_list; kwargs...)
     nonliftingbodies = nothing
     structures = nothing
     motors = nothing
@@ -134,6 +134,10 @@ function vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, wing_AR, wi
         * `plotextension::String` : extension of saved figure file names
         * `plotstepi::Vector{Int}` : which steps at which to plot
     =#
+    # println("Sherlock! \n\ttypeof(params_post_plot_lift_moment_distribution) = $(typeof(params_post_plot_lift_moment_distribution))")
+    # println("\tparams_post_plot_lift_moment_distribution = $params_post_plot_lift_moment_distribution")
+    if !isnothing(surfacenames); params_post_plot_lift_moment_distribution[9] .= surfacenames; end
+
     params_post_plot_rotor_sweep = post_plot_rotor_sweep(aircraft, steprange)
     #= Contains:
         * `Js::AbstractArray` : array of advance ratios of the ith rotor at the jth step
@@ -145,11 +149,12 @@ function vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, wing_AR, wi
         * `plotbasename::String` : first portion of the saved figure file name
         * `plotextension::String` : extension of saved figure files
     =#
+    if !isnothing(rotornames); params_post_plot_rotor_sweep[5] .= rotornames; end
     # prepare plot directory
     if !isdir(plotdirectory); mkpath(plotdirectory); end
     println("==== MSG ====\n\tplotdirectory = $plotdirectory")
     # build parameters struct
-    parameters = VLM_BEM(omegas, params_solve_vlm_bem[2:end]..., params_post_plot_lift_moment_distribution[7:9]..., params_post_plot_rotor_sweep[5], plotdirectory, params_post_plot_lift_moment_distribution[11:12]..., plotstepi)
+    parameters = VLM_BEM(omegas, params_solve_vlm_bem[2:end]..., params_post_plot_lift_moment_distribution[7:9]..., params_post_plot_rotor_sweep[5], plotdirectory, plotbasename, plotextension, plotstepi)
     # build freestream_function
     function freestream_function(aircraft, parameters, environment, alphas, stepi)
         # calculate freestream

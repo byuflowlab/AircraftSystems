@@ -44,7 +44,7 @@ function post_plot_rotor_sweep(aircraft, parameters, steprange, stepsymbol)
     @assert length(rotornames) == nrotors "length of rotornames is inconsistent: got $(length(rotornames)); expected $nrotors"
     @assert isdir(plotdirectory) "plotdirectory does not exist"
     # prepare figure
-    fig = plt.figure("rotorsweep")
+    fig = plt.figure(plotbasename * "_rotorsweep")
     fig.clear()
     fig.add_subplot(311, ylabel = L"C_T")
     fig.add_subplot(312, ylabel = L"C_Q")
@@ -63,7 +63,7 @@ function post_plot_rotor_sweep(aircraft, parameters, steprange, stepsymbol)
     fig.tight_layout()
     # save
     savepath = joinpath(plotdirectory, plotbasename * "_rotorsweep" * plotextension)
-    fig.savefig(savepath)
+    fig.savefig(savepath, bbox_inches = "tight")
     return false
 end
 

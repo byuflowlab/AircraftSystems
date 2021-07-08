@@ -827,7 +827,7 @@ function plotairfoil(α, cl, cd, filename, airfoilname, Re, M;
     if savefigure
         if !isdir(savepath); mkpath(savepath); end
         savename = splitext(filename)[1] * extension
-        fig.savefig(joinpath(savepath, savename))
+        fig.savefig(joinpath(savepath, savename), bbox_inches="tight")
     end
     if closefigure; plt.close(filename); end
 
@@ -891,7 +891,7 @@ function plotrotor(filename, rotorname, rs, chords, twists;
     if savefigure
         if !isdir(savepath); mkpath(savepath); end
         savename = splitext(filename)[1] * extension
-        fig.savefig(joinpath(savepath, savename))
+        fig.savefig(joinpath(savepath, savename), bbox_inches="tight")
     end
     if closefigure; plt.close(filename); end
 
