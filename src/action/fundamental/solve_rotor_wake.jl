@@ -5,6 +5,7 @@ Contact: rymanderson@gmail.com
 README: define an `Action` object to solve for the wake of a rotor system
 =###############################################################################################
 
+
 """
     solve_rotor_wake(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol) <: Action
 
@@ -34,13 +35,14 @@ function solve_rotor_wake(aircraft, parameters, freestream, environment, stepran
                                         axialinterpolation = (rs, us, r) -> FM.linear(rs, us, r),
                                         swirlinterpolation = (rs, vs, r) -> FM.linear(rs, vs, r),
                                         axialmultiplier = (distance2plane, Rtip) -> 2,
-                                        swirlmultiplier = (distance2plane, Rtip) -> 1
+                                        swirlmultiplier = (distance2plane, Rtip) -> -1
                                         )
 
     parameters.wakefunctions[stepi] = wakefunction
 
     return false
 end
+
 
 """
     solve_rotor_wake(aircraft, steprange)
