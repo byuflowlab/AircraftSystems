@@ -8,10 +8,13 @@ plt = AS.plt
 VL = AS.VL
 using Test
 using PyPlot
+using Infiltrator
+import LinearAlgebra
+LA = AS.LA
 
 # @testset "rotors" begin
 
-include("epema_rotor_sweep.jl")
+# include("epema_rotor_sweep.jl")
 
 # end # test rotors
 
@@ -34,6 +37,14 @@ include("epema_rotor_sweep.jl")
 @testset "Epema Blown Wing Validation" begin
 
     include("epema_blown_wing_cl.jl")
+
+end
+
+# @testset "Veldhuis Blown Wing Validation" begin
+
+#     include("veldhuis_blown_wing_cl.jl")
+
+# end
 
 # @testset "wings_and_rotors" begin
 
