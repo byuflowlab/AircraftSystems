@@ -23,11 +23,12 @@ rotor_chord_data = rotor["r/R vs chord/R"]
 rotor_twist_data = rotor["r/R vs twist"]
 radii = [rotor_chord_data[:,1] * rtip[1]]
 rotor_chords = [rotor_chord_data[:,2] * rtip[1]]
-rotor_twists = [FM.linear(rotor_twist_data[:,1]*rtip[1], rotor_twist_data[:,2], radii[1])]
+# rotor_twists = [FM.linear(rotor_twist_data[:,1]*rtip[1], rotor_twist_data[:,2], radii[1])]
+rotor_twists = [FM.linear(rotor_twist_data[:,1]*rtip[1], rotor_twist_data[:,2], radii[1]) * pi/180]
 
-airfoilcontour = joinpath(AS.topdirectory, "data", "airfoil", "contours", "e212-il.csv")
+airfoilcontour = joinpath(AS.topdirectory, "data", "airfoil", "contours", "mh117-il-new.csv")
 airfoilcontours = [fill(airfoilcontour, length(radii[1]))]
-airfoilname = "eppler212"
+airfoilname = "mh117"
 airfoilnames = [fill(airfoilname, length(radii[1]))]
 index = [1]
 rotor_positions = [[0.0; rotor[:"y"]; 0.0]]
@@ -42,17 +43,19 @@ wing_chord = epema_chords[:,2]
 wing_twist = [0.0, 0.0, 0.0]
 wing_phi = [0.0, 0.0, 0.0]
 
+Res_list = [fill([1e6], length(radii[1]))]
 surfacenames = ["epema wing"]
-polardirectory=joinpath(AS.topdirectory, "data","airfoil","polars","20210618")
+polardirectory=joinpath(AS.topdirectory, "data","airfoil","polars","20210708")
 
 args = AS.vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip,
                         rotor_omegas, nblades, rhub, rtip, radii, rotor_chords, rotor_twists,
                         airfoilcontours, airfoilnames, index, rotor_positions, rotor_orientations,
                         spindirections;
+                        Res_list,
                         surfacenames,
                         polardirectory,
                         # other wing keyword arguments
-                        xle, yle, zle, wing_chord, wing_twist, wing_phi, Vinf, Vref)
+                        xle, yle, zle, wing_chord, wing_twist, wing_phi, Vinf, Vref, radians=true, runxfoil=false)
 
 outs = AS.runsimulation!(args...)
 
