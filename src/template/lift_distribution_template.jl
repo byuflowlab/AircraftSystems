@@ -29,9 +29,10 @@ README: this is a template file. Convenience methods are provided to calculate t
 * `plotextension::V12`
 * `plotstepi::V13`
 * `surfacenames::V14`
+* `wakefunctions::V15`: additional velocity function; default is nothing
 
 """
-struct LiftDistribution{V1,V2,V3,V4,V5,V6,V7,V8,V9,V10,V11,V12,V13,V14} <: Parameters
+struct LiftDistribution{V1,V2,V3,V4,V5,V6,V7,V8,V9,V10,V11,V12,V13,V14,V15} <: Parameters
     CLs::V1
     CDs::V2
     CYs::V3
@@ -48,7 +49,11 @@ struct LiftDistribution{V1,V2,V3,V4,V5,V6,V7,V8,V9,V10,V11,V12,V13,V14} <: Param
     plotextension::V12
     plotstepi::V13
     surfacenames::V14
+    wakefunctions::V15
 end
+
+LiftDistribution(CLs, CDs, CYs, cls, cds, cys, cmxs, cmys, cmzs, cfs, cms, plotdirectory, plotbasename, plotextension, ploti, surfacenames; wakefunctions=[nothing]) = 
+    LiftDistribution(CLs, CDs, CYs, cls, cds, cys, cmxs, cmys, cmzs, cfs, cms, plotdirectory, plotbasename, plotextension, ploti, surfacenames, wakefunctions)
 
 # function (rs::RotorSweepParameters{V1, V2, V3, V4, V5})(alphas, omega...)
 
@@ -70,6 +75,7 @@ end
 
 # Arguments:
 
+* `vinfs::Vector{Float64}`: freestream velocity for each time step
 * `ploti`
 * `alphas::Vector{Float64}`
 * `wing_b::Float64`
@@ -87,7 +93,7 @@ end
 * `surfacenames`
 
 """
-function lift_distribution_template(ploti, alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip;
+function lift_distribution_template(vinfs, ploti, alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip;
             plotdirectory=joinpath(topdirectory,"data","plots",TODAY),
             plotbasename="default",
             plotextension=".pdf",
@@ -139,7 +145,7 @@ function lift_distribution_template(ploti, alphas, wing_b, wing_TR, wing_AR, win
     function freestream_function(aircraft, parameters, environment, alphas, stepi)
         
         # calculate freestream
-        vinf = 1.0 # + ti # arbitrary for lift distribution?
+        vinf = vinfs[stepi]
         alpha = alphas[stepi]
         beta = 0.0
         Omega = zeros(3)
@@ -154,7 +160,7 @@ function lift_distribution_template(ploti, alphas, wing_b, wing_TR, wing_AR, win
     end
     
     # compile postactions
-    postactions = [plot_clalphasweep, post_plot_lift_moment_distribution]
+    postactions = [post_plot_cl_alpha_sweep, post_plot_lift_moment_distribution]
     
     # build objective_function
     objective_function(aircraft, parameters, freestream, environment, alphas) = 0.0
