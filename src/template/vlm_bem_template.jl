@@ -130,8 +130,8 @@ end
 """
 function vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, 
             omegas, nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, 
-            index, rotor_positions, rotor_orientation, spindirections, 
-            Res_list = [fill([5e4, 1e5, 1e6], length(radii))];
+            index, rotor_positions, rotor_orientation, spindirections; 
+            Res_list = [fill([5e4, 1e5, 1e6], length(radii[i])) for i in 1:length(nblades)],
             surfacenames = ["default wing"],
             rotornames = ["rotor 1"],
             plotdirectory = joinpath(topdirectory, "data","plots",TODAY),
@@ -139,7 +139,7 @@ function vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, wing_AR, wi
             plotextension = ".pdf",
             stepsymbol = L"\alpha ",
             kwargs...)
-
+    
     # prepare subsystems
     wings = simplewingsystem(; wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, kwargs...)
     rotors = CCBladeSystem(nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, index, rotor_positions, rotor_orientation, spindirections; Res_list, kwargs...)
