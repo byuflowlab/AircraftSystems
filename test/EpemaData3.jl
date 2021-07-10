@@ -1,7 +1,6 @@
 "20210702- working well, but still struggling to get the nose looking right. I just discovered B-splines and will try those."
 module EpemaData3
 using Base: Forward, find_all_in_cache_path
-import Dates
 import DelimitedFiles
 DF = DelimitedFiles
 import Splines
@@ -116,6 +115,86 @@ rotor["chord vs. r/R"] = [
     1.0 0.06817713697219355
 ]
 rotor["chord vs. r/R"][:,2] .*= rotor["radius"]
+rotor["chords_raw"] = [
+    0.20689655 0.15571575695159628
+    0.23119777158774377 0.15571575695159628;
+    0.24373259052924792 0.15489186405767247;
+    0.254874651810585 0.15427394438722963;
+    0.2646239554317549 0.1536560247167868;
+    0.2771587743732591 0.152832131822863;
+    0.28690807799442897 0.15242018537590113;
+    0.29944289693593307 0.1515962924819773;
+    0.31058495821727017 0.15097837281153448;
+    0.32033426183844016 0.1505664263645726;
+    0.33008356545961004 0.14994850669412974;
+    0.34122562674094703 0.1493305870236869;
+    0.35027855153203336 0.14871266735324407;
+    0.3621169916434541 0.14809474768280123;
+    0.3746518105849582 0.14747682801235837;
+    0.3857938718662953 0.14685890834191553;
+    0.39484679665738176 0.14644696189495365;
+    0.4032033426183844 0.14582904222451082;
+    0.41364902506963797 0.14562306900102984;
+    0.42479108635097473 0.14582904222451082;
+    0.43454038997214484 0.14603501544799175;
+    0.44846796657381605 0.1462409886714727;
+    0.4623955431754875 0.14624098867147267;
+    0.4798050139275766 0.14644696189495363;
+    0.4972144846796658 0.14665293511843458;
+    0.5097493036211699 0.14665293511843458;
+    0.5250696378830083 0.1474768280123584;
+    0.5181058495821728 0.1470648815653965;
+    0.5376044568245125 0.14809474768280123;
+    0.5536211699164346 0.14891864057672502;
+    0.5682451253481894 0.14953656024716785;
+    0.5793871866295265 0.15015447991761072;
+    0.5919220055710307 0.1505664263645726;
+    0.6016713091922006 0.15097837281153448;
+    0.6142061281337048 0.1515962924819773;
+    0.6267409470752089 0.1518022657054583;
+    0.6406685236768802 0.15200823892893922;
+    0.6559888579387188 0.15221421215242015;
+    0.6740947075208914 0.15262615859938206;
+    0.6866295264623956 0.152832131822863;
+    0.6991643454038998 0.1532440782698249;
+    0.7103064066852367 0.1532440782698249;
+    0.7207520891364904 0.15345005149330587;
+    0.7381615598885793 0.15303810504634396;
+    0.756267409470752 0.15242018537590113;
+    0.7743732590529246 0.15200823892893922;
+    0.7862116991643455 0.1518022657054583;
+    0.7889972144846799 0.1518022657054583;
+    0.7924791086350975 0.1511843460350154;
+    0.7966573816155988 0.15036045314109164;
+    0.8077994428969361 0.1480947476828012;
+    0.8217270194986074 0.1454170957775489;
+    0.83983286908078 0.1419155509783728;
+    0.8565459610027856 0.1388259526261586;
+    0.8586350974930362 0.1384140061791967;
+    0.8607242339832869 0.13779608650875386;
+    0.8662952646239553 0.13553038105046342;
+    0.8746518105849582 0.13223480947476826;
+    0.8837047353760447 0.12852729145211123;
+    0.8920612813370473 0.12523171987641607;
+    0.8990250696378829 0.1223480947476828;
+    0.9059888579387186 0.11946446961894952;
+    0.9129526462395544 0.11658084449021626;
+    0.91991643454039 0.113697219361483;
+    0.9317548746518106 0.10875386199794025;
+    0.9366295264623955 0.10628218331616889;
+    0.9456824512534819 0.10175077239958805;
+    0.953342618384401 0.09763130792996907;
+    0.9610027855153204 0.09351184346035016;
+    0.9658774373259055 0.09083419155509764;
+    0.9721448467966572 0.08692070030895985;
+    0.9770194986072421 0.08362512873326469;
+    0.9811977715877437 0.08074150360453139;
+    0.9860724233983288 0.07765190525231722;
+    0.9902506963788301 0.07456230690010296;
+    0.9937325905292481 0.07209062821833162;
+    0.998607242339833 0.06920700308959835;
+    1.0 0.06817713697219355
+] .* rotor["diameter"] / 2
 rotor["twist vs. r/R"] = [
     0.20689655 0.17550647087207333
     0.23178214543117073 0.17550647087207333;
@@ -163,8 +242,52 @@ rotor["twist vs. r/R"] = [
     1.0 0.073276368795515
 ]
 rotor["twist vs. r/R"][:,2] .*= 60 / 0.2 # convert because I got the axes wrong when digitizing the data
-
-
+rotor["twists_raw"] = [
+    0.20689655          52.651941261622 # tacked on to reach hub radius
+    0.2317821454311707  52.651941261622;
+    0.254709079221614   51.51808027194226;
+    0.272959074351832   50.56838527075396;
+    0.2909986948984163  49.651357910884165;
+    0.3083545980481913  48.74133075986835;
+    0.3257105011979664  47.862415648203495;
+    0.3439604963281844  46.91427624898273;
+    0.3598963710384323  46.02058291862616;
+    0.3772522741882074  45.176095321212834;
+    0.3946081773379823  44.29411614506643;
+    0.4119640804877574  43.469411404997956;
+    0.4311433691656533  42.47811920314493;
+    0.4465005746342795  41.74112190590048;
+    0.4638564777840545  40.86998480407336;
+    0.4808617566277734  40.068849790785926;
+    0.4982176597775484  39.20549069879656;
+    0.516415061261858   38.32501998516417;
+    0.5345072754543507  37.502106544331056;
+    0.5527046769386602  36.63096944250393;
+    0.5707968911311531  35.77538836035231;
+    0.588152794280928   34.935363297876165;
+    0.6061924148275124  34.07589321080567;
+    0.625283908292265   33.22186773062159;
+    0.6433761224847576  32.47751218914967;
+    0.661415743031342   31.688821991602623;
+    0.6805072364960946  30.89079818225029;
+    0.6985994506885872  30.11299719847608;
+    0.7166390712351716  29.34375202552339;
+    0.7355727837621989  28.71373322866628;
+    0.7562420866042037  28.0557135963933;
+    0.7753861737148646  27.476251863481515;
+    0.7943198862418919  26.900679135488605;
+    0.8146210335625379  26.34766263602514;
+    0.8337651206731987  25.842869797555686;
+    0.8540662679938448  25.297631307929965;
+    0.8732103551045057  24.80061647929824;
+    0.8917759121101739  24.338602694936363;
+    0.9095657128386935  23.90808985041734;
+    0.9265052496250269  23.47835480688209;
+    0.9425024835888346  23.094315571143582;
+    0.9598583867386096  22.69180356204043;
+    0.9790550674951789  22.302424660818083;
+    1.0000000000000000  21.9829106386545
+]
 rotor["airfoils_raw"] = [
     [
         0.9974489795918366 0.013191489361702113;
@@ -568,6 +691,13 @@ rotor["airfoils_raw"] = [
     ]
 ]
 
+setup = Dict{String,Union{Int, String, Float64, Vector{Float64}, Array{Float64,2}}}()
+setup["Re"] = 0.3e6
+setup["Vinf"] = 19.0 # m/s
+setup["wing_aoa"] = 4.0 # deg.
+setup["J"] = 0.695
+setup["rotor_CT"] = 0.30
+
 function cosinepoints(Npoints)
     xupper_desired = 1.0 .- sin.(range(0,pi/2,length=Npoints))
     # xupper_desired[1] = 1.0
@@ -610,52 +740,6 @@ function get_midpointline(airfoil, midpoint_xc = 0.5)
 end
 
 get_leadingedge_i(airfoil) = findfirst((x) -> x == minimum(airfoil[:,1]), airfoil[:,1])
-
-function forwarddifference(airfoil, i)
-    p1 = airfoil[i,:]
-    p2 = airfoil[i+1,:]
-    dydx = (p2[2] - p1[2]) / (p2[1] - p1[1])
-    return dydx
-end
-
-function backwarddifference(airfoil, i)
-    p1 = airfoil[i,:]
-    p2 = airfoil[i-1,:]
-    dydx = (p2[2] - p1[2]) / (p2[1] - p1[1])
-    return dydx
-end
-
-function normal(airfoil, i, dydx_normal)
-    # get equation for the line
-    y(x) = airfoil[i,2] + dydx_normal * (x - airfoil[i,1])
-    b = y(0.0)
-    return dydx_normal, b
-end
-
-function normal_forward(airfoil, i)
-    dydx = forwarddifference(airfoil, i)
-    dydx_normal = -1/dydx
-    return normal(airfoil, i, dydx_normal)
-end
-
-function normal_backward(airfoil, i)
-    dydx = backwarddifference(airfoil, i)
-    dydx_normal = -1/dydx
-    return normal(airfoil, i, dydx_normal)
-end
-
-function find_intersection(m1, b1, m2, b2)
-    x = (b2 - b1) / (m1 - m2)
-    y = b1 + m1 * x
-    @assert isapprox(y, b2 + m2 * x) "Logic error in finding intersection"
-    return x, y
-end
-
-function myatan(y,x)
-    theta = atan(y,x)
-    if theta < 0; theta += 2*pi; end
-    return theta
-end
 
 function condition_airfoils!(rotor, Npoints_cosine, Npoints_smoothed;
         smoothing_n = 30,
@@ -933,8 +1017,8 @@ function write_all_contours(dir, rotor, plotdirectory, Npoints, Npoints_smoothed
         smoothing_degree = smoothing_degree,
     )
     println("\nWriting files...")
-    write_contours(dir, rotor)
-    write_contours_cosine(dir, rotor)
+    # write_contours(dir, rotor)
+    # write_contours_cosine(dir, rotor)
     write_contours_aligned(dir, rotor)
     # write_contours_smoothed(dir, rotor)
     println("Done.")
@@ -942,33 +1026,33 @@ function write_all_contours(dir, rotor, plotdirectory, Npoints, Npoints_smoothed
 end
 
 # write contour files
-function write_contours(dir, rotor)
-    if !isdir(dir)
-        mkpath(dir)
-    end
-    filenames = joinpath.(dir, ["epema_0230", "epema_0405", "epema_0790", "epema_1000"] .* ".dat")
-    println("Writing to:\n\t$filenames")
-    for (i,airfoil) in enumerate(rotor["airfoils"])
-        open(filenames[i], "w") do io
-            DF.writedlm(io,["x" "y"], ',')
-            DF.writedlm(io, airfoil, ',')
-        end
-    end
-end
+# function write_contours(dir, rotor)
+#     if !isdir(dir)
+#         mkpath(dir)
+#     end
+#     filenames = joinpath.(dir, ["epema_0230", "epema_0405", "epema_0790", "epema_1000"] .* ".dat")
+#     println("Writing to:\n\t$filenames")
+#     for (i,airfoil) in enumerate(rotor["airfoils"])
+#         open(filenames[i], "w") do io
+#             DF.writedlm(io,["x" "y"], ',')
+#             DF.writedlm(io, airfoil, ',')
+#         end
+#     end
+# end
 
-function write_contours_cosine(dir, rotor)
-    if !isdir(dir)
-        mkpath(dir)
-    end
-    filenames = joinpath.(dir, ["epema_cosine_0230", "epema_cosine_0405", "epema_cosine_0790", "epema_cosine_1000"] .* ".dat")
-    println("Writing to:\n\t$filenames")
-    for (i,airfoil) in enumerate(rotor["cosineairfoils"])
-        open(filenames[i], "w") do io
-            DF.writedlm(io,["x" "y"], ',')
-            DF.writedlm(io, airfoil, ',')
-        end
-    end
-end
+# function write_contours_cosine(dir, rotor)
+#     if !isdir(dir)
+#         mkpath(dir)
+#     end
+#     filenames = joinpath.(dir, ["epema_cosine_0230", "epema_cosine_0405", "epema_cosine_0790", "epema_cosine_1000"] .* ".dat")
+#     println("Writing to:\n\t$filenames")
+#     for (i,airfoil) in enumerate(rotor["cosineairfoils"])
+#         open(filenames[i], "w") do io
+#             DF.writedlm(io,["x" "y"], ',')
+#             DF.writedlm(io, airfoil, ',')
+#         end
+#     end
+# end
 
 function write_contours_aligned(dir, rotor)
     if !isdir(dir)
@@ -984,19 +1068,19 @@ function write_contours_aligned(dir, rotor)
     end
 end
 
-function write_contours_smoothed(dir, rotor)
-    if !isdir(dir)
-        mkpath(dir)
-    end
-    filenames = joinpath.(dir, ["epema_smoothed_0230", "epema_smoothed_0405", "epema_smoothed_0790", "epema_smoothed_1000"] .* ".dat")
-    println("Writing to:\n\t$filenames")
-    for (i,airfoil) in enumerate(rotor["airfoils_smoothed"])
-        open(filenames[i], "w") do io
-            DF.writedlm(io,["x" "y"], ',')
-            DF.writedlm(io, airfoil, ',')
-        end
-    end
-end
+# function write_contours_smoothed(dir, rotor)
+#     if !isdir(dir)
+#         mkpath(dir)
+#     end
+#     filenames = joinpath.(dir, ["epema_smoothed_0230", "epema_smoothed_0405", "epema_smoothed_0790", "epema_smoothed_1000"] .* ".dat")
+#     println("Writing to:\n\t$filenames")
+#     for (i,airfoil) in enumerate(rotor["airfoils_smoothed"])
+#         open(filenames[i], "w") do io
+#             DF.writedlm(io,["x" "y"], ',')
+#             DF.writedlm(io, airfoil, ',')
+#         end
+#     end
+# end
 
 function write_contours(dir, airfoils, filenames)
     if !isdir(dir)
@@ -1011,39 +1095,35 @@ function write_contours(dir, airfoils, filenames)
     end
 end
 
-setup = Dict{String,Union{Int, String, Float64, Vector{Float64}, Array{Float64,2}}}()
-setup["Re"] = 0.3e6
-setup["Vinf"] = 19.0 # m/s
-setup["wing_aoa"] = 4.0 # deg.
-setup["J"] = 0.695
-setup["rotor_CT"] = 0.30
+function scans_to_interpolated_contours(contourdirectory, plotdirectory, rs_desired)
+    println("================= BEGIN BUILDING CONTOURS =================")
+    smoothing_n = 30
+    smoothing_degree = 2
+    Npoints = 20
+    Npoints_smoothed = 300
+    Npoints_interpolate = 130
+    if !isdir(contourdirectory); mkpath(contourdirectory); end
+    if !isdir(plotdirectory); mkpath(plotdirectory); end
+    write_all_contours(contourdirectory, rotor, plotdirectory, Npoints, Npoints_smoothed;
+        extension = ".pdf",
+        smoothing_n = smoothing_n,
+        smoothing_degree = smoothing_degree
+    )
+
+    plot_interpolated_contours(rotor, Npoints, Npoints_smoothed, Npoints_interpolate, plotdirectory;
+                rs_desired = rs_desired,
+                rs = [0.230, 0.405, 0.790, 1.000],
+                plotname = "epema_interpolated_bspline_n$(smoothing_n).pdf",
+                smoothing_n = smoothing_n,
+                smoothing_degree = smoothing_degree
+            )
+    # write to files
+    locations = string.(Int.(round.(rs_desired .* 1000, digits=0)))
+    locations[1:end-1] = "0" .* locations[1:end-1]
+    filenames = "epema_interpolated_bspline_n$(smoothing_n)_" .* locations .* ".dat"
+    write_contours(contourdirectory, rotor["airfoils_interpolated"], filenames)
+    println("========================= FINISHED =========================")
+    return nothing
+end
 
 end # module
-
-smoothing_n = 30
-smoothing_degree = 2
-Npoints = 20
-Npoints_smoothed = 300
-Npoints_interpolate = 130
-TODAY = replace(string(Dates.today()),"-" => "")
-dir = "/Users/randerson/Box/research/projects/AircraftSystems/data/airfoil/contours/$TODAY"
-if !isdir(ENV["NOTEBOOK_IMG_PATH"]); mkpath(ENV["NOTEBOOK_IMG_PATH"]); end
-EpemaData3.write_all_contours(dir, EpemaData3.rotor, ENV["NOTEBOOK_IMG_PATH"], Npoints, Npoints_smoothed;
-    extension = ".pdf",
-    smoothing_n = smoothing_n,
-    smoothing_degree = smoothing_degree
-)
-
-rs_desired = [0.207, 0.3, 0.4, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0]
-EpemaData3.plot_interpolated_contours(EpemaData3.rotor, Npoints, Npoints_smoothed, Npoints_interpolate, ENV["NOTEBOOK_IMG_PATH"];
-            rs_desired = rs_desired,
-            rs = [0.230, 0.405, 0.790, 1.000],
-            plotname = "epema_interpolated_bspline_n$(smoothing_n).pdf",
-            smoothing_n = smoothing_n,
-            smoothing_degree = smoothing_degree
-        )
-# write to files
-locations = string.(Int.(round.(rs_desired .* 1000, digits=0)))
-locations[1:end-1] = "0" .* locations[1:end-1]
-filenames = "epema_interpolated_bspline_n$(smoothing_n)_" .* locations .* ".dat"
-EpemaData3.write_contours(dir, EpemaData3.rotor["airfoils_interpolated"], filenames)

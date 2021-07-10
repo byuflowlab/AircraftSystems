@@ -10,6 +10,7 @@ VL = AS.VL
 
 plotdirectory = "/Users/randerson/Box/research/projects/AircraftSystems/data/plots/$(AS.TODAY)"
 notebookdirectory = ENV["NOTEBOOK_IMG_PATH"]
+if !isdir(notebookdirectory); mkpath(notebookdirectory); end
 
 # @testset "rotors" begin
 
@@ -21,9 +22,9 @@ include("epema_rotor_sweep.jl")
 
 # @testset "wings" begin
 
-include("prowim_propsoff_clalpha.jl")
+# include("prowim_propsoff_clalpha.jl")
 
-include("prowim_propsoff_liftdist.jl")
+# include("prowim_propsoff_liftdist.jl")
 
 # end # test wings
 
@@ -32,7 +33,7 @@ include("prowim_propsoff_liftdist.jl")
 
 # @testset "wings_and_rotors" begin
 
-include("prowim_propson_liftdist.jl")
+# include("prowim_propson_liftdist.jl")
 
 # end # test wings_and_rotors
 

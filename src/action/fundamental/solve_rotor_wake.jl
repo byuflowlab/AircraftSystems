@@ -23,18 +23,28 @@ Inputs:
 * `wakefunctions::Function` : a function describing the induced velocity behind each propeller as a function of global coordinates
 * `us::Vector{Vector{Vector{Float64}}}` : each [i][j][k]th element is the axial induced velocity at ith step of the jth rotor at the kth radial section
 * `vs::Vector{Vector{Vector{Float64}}}` : each [i][j][k]th element is the swirl induced velocity at ith step of the jth rotor at the kth radial section
+* `wakeshapefunctions::Vector{Function}` : [i]th element is a function f(Rtip, x) describing the radial distance from the rotor axis to the boundary of the wake of the ith rotor
+* `axialinterpolation::Vector{Function}` : [i]th element is a function f(rs, us, r, Rtip) that returns the axial component of rotor-induced velocity at distance r from the rotor axis based on the calculated axial induced velocities output from CCBlade of the ith rotor
+* `swirlinterpolation::Vector{Function}` : [i]th element is a function f(rs, us, r, Rtip) that returns the swirl component of rotor-induced velocity at distance r from the rotor axis based on the calculated axial induced velocities output from CCBlade of the ith rotor
+* `axialmultiplier::Vector{Function}` : [i]th element is a function f(distance2plane, Rtip) that is multiplied by the axial induced velocity function of the ith rotor
+* `swirlmultiplier::Vector{Function}` : [i]th element is a function f(distance2plane, Rtip) that is multiplied by the swirl induced velocity function of the ith rotor
 
 """
 function solve_rotor_wake(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol)
 
     us = parameters.us[stepi]
     vs = parameters.vs[stepi]
+    wakeshapefunctions = parameters.wakeshapefunctions
+    axialinterpolations = parameters.axialinterpolations
+    swirlinterpolations = parameters.swirlinterpolations
+    axialmultipliers = parameters.axialmultipliers
+    swirlmultipliers = parameters.swirlmultipliers
     wakefunction = induced2wakefunction(aircraft.rotorsystem, us, vs;
-        wakeshapefunction = (Rtip, x) -> Rtip,
-        axialinterpolation = (rs, us, r) -> FM.linear(rs, us, r),
-        swirlinterpolation = (rs, vs, r) -> FM.linear(rs, vs, r),
-        axialmultiplier = (distance2plane, Rtip) -> 2,
-        swirlmultiplier = (distance2plane, Rtip) -> 1
+        wakeshapefunctions = wakeshapefunctions,
+        axialinterpolations = axialinterpolations,
+        swirlinterpolations = swirlinterpolations,
+        axialmultipliers = axialmultipliers,
+        swirlmultipliers = swirlmultipliers
     )
 
     parameters.wakefunctions[stepi] = wakefunction
@@ -57,13 +67,24 @@ Outputs:
 * `wakefunctions::Union{Function, Nothing}` : a function describing the induced velocity behind each propeller as a function of global coordinates
 * `us::Vector{Vector{Vector{Float64}}}` : each [i][j][k]th element is the axial induced velocity at ith step of the jth rotor at the kth radial section
 * `vs::Vector{Vector{Vector{Float64}}}` : each [i][j][k]th element is the swirl induced velocity at ith step of the jth rotor at the kth radial section
+* `wakeshapefunctions::Vector{Function}` : [i]th element is a function f(Rtip, x) describing the radial distance from the rotor axis to the boundary of the wake of the ith rotor
+* `axialinterpolation::Vector{Function}` : [i]th element is a function f(rs, us, r, Rtip) that returns the axial component of rotor-induced velocity at distance r from the rotor axis based on the calculated axial induced velocities output from CCBlade of the ith rotor
+* `swirlinterpolation::Vector{Function}` : [i]th element is a function f(rs, us, r, Rtip) that returns the swirl component of rotor-induced velocity at distance r from the rotor axis based on the calculated axial induced velocities output from CCBlade of the ith rotor
+* `axialmultiplier::Vector{Function}` : [i]th element is a function f(distance2plane, Rtip) that is multiplied by the axial induced velocity function of the ith rotor
+* `swirlmultiplier::Vector{Function}` : [i]th element is a function f(distance2plane, Rtip) that is multiplied by the swirl induced velocity function of the ith rotor
 
 """
 function solve_rotor_wake(aircraft, steprange)
     wakefunctions = Vector{Any}(nothing,length(steprange))
     _, _, _, _, us, vs = solve_rotor(aircraft, steprange)
 
-    return wakefunctions, us, vs
+    wakeshapefunctions = fill((Rtip, x) -> Rtip, length(aircraft.rotorsystem.index))
+    axialinterpolations = fill((rs, us, r, Rtip) -> FM.linear(rs, us, r), length(aircraft.rotorsystem.index))
+    swirlinterpolations = fill((rs, vs, r, Rtip) -> FM.linear(rs, vs, r), length(aircraft.rotorsystem.index))
+    axialmultipliers = fill((distance2plane, Rtip) -> 2, length(aircraft.rotorsystem.index))
+    swirlmultipliers = fill((distance2plane, Rtip) -> 1, length(aircraft.rotorsystem.index))
+
+    return wakefunctions, us, vs, wakeshapefunctions, axialinterpolations, swirlinterpolations, axialmultipliers, swirlmultipliers
 end
 
 # # prepare solutionkeys and solutioninits for this particular system and simulation

@@ -1179,11 +1179,11 @@ Keyword Arguments:
 
 """
 function induced2wakefunction(rotorsystem, us, vs;
-        wakeshapefunction = (Rtip, x) -> Rtip,
-        axialinterpolation = (rs, us, r) -> FM.linear(rs, us, r),
-        swirlinterpolation = (rs, vs, r) -> FM.linear(rs, vs, r),
-        axialmultiplier = (distance2plane, Rtip) -> 2,
-        swirlmultiplier = (distance2plane, Rtip) -> 1
+        wakeshapefunctions = fill((Rtip, x) -> Rtip, length(rotorsystem.index)),
+        axialinterpolations = fill((rs, us, r, Rtip) -> FM.linear(rs, us, r), length(rotorsystem.index)),
+        swirlinterpolations = fill((rs, vs, r, Rtip) -> FM.linear(rs, vs, r), length(rotorsystem.index)),
+        axialmultipliers = fill((distance2plane, Rtip) -> 2, length(rotorsystem.index)),
+        swirlmultipliers = fill((distance2plane, Rtip) -> 1, length(rotorsystem.index))
     )
     function wakefunction(X)
         Vwake = zeros(3)
@@ -1199,10 +1199,10 @@ function induced2wakefunction(rotorsystem, us, vs;
             distance2centerline = r * sin(θ) # always positive
             # check if X is within the wake
             Rtip = rotorsystem.rotors[rotorindex].Rtip
-            if distance2centerline < wakeshapefunction(Rtip, distance2plane)
+            if distance2centerline < wakeshapefunctions[irotor](Rtip, distance2plane)
                 # interpolate wake velocity
-                u = axialinterpolation(rotorsystem.rlists[rotorindex], us[irotor], distance2centerline) * axialmultiplier(distance2plane, Rtip)
-                v = swirlinterpolation(rotorsystem.rlists[rotorindex], vs[irotor], distance2centerline) * swirlmultiplier(distance2plane, Rtip)
+                u = axialinterpolations[irotor](rotorsystem.rlists[rotorindex], us[irotor], distance2centerline, Rtip) * axialmultipliers[irotor](distance2plane, Rtip)
+                v = swirlinterpolations[irotor](rotorsystem.rlists[rotorindex], vs[irotor], distance2centerline, Rtip) * swirlmultipliers[irotor](distance2plane, Rtip)
                 # get axial unit vector
                 axialhat = -rotorsystem.orientations[irotor]
                 # get tangential unit vector

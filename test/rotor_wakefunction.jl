@@ -6,12 +6,17 @@ struct TestParams
     us
     vs
     wakefunctions
+    wakeshapefunctions
+    axialinterpolation
+    swirlinterpolation
+    axialmultiplier
+    swirlmultiplier
 end
 
 nsteps = length(parameters.us)
 stepi = 5
 
-testparams = TestParams(deepcopy(parameters.us), deepcopy(parameters.vs), Vector{Any}(nothing,nsteps))
+testparams = TestParams(deepcopy(parameters.us), deepcopy(parameters.vs), Vector{Any}(nothing,nsteps), fill((Rtip, x) -> Rtip, length(aircraft.rotorsystem.index)), fill((rs, us, r, Rtip) -> FM.linear(rs, us, r), length(aircraft.rotorsystem.index)), fill((rs, vs, r, Rtip) -> FM.linear(rs, vs, r), length(aircraft.rotorsystem.index)), fill((distance2plane, Rtip) -> 2, length(aircraft.rotorsystem.index)), fill((distance2plane, Rtip) -> 1, length(aircraft.rotorsystem.index)))
 
 for i=1:nsteps
     AS.solve_rotor_wake(aircraft, testparams, nothing, nothing, nothing, i, nothing)

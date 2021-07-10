@@ -61,8 +61,6 @@ axs[2].scatter(CDdata_balance[:,1], CDdata_balance[:,2], marker = "+", label = "
 axs[2].scatter(CDdata_wakesurvey[:,1], CDdata_wakesurvey[:,2], marker = "x", label = "wake survey")
 axs[2].legend(loc="upper left", bbox_to_anchor=(1.01,1))
 
-plotdirectory = "/Users/randerson/Box/research/projects/AircraftSystems/data/plots/$(AS.TODAY)"
-notebookdirectory = ENV["NOTEBOOK_IMG_PATH"]
 fig_propsoff_clalpha.tight_layout()
 fig_propsoff_clalpha.savefig(joinpath(plotdirectory,"PROWIM_propsoff_clalphasweep.pdf"), bbox_inches="tight")
 fig_propsoff_clalpha.savefig(joinpath(notebookdirectory,"PROWIM_propsoff_clalphasweep.pdf"), bbox_inches="tight")

@@ -209,7 +209,11 @@ spindirections = [true]
 
 # call template
 plotbasename = "PROWIM_propson"
+wakedevelopementfactor = 0.0
+swirlrecoveryfactor = 0.5
 simulationdata = AS.vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, omegas, nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, index, rotor_X, rotor_orientation, spindirections, Res_list, Ms_list;
+        wakedevelopementfactor = wakedevelopementfactor, # fully developed by default
+        swirlrecoveryfactor = swirlrecoveryfactor, # as described in Veldhuis' paper
         polardirectory = polardirectory,
         surfacenames = ["wing"],
         rotornames = ["rotor"],
@@ -219,6 +223,13 @@ simulationdata = AS.vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, 
 objective = AS.runsimulation!(simulationdata...)
 
 # plot validation
+if isapprox(wakedevelopementfactor, 0.0; atol=1e-8)
+    waketag = "_ud"
+elseif isapprox(wakedevelopementfactor, 1.0; atol=1e-8)
+    waketag = "_fd"
+else
+    waketag = "_wdf_$(round(wakedevelopementfactor; digits=1))"
+end
 fig_rotor = plt.figure(plotbasename * "_rotorsweep")
 ax_rotor = fig_rotor.get_axes()[1]
 ax_rotor.scatter(0.85, 0.168, c="r", label="Velduis")
@@ -322,8 +333,8 @@ for (i, data) in enumerate(cldata)
 end
 axs_cf[3].legend(loc="upper left", bbox_to_anchor=(1.01,1))
 fig_cf.tight_layout()
-fig_cf.savefig(joinpath(plotdirectory,"PROWIM_propson_cl_dist.pdf"), bbox_inches="tight")
-fig_cf.savefig(joinpath(notebookdirectory,"PROWIM_propson_cl_dist.pdf"), bbox_inches="tight")
+fig_cf.savefig(joinpath(plotdirectory,"PROWIM_propson_liftdistribution" * waketag * ".pdf"), bbox_inches="tight")
+fig_cf.savefig(joinpath(notebookdirectory,"PROWIM_propson_liftdistribution" * waketag * ".pdf"), bbox_inches="tight")
 
 fig_CF = plt.figure(plotbasename * "_clalphasweep")
 axs_CF = fig_CF.get_axes()
@@ -356,5 +367,5 @@ axs_CF[2].scatter(CDdata_balance[:,1], CDdata_balance[:,2], marker = "+", label=
 axs_CF[2].scatter(CDdata_wakesurvey[:,1], CDdata_wakesurvey[:,2], marker = "+", label="Velduis, wake survey")
 axs_CF[2].legend(loc="upper left", bbox_to_anchor=(1.01,1))
 fig_CF.tight_layout()
-fig_CF.savefig(joinpath(plotdirectory,"PROWIM_propson_clalphasweep.pdf"), bbox_inches="tight")
-fig_CF.savefig(joinpath(notebookdirectory,"PROWIM_propson_clalphasweep.pdf"), bbox_inches="tight")
+fig_CF.savefig(joinpath(plotdirectory,"PROWIM_propson_clalphasweep" * waketag * ".pdf"), bbox_inches="tight")
+fig_CF.savefig(joinpath(notebookdirectory,"PROWIM_propson_clalphasweep" * waketag * ".pdf"), bbox_inches="tight")
