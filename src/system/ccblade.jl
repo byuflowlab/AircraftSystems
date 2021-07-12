@@ -1573,7 +1573,7 @@ function induced2wakefunction(rotorsystem, us, vs;
             swirlinterpolation = (rs, vs, r) -> FM.linear(rs, vs, r),
             axialmultiplier = (distance2plane, Rtip) -> 2,
             swirlmultiplier = (distance2plane, Rtip) -> 1)
-    # @infiltrate
+
     function wakefunction(X)
         Vwake = zeros(3)
         for (irotor, rotorindex) in enumerate(rotorsystem.index)
