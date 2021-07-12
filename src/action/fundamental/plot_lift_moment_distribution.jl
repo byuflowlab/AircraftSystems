@@ -6,37 +6,41 @@ README: `<: Action` function plots the lift distribution of all lifting surfaces
 =###############################################################################################
 
 """
-plot_lift_moment_distribution <: Action
+    plot_lift_moment_distribution(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol) <: Action
 
-Inputs:
+# Arguments:
 
-* `aircraft::Aircraft` : `Aircraft` system object
-* `parameters<:Parameters` `Parameters` struct
-* `freestream::Freestream` : `Freestream` object
+* `aircraft::Aircraft`: `Aircraft` system object
+* `parameters<:Parameters`: `Parameters` struct
+* `freestream::Freestream`: `Freestream` object
 * `environment::Environment` `Environment` object
-* `steprange::AbstractArray` : array of step for which the simulation is run
-* `stepi::Int` : index of the current step
-* `stepsymbol::String` : defines the step, e.g. `alpha` or `time`
+* `steprange::AbstractArray`: array of step for which the simulation is run
+* `stepi::Int`: index of the current step
+* `stepsymbol::String`: defines the step, e.g. `alpha` or `time`
 
 `parameters <: Parameters` requires the following elements:
 
-* `surfacenames::Vector{String}` : names of each lifting surface to be shown in the legend
-* `cfs::Vector{Array{Float64,2}}` : vector with length equal to the number of lifting surfaces, each member containing an array of size (3,ns) of force coefficients cd, cy, cl
-* `cms::Vector{Array{Float64,2}}` : vector with length equal to the number of lifting surfaces, each member containing an array of size (3,ns) of moment coefficients cmx, cmy, cmz
-* `plotdirectory::String` : path to the folder where plots will be saved
-* `plotbasename::String` : first part of saved figure file names
-* `plotextension::String` : extension of saved figure file names
-* `plotstepi::Vector{Int}` : which steps at which to plot
-# * `cl_ylim::Vector{Float64}` : y axis limits for ploting c_l
-# * `cd_ylim::Vector{Float64}` : y axis limits for ploting c_d
-# * `cy_ylim::Vector{Float64}` : y axis limits for ploting c_y
-
+* `surfacenames::Vector{String}`: names of each lifting surface to be shown in the legend
+* `cfs::Vector{Array{Float64,2}}`: vector with length equal to the number of lifting surfaces, each member containing an array of size (3,ns) of force coefficients cd, cy, cl
+* `cms::Vector{Array{Float64,2}}`: vector with length equal to the number of lifting surfaces, each member containing an array of size (3,ns) of moment coefficients cmx, cmy, cmz
+* `plotdirectory::String`: path to the folder where plots will be saved
+* `plotbasename::String`: first part of saved figure file names
+* `plotextension::String`: extension of saved figure file names
+* `plotstepi::Vector{Int}`: which steps at which to plot
 """
+# * `cl_ylim::Vector{Float64}`: y axis limits for ploting c_l
+# * `cd_ylim::Vector{Float64}`: y axis limits for ploting c_d
+# * `cy_ylim::Vector{Float64}`: y axis limits for ploting c_y
+
+
 function plot_lift_moment_distribution(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol)
+    
     # extract plot indices
     plotstepi = parameters.plotstepi
     basename = parameters.plotbasename
+    
     if stepi in plotstepi
+        
         # extract info
         surfacenames = parameters.surfacenames
         cfs = parameters.cfs
@@ -48,6 +52,7 @@ function plot_lift_moment_distribution(aircraft, parameters, freestream, environ
         # cl_ylim = parameters.cl_ylim
         # cd_ylim = parameters.cd_ylim
         # cy_ylim = parameters.cy_ylim
+        
         # create axes
         fig = plt.figure(basename * "_liftdistribution")
         nsurfaces = length(surfacenames)
@@ -59,6 +64,7 @@ function plot_lift_moment_distribution(aircraft, parameters, freestream, environ
                 fig.add_subplot(nsubplotbase + 3 + (isurface-1) * nsurfaces, ylabel = L"c_y", xlabel = L"y [m]") # side force ylim = cy_ylim,
                 fig.add_subplot(nsubplotbase + 1 + (isurface-1) * nsurfaces, ylabel = L"c_l", title = surfacenames[isurface]) # lift ylim = cl_ylim,
                 # fig.suptitle("t = $(steprange[stepi]), ti = $stepi") # add title
+                
                 # set axes
                 # axs[1].set_ylim(cd_ylim)
                 # axs[1].set_ylabel(L"c_d")
@@ -72,8 +78,10 @@ function plot_lift_moment_distribution(aircraft, parameters, freestream, environ
             end
         end
         axs = fig.get_axes()
+        
         # get color
         cratio = findfirst((x)->x==stepi,plotstepi) / length(plotstepi)
+        
         # plot
         for (isurface,cf) in enumerate(cfs)
             rs_plot = get_midpoints(lifting_line_rs[isurface][2,:])
@@ -81,6 +89,7 @@ function plot_lift_moment_distribution(aircraft, parameters, freestream, environ
                 axs[(isurface - 1) * nsurfaces + icf].plot(rs_plot, cf[icf,:], color=(0.05, 0.85-cratio*0.7, 0.15 + 0.75 * cratio), label="$stepsymbol = $(round(steprange[stepi],digits=3))")
             end
         end
+        
         # save
         if stepi == plotstepi[end] # last step
             axs[3].legend(loc="upper left", bbox_to_anchor=(1.01,1)) # set legend
@@ -100,6 +109,7 @@ function plot_lift_moment_distribution(aircraft, parameters, freestream, environ
                 fig.add_subplot(nsubplotbase + 1 + (isurface-1) * nsurfaces, ylabel = L"c_{my}", title = surfacenames[isurface]) # lift ylim = cl_ylim,
                 fig.add_subplot(nsubplotbase + 3 + (isurface-1) * nsurfaces, ylabel = L"c_{mz}", xlabel = L"y [m]") # side force ylim = cy_ylim,
                 # fig.suptitle("t = $(steprange[stepi]), ti = $stepi") # add title
+                
                 # set axes
                 # axs[1].set_ylim(cd_ylim)
                 # axs[1].set_ylabel(L"c_d")
@@ -112,7 +122,9 @@ function plot_lift_moment_distribution(aircraft, parameters, freestream, environ
                 # axs[3].set_ylabel(L"c_l")
             end
         end
+        
         axs = fig.get_axes()
+        
         # plot
         for (isurface,cm) in enumerate(cms)
             rs_plot = get_midpoints(lifting_line_rs[isurface][2,:])
@@ -120,6 +132,7 @@ function plot_lift_moment_distribution(aircraft, parameters, freestream, environ
                 axs[(isurface - 1) * nsurfaces + icf].plot(rs_plot, cm[icf,:], color=(0.05, 0.85-cratio*0.7, 0.15 + 0.75 * cratio), label="$stepsymbol = $(round(steprange[stepi],digits=3))")
             end
         end
+        
         # save
         if stepi == plotstepi[end]
             axs[2].legend(loc="upper left", bbox_to_anchor=(1.01,1)) # set legend
@@ -128,6 +141,7 @@ function plot_lift_moment_distribution(aircraft, parameters, freestream, environ
             fig.savefig(savepath, bbox_inches="tight")
         end
     end
+    
     return false
 end
 
@@ -136,27 +150,27 @@ end
 # @assert ispath(plotdirectory) "plotdirectory does not exist"
 
 """
-plot_lift_moment_distribution(system, steprange)
+plot_lift_moment_distribution(aircraft, steprange)
 
 Method returns initialized elements required for the `parameters <: Parameters` struct during simulation.
 
-Inputs:
+# Arguments:
 
-* `aircraft::Aircraft` : system to be simulated
-* `steprange::AbstractArray` : defines each step of the simulation
+* `aircraft::Aircraft`: system to be simulated
+* `steprange::AbstractArray`: defines each step of the simulation
 
-Outputs:
+# Returns:
 
-* `surfacenames::Vector{String}` : names of each lifting surface to be shown in the legend
-* `cfs::Vector{String}` : vector with length equal to the number of lifting surfaces, each member containing an array of size (3,ns) of force coefficients
-* `plotdirectory::String` : path to the folder where plots will be saved
-* `plotbasename::String` : first part of saved figure file names
-* `plotextension::String` : extension of saved figure file names
-# * `cl_ylim::Vector{Float64}` : y axis limits for ploting c_l
-# * `cd_ylim::Vector{Float64}` : y axis limits for ploting c_d
-# * `cy_ylim::Vector{Float64}` : y axis limits for ploting c_y
-
+* `surfacenames::Vector{String}`: names of each lifting surface to be shown in the legend
+* `cfs::Vector{String}`: vector with length equal to the number of lifting surfaces, each member containing an array of size (3,ns) of force coefficients
+* `plotdirectory::String`: path to the folder where plots will be saved
+* `plotbasename::String`: first part of saved figure file names
+* `plotextension::String`: extension of saved figure file names
 """
+# * `cl_ylim::Vector{Float64}`: y axis limits for ploting c_l
+# * `cd_ylim::Vector{Float64}`: y axis limits for ploting c_d
+# * `cy_ylim::Vector{Float64}`: y axis limits for ploting c_y
+
 function plot_lift_moment_distribution(aircraft, steprange)
 
     nwings = length(aircraft.wingsystem.surfaces)

@@ -190,10 +190,11 @@ locations[1:end-1] = "0" .* locations[1:end-1]
 # contourfilenames = "epema_interpolated_bspline_n30_" .* locations
 # try just repeating the r/R = 0.7 airfoil and see how this looks
 contourfilenames = fill("epema_interpolated_bspline_n30_" * locations[8],length(radii[1]))
-airfoilcontours = fill(joinpath.(AS.topdirectory, "data", "airfoil", "contours", "20210702", contourfilenames .* ".dat"),length(nblades))
+airfoilcontours = fill(joinpath.(contourdirectory, contourfilenames .* ".dat"),length(nblades))
+# airfoilcontours = fill(joinpath.(AS.topdirectory, "data", "airfoil", "contours", "20210702", contourfilenames .* ".dat"),length(nblades))
 airfoilnames = fill(contourfilenames, length(nblades))
 
-polardirectory = joinpath(AS.topdirectory, "data", "airfoil", "polars", "20210703")
+polardirectory = polardirectory
 plotstepi = 1:length(alphas)
 
 Res = [5e4, 1e5, 5e5, 1e6, 1e7]
@@ -235,8 +236,11 @@ ax_rotor = fig_rotor.get_axes()[1]
 ax_rotor.scatter(0.85, 0.168, c="r", label="Velduis")
 ax_rotor.legend(loc="upper left", bbox_to_anchor=(1.01,1))
 fig_rotor.tight_layout()
-fig_rotor.savefig(joinpath(plotdirectory,"PROWIM_propson_rotorsweep.pdf"), bbox_inches="tight")
-fig_rotor.savefig(joinpath(notebookdirectory,"PROWIM_propson_rotorsweep.pdf"), bbox_inches="tight")
+
+if savefigs
+    fig_rotor.savefig(joinpath(plotdirectory,"PROWIM_propson_rotorsweep.pdf"), bbox_inches="tight")
+    fig_rotor.savefig(joinpath(notebookdirectory,"PROWIM_propson_rotorsweep.pdf"), bbox_inches="tight")
+end
 
 fig_cf = plt.figure(plotbasename * "_liftdistribution")
 axs_cf = fig_cf.get_axes()
@@ -333,8 +337,11 @@ for (i, data) in enumerate(cldata)
 end
 axs_cf[3].legend(loc="upper left", bbox_to_anchor=(1.01,1))
 fig_cf.tight_layout()
-fig_cf.savefig(joinpath(plotdirectory,"PROWIM_propson_liftdistribution" * waketag * ".pdf"), bbox_inches="tight")
-fig_cf.savefig(joinpath(notebookdirectory,"PROWIM_propson_liftdistribution" * waketag * ".pdf"), bbox_inches="tight")
+
+if savefigs
+    fig_cf.savefig(joinpath(plotdirectory,"PROWIM_propson_cl_dist.pdf"), bbox_inches="tight")
+    fig_cf.savefig(joinpath(notebookdirectory,"PROWIM_propson_cl_dist.pdf"), bbox_inches="tight")
+end
 
 fig_CF = plt.figure(plotbasename * "_clalphasweep")
 axs_CF = fig_CF.get_axes()
@@ -367,5 +374,8 @@ axs_CF[2].scatter(CDdata_balance[:,1], CDdata_balance[:,2], marker = "+", label=
 axs_CF[2].scatter(CDdata_wakesurvey[:,1], CDdata_wakesurvey[:,2], marker = "+", label="Velduis, wake survey")
 axs_CF[2].legend(loc="upper left", bbox_to_anchor=(1.01,1))
 fig_CF.tight_layout()
-fig_CF.savefig(joinpath(plotdirectory,"PROWIM_propson_clalphasweep" * waketag * ".pdf"), bbox_inches="tight")
-fig_CF.savefig(joinpath(notebookdirectory,"PROWIM_propson_clalphasweep" * waketag * ".pdf"), bbox_inches="tight")
+
+if savefigs
+    fig_CF.savefig(joinpath(plotdirectory,"PROWIM_propson_clalphasweep.pdf"), bbox_inches="tight")
+    fig_CF.savefig(joinpath(notebookdirectory,"PROWIM_propson_clalphasweep.pdf"), bbox_inches="tight")
+end

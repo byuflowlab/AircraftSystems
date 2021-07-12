@@ -5,31 +5,33 @@ Contact: rymanderson@gmail.com
 README: define an `Action` object to solve a CCBlade rotor
 =###############################################################################################
 
+
 """
-    solve_rotor_nondimensional(system, steprange) <: Action
+    solve_rotor_nondimensional(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol) <: Action
 
-Inputs:
+# Arguments:
 
-* `aircraft::Aircraft` : `Aircraft` system object
-* `parameters<:Parameters` `Parameters` struct
-* `freestream::Freestream` : `Freestream` object
+* `aircraft::Aircraft`: `Aircraft` system object
+* `parameters<:Parameters`: `Parameters` struct
+* `freestream::Freestream`: `Freestream` object
 * `environment::Environment` `Environment` object
-* `steprange::AbstractArray` : array of times for which the simulation is run
-* `stepi::Int` : index of the current step
-* `stepsymbol::String` : defines the step, e.g. `alpha` or `time`
+* `steprange::AbstractArray`: array of times for which the simulation is run
+* `stepi::Int`: index of the current step
+* `stepsymbol::String`: defines the step, e.g. `alpha` or `time`
 
 `parameters <: Parameters` requires the following elements:
 
-* `omegas::Array{Float64,2}` : [i,j]th element is the rotational velocities for the ith rotor at the jth step
-* `Js::Vector{Vector{Float64}}` : a vector of length `length(steprange)` containing a vector of advance ratios for each rotor
-* `Ts::Array{Float64,2}` : each [i,j]th element is the thrust of the ith rotor at the jth step
-* `Qs::Array{Float64,2}` : each [i,j]th element is the torque of the ith rotor at the jth step
-* `CTs::Array{Float64,2}` : each [i,j]th element is the thrust coefficient of the ith rotor at the jth step
-* `CQs::Array{Float64,2}` : each [i,j]th element is the torque coefficient of the ith rotor at the jth step
-* `ηs::Array{Float64,2}` : each [i,j]th element is the propulsive efficiency of the ith rotor at the jth step
+* `omegas::Array{Float64,2}`: [i,j]th element is the rotational velocities for the ith rotor at the jth step
+* `Js::Vector{Vector{Float64}}`: a vector of length `length(steprange)` containing a vector of advance ratios for each rotor
+* `Ts::Array{Float64,2}`: each [i,j]th element is the thrust of the ith rotor at the jth step
+* `Qs::Array{Float64,2}`: each [i,j]th element is the torque of the ith rotor at the jth step
+* `CTs::Array{Float64,2}`: each [i,j]th element is the thrust coefficient of the ith rotor at the jth step
+* `CQs::Array{Float64,2}`: each [i,j]th element is the torque coefficient of the ith rotor at the jth step
+* `ηs::Array{Float64,2}`: each [i,j]th element is the propulsive efficiency of the ith rotor at the jth step
 
 """
 function solve_rotor_nondimensional(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol)
+    
     Js = view(parameters.Js,:,stepi)
     Ts = view(parameters.Ts,:,stepi)
     Qs = view(parameters.Qs,:,stepi)
@@ -45,17 +47,18 @@ function solve_rotor_nondimensional(aircraft, parameters, freestream, environmen
     return false
 end
 
+
 """
-    solve_rotor_nondimensional(system, steprange) <: Action
+    solve_rotor_nondimensional(aircraft, steprange) <: Action
 
 Method returns initialized elements required for the `parameters <: Parameters` struct during simulation.
 
-Inputs:
+# Arguments:
 
 * `aircraft::Aircraft` : system to be simulated
 * `steprange::AbstractArray` : defines each step of the simulation
 
-Outputs:
+# Returns:
 
 * `omegas::Vector{Float64}` : a vector of rotational speeds in rad/s at the current step
 * `Js::Array{Float64,2}` : each [i,j]th element is the advance ratio of the ith rotor at the jth step
@@ -69,6 +72,7 @@ Outputs:
 
 """
 function solve_rotor_nondimensional(aircraft, steprange)
+    
     omegas, Js, Ts, Qs, us, vs = solve_rotor(aircraft, steprange)
     CTs = deepcopy(Qs)
     CQs = deepcopy(Qs)

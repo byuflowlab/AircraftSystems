@@ -6,9 +6,11 @@ README: define an `Action` object to solve a CCBlade rotor
 =###############################################################################################
 
 """
+    solve_rotor(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol)
+
 Action function.
 
-Inputs:
+# Arguments:
 
 * `aircraft::Aircraft` : `Aircraft` system object
 * `parameters<:Parameters` `Parameters` struct
@@ -31,6 +33,7 @@ NOTE: `omegas` is commanded while `Js` is calculated
 
 """
 function solve_rotor(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol)
+    
     # extract parameters
     omegas = parameters.omegas[stepi]
     Js = parameters.Js[:,stepi]
@@ -38,32 +41,34 @@ function solve_rotor(aircraft, parameters, freestream, environment, steprange, s
     Qs = parameters.Qs[:,stepi]
     us = parameters.us[stepi]
     vs = parameters.vs[stepi]
+    
     solverotors!(Js, Ts, Qs, us, vs, aircraft.rotorsystem, omegas, freestream, environment)
 
     return false
 end
 
 """
-solve_rotor(system, steprange)
+    solve_rotor(aircraft, steprange)
 
 Method returns initialized elements required for the `parameters <: Parameters` struct during simulation.
 
-Inputs:
+# Arguments:
 
-* `aircraft::Aircraft` : system to be simulated
-* `steprange::AbstractArray` : defines each step of the simulation
+* `aircraft::Aircraft`: system to be simulated
+* `steprange::AbstractArray`: defines each step of the simulation
 
-Outputs:
+# Returns:
 
-* `omegas::Array{Float64,2}` : [i,j]th elemnt is the rotational speeds in rad/s of the ith rotor at the jth step
-* `Js::Array{Float64,2}` : [i,j]th element is the advance ratio of the ith rotor at the jth step
-* `Ts::Array{Float64,2}` : [i,j]th element is the thrust of the ith rotor at the jth step
-* `Qs::Array{Float64,2}` : [i,j]th element is the torque of the ith rotor at the jth step
-* `us::Vector{Vector{Vector{Float64}}}` : each [i][j][k]th element is the axial induced velocity at ith step of the jth rotor at the kth radial section
-* `vs::Vector{Vector{Vector{Float64}}}` : each [i][j][k]th element is the swirl induced velocity at ith step of the jth rotor at the kth radial section
+* `omegas::Array{Float64,2}`: [i,j]th elemnt is the rotational speeds in rad/s of the ith rotor at the jth step
+* `Js::Array{Float64,2}`: [i,j]th element is the advance ratio of the ith rotor at the jth step
+* `Ts::Array{Float64,2}`: [i,j]th element is the thrust of the ith rotor at the jth step
+* `Qs::Array{Float64,2}`: [i,j]th element is the torque of the ith rotor at the jth step
+* `us::Vector{Vector{Vector{Float64}}}`: each [i][j][k]th element is the axial induced velocity at ith step of the jth rotor at the kth radial section
+* `vs::Vector{Vector{Vector{Float64}}}`: each [i][j][k]th element is the swirl induced velocity at ith step of the jth rotor at the kth radial section
 
 """
 function solve_rotor(aircraft, steprange)
+    
     nrotors = length(aircraft.rotorsystem.index) # number of rotors
     omegas = ones(Float64, nrotors, length(steprange))
     Js = zeros(nrotors, length(steprange))
