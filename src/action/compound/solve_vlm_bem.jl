@@ -56,7 +56,8 @@ function solve_vlm_bem(aircraft, parameters, freestream, environment, steprange,
     # solve VLM
     flags[3] = solve_wing_CF(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol)
     # extract lift and moment distribution
-    flags[4] = lift_moment_distribution_blownwing(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol)
+    flags[4] = lift_moment_distribution(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol)
+    # flags[4] = lift_moment_distribution_blownwing(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol)
 
     return prod(flags)
 end
