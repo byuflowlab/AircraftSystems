@@ -131,7 +131,7 @@ end
 function vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, 
             omegas, nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, 
             index, rotor_positions, rotor_orientation, spindirections, 
-            Res_list, Ms_list,
+            Res_list, Ms_list;
             surfacenames = ["default wing"],
             rotornames = ["rotor 1"],
             plotdirectory = joinpath(topdirectory, "data","plots",TODAY),
@@ -142,7 +142,7 @@ function vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, wing_AR, wi
     
     # prepare subsystems
     wings = simplewingsystem(; wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, kwargs...)
-    rotors = CCBladeSystem(nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, index, rotor_positions, rotor_orientation, spindirections; Res_list, kwargs...)
+    rotors = CCBladeSystem(nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, index, rotor_positions, rotor_orientation, spindirections, Res_list, Ms_list; kwargs...)
     nonliftingbodies = nothing
     structures = nothing
     motors = nothing

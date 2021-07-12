@@ -93,7 +93,7 @@ LiftDistribution(CLs, CDs, CYs, cls, cds, cys, cmxs, cmys, cmzs, cfs, cms, plotd
 * `surfacenames`
 
 """
-function lift_distribution_template(vinfs, ploti, alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip;
+function lift_distribution_template(ploti, alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip;
             plotdirectory=joinpath(topdirectory,"data","plots",TODAY),
             plotbasename="default",
             plotextension=".pdf",
@@ -145,7 +145,7 @@ function lift_distribution_template(vinfs, ploti, alphas, wing_b, wing_TR, wing_
     function freestream_function(aircraft, parameters, environment, alphas, stepi)
         
         # calculate freestream
-        vinf = vinfs[stepi]
+        vinf = 1.0 # + ti # arbitrary for lift distribution?
         alpha = alphas[stepi]
         beta = 0.0
         Omega = zeros(3)

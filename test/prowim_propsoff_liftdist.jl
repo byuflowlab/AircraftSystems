@@ -9,12 +9,13 @@ wing_θroot = 0.0
 wing_θtip = 0.0
 plotbasename = "PROWIM_propsoff_cf"
 simulationdata = AS.lift_distribution_template(ploti, alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip;
-    plotdirectory = joinpath(AS.topdirectory, "data","plots",TODAY),
+    plotdirectory,
     plotbasename = plotbasename,
     plotextension = ".pdf",
     stepsymbol = L"\alpha ",
     surfacenames = ["PROWIM, w/o props"]
 )
+
 objective = AS.runsimulation!(simulationdata...)
 
 
@@ -82,7 +83,10 @@ for (idata, data) in enumerate(prowim_liftdistribution)
 end
 axs[3].legend(loc="upper left", bbox_to_anchor=(1.01,1))
 fig.tight_layout()
-fig.savefig(joinpath(plotdirectory,"PROWIM_propsoff_liftdistribution.pdf"), bbox_inches="tight")
-fig.savefig(joinpath(notebookdirectory,"PROWIM_propsoff_liftdistribution.pdf"), bbox_inches="tight")
+
+if savefigs
+    fig.savefig(joinpath(plotdirectory,"PROWIM_propsoff_liftdistribution.pdf"), bbox_inches="tight")
+    fig.savefig(joinpath(notebookdirectory,"PROWIM_propsoff_liftdistribution.pdf"), bbox_inches="tight")
+end
 
 # @test objective == 0

@@ -8,9 +8,18 @@ plt = AS.plt
 VL = AS.VL
 using Test
 LA = AS.LA
+using Infiltrator
 
-plotdirectory = "/Users/randerson/Box/research/projects/AircraftSystems/data/plots/$(AS.TODAY)"
-notebookdirectory = ENV["NOTEBOOK_IMG_PATH"]
+plotdirectory = joinpath(AS.topdirectory, "data/plots/$(AS.TODAY)")
+contourdirectory = joinpath(AS.topdirectory, "test/data/airfoil/contours")
+polardirectory = joinpath(AS.topdirectory, "test/data/airfoil/polars")
+
+#! change this if you want to save figures from these tests. If so, edit the notebookdirectory below and the plot directory above.
+const savefigs = false
+
+if savefigs
+    notebookdirectory = ENV["NOTEBOOK_IMG_PATH"]
+end
 
 # @testset "rotors" begin
 
@@ -36,11 +45,12 @@ include("prowim_propsoff_liftdist.jl")
 # end # Epema Blown Wing Validation
 
 
-@testset "Epema Blown Wing Validation" begin
+# @testset "Epema Blown Wing Validation" begin
 
-    include("epema_blown_wing_cl.jl")
+    # include("epema_blown_wing_cl.jl")
+    # include("epema_blown_wing_cl_epema_polar.jl")
 
-end
+# end
 
 # @testset "Veldhuis Blown Wing Validation" begin
 
