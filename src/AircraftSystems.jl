@@ -15,6 +15,8 @@ import LinearAlgebra
 LA = LinearAlgebra
 import PyPlot
 plt = PyPlot
+import Splines
+using Test
 import VortexLattice
 VL = VortexLattice
 import Xfoil
@@ -47,7 +49,7 @@ for directory in subdirectories
 end
 
 # export packages
-export CCBlade, FLOWMath, VortexLattice, Xfoil
+export CCBlade, FLOWMath, LaTeXStrings, VortexLattice, Test, Xfoil
 
 # export functions
 export runsimulation!

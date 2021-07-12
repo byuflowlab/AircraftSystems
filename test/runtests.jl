@@ -1,27 +1,28 @@
-import AircraftSystems
+println("Begin importing packages for `runtests.jl`...")
+using AircraftSystems
 AS = AircraftSystems
-import FileIO
-FM = AS.FM
-using LaTeXStrings
-plt = AS.plt
+FM = AS.FLOWMath
+# using LaTeXStrings
+LS = LaTeXStrings
+plt = AS.PyPlot
 # plt.pygui(false)
-VL = AS.VL
-using Test
-LA = AS.LA
-using Infiltrator
+# using Test
+T = AS.Test
+VL = AS.VortexLattice
+println("Finished.")
 
-plotdirectory = joinpath(AS.topdirectory, "data/plots/$(AS.TODAY)")
-contourdirectory = joinpath(AS.topdirectory, "test/data/airfoil/contours")
-polardirectory = joinpath(AS.topdirectory, "test/data/airfoil/polars")
+plotdirectory = joinpath(AS.topdirectory, "data", "plots", AS.TODAY)
+# notebookdirectory = ENV["NOTEBOOK_IMG_PATH"]
+# if !isdir(notebookdirectory); mkpath(notebookdirectory); end
 
-#! change this if you want to save figures from these tests. If so, edit the notebookdirectory below and the plot directory above.
-const savefigs = false
+# prepare Epema rotor
+include("EpemaData3.jl")
+contourdirectory = joinpath(AS.topdirectory, "test", "data", "airfoil", "contours")
+polardirectory = joinpath(AS.topdirectory, "test", "data", "airfoil", "polars")
+rs_desired = [0.207, 0.3, 0.4, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0]
+EpemaData3.scans_to_interpolated_contours(contourdirectory, plotdirectory, rs_desired)
 
-if savefigs
-    notebookdirectory = ENV["NOTEBOOK_IMG_PATH"]
-end
-
-# @testset "rotors" begin
+# T.@testset "rotors" begin
 
 # include("epema_rotor_sweep.jl")
 
@@ -29,11 +30,11 @@ end
 
 # end # test rotors
 
-# @testset "wings" begin
+# T.@testset "wings" begin
 
-include("prowim_propsoff_clalpha.jl")
+# include("prowim_propsoff_clalpha.jl")
 
-include("prowim_propsoff_liftdist.jl")
+# include("prowim_propsoff_liftdist.jl")
 
 # end # test wings
 
@@ -44,6 +45,7 @@ include("prowim_propsoff_liftdist.jl")
 
 # end # Epema Blown Wing Validation
 
+# T.@testset "wings_and_rotors" begin
 
 # @testset "Epema Blown Wing Validation" begin
 

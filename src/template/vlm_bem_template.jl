@@ -53,6 +53,11 @@ struct VLM_BEM{V1,V2,V3,V4,V5,V6,V7,V8,V9,V10} <: Parameters
     us::V3
     vs::V3
     wakefunctions::V4
+    wakeshapefunctions::V11
+    axialinterpolations::V12
+    swirlinterpolations::V13
+    axialmultipliers::V14
+    swirlmultipliers::V15
     CLs::V5
     CDs::V5
     CYs::V5
@@ -116,30 +121,32 @@ end
 * `rotor_position`
 * `rotor_orientation`
 * `spindirections`
+* `Res_list`
+* `Ms_list`
 
 # Keyword Arguments:
 
-* `Res_list`
-* `surfacenames`
-* `rotornames`
-* `plotdirectory`: directory to which plots are saved
-* `plotbasename`: first part of saved plot filenames
-* `plotextension`: saved plots file extension
-* `stepsymbol`
+* `wakedevelopementfactor` : value between 0-1 with 0 meaning not developed at all and 1 meaning fully developed
+* `surfacenames` : names for each lifting surface used in plots
+* `rotornames` : names for each rotor used in plots
+* `plotdirectory` : directory to which plots are saved
+* `plotbasename` : first part of saved plot filenames
+* `plotextension` : saved plots file extension
+* `stepsymbol` : symbol in plots and terminal output describing each step
 
 """
-function vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, 
-            omegas, nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, 
-            index, rotor_positions, rotor_orientation, spindirections, 
-            Res_list, Ms_list;
-            surfacenames = ["default wing"],
-            rotornames = ["rotor 1"],
-            plotdirectory = joinpath(topdirectory, "data","plots",TODAY),
-            plotbasename = "default",
-            plotextension = ".pdf",
-            stepsymbol = L"\alpha ",
-            kwargs...)
-    
+function vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, omegas, nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, index, rotor_X, rotor_orientation, spindirections, Res_list, Ms_list;
+    wakedevelopementfactor = 1.0, # fully developed by default
+    swirlrecoveryfactor = 0.5, # as described in Veldhuis' paper
+    surfacenames = ["default wing"],
+    rotornames = ["rotor 1"],
+    plotdirectory = joinpath(topdirectory, "data","plots",TODAY),
+    plotbasename = "default",
+    plotextension = ".pdf",
+    stepsymbol = L"\alpha ",
+    kwargs...
+)
+
     # prepare subsystems
     wings = simplewingsystem(; wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, kwargs...)
     rotors = CCBladeSystem(nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, index, rotor_positions, rotor_orientation, spindirections, Res_list, Ms_list; kwargs...)
@@ -158,54 +165,64 @@ function vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, wing_AR, wi
     steprange = alphas
     params_solve_vlm_bem = solve_vlm_bem(aircraft, steprange)
     params_solve_vlm_bem[1] .*= omegas
-
+    
+    # set wake development parameters
+    @assert wakedevelopementfactor <= 1 && wakedevelopementfactor >= 0 "`wakedevelopementfactor` must be between 0 and 1"
+    axialmultipliers = fill((distance2plane, Rtip) -> 1 + wakedevelopementfactor, length(aircraft.rotorsystem.index))
+    swirlmultipliers = fill((distance2plane, Rtip) -> (1 + wakedevelopementfactor) * swirlrecoveryfactor, length(aircraft.rotorsystem.index))
+    params_solve_vlm_bem = params_solve_vlm_bem[1:13]..., axialmultipliers, swirlmultipliers, params_solve_vlm_bem[16:end]...
     #= Contains:
-        * `omegas::Vector{Float64}` : a vector of rotational speeds in rad/s at the current step
-        * `Js::Array{Float64,2}` : each [i,j]th element is the advance ratio of the ith rotor at the jth step
-        * `Ts::Array{Float64,2}` : each [i,j]th element is the thrust of the ith rotor at the jth step
-        * `Qs::Array{Float64,2}` : each [i,j]th element is the torque of the ith rotor at the jth step
-        * `CTs::Array{Float64,2}` : each [i,j]th element is the thrust coefficient of the ith rotor at the jth step
-        * `CQs::Array{Float64,2}` : each [i,j]th element is the torque coefficient of the ith rotor at the jth step
-        * `ηs::Array{Float64,2}` : each [i,j]th element is the propulsive efficiency of the ith rotor at the jth step
-        * `us::Vector{Vector{Vector{Float64}}}` : each [i][j][k]th element is the axial induced velocity at ith step of the jth rotor at the kth radial section
-        * `vs::Vector{Vector{Vector{Float64}}}` : each [i][j][k]th element is the swirl induced velocity at ith step of the jth rotor at the kth radial section
-        * `wakefunction::Function` : function accepts position X and returns the rotor induced velocity
-        * `CLs::Vector{Vector{Float64}}` : a vector of length `length(steprange)` containing lift coefficients at each step
-        * `CDs::Vector{Vector{Float64}}` : a vector of length `length(steprange)` containing drag coefficients at each step
-        * `CYs::Vector{Vector{Float64}}` : a vector of length `length(steprange)` containing side force coefficients at each step
-        * `cls::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local lift coefficients at each lifting line section, corresponding to each lifting surface
-        * `cds::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local drag coefficients at each lifting line section, corresponding to each lifting surface
-        * `cys::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local side force coefficients at each lifting line section, corresponding to each lifting surface
-        * `cmxs::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local x-axis (roll) moment coefficients at each lifting line section, corresponding to each lifting surface
-        * `cmys::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local y-axis (pitch) moment coefficients at each lifting line section, corresponding to each lifting surface
-        * `cmzs::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local z-axis (yaw) moment force coefficients at each lifting line section, corresponding to each lifting surface
+        1 `omegas::Vector{Float64}` : a vector of rotational speeds in rad/s at the current step
+        2 `Js::Array{Float64,2}` : each [i,j]th element is the advance ratio of the ith rotor at the jth step
+        3 `Ts::Array{Float64,2}` : each [i,j]th element is the thrust of the ith rotor at the jth step
+        4 `Qs::Array{Float64,2}` : each [i,j]th element is the torque of the ith rotor at the jth step
+        5 `CTs::Array{Float64,2}` : each [i,j]th element is the thrust coefficient of the ith rotor at the jth step
+        6 `CQs::Array{Float64,2}` : each [i,j]th element is the torque coefficient of the ith rotor at the jth step
+        7 `ηs::Array{Float64,2}` : each [i,j]th element is the propulsive efficiency of the ith rotor at the jth step
+        8 `us::Vector{Vector{Vector{Float64}}}` : each [i][j][k]th element is the axial induced velocity at ith step of the jth rotor at the kth radial section
+        9 `vs::Vector{Vector{Vector{Float64}}}` : each [i][j][k]th element is the swirl induced velocity at ith step of the jth rotor at the kth radial section
+        10 `wakefunction::Function` : function accepts position X and returns the rotor induced velocity
+        11 `wakeshapefunctions::Vector{Function}` : [i]th element is a function f(Rtip, x) describing the radial distance from the rotor axis to the boundary of the wake of the ith rotor
+        12 `axialinterpolations::Vector{Function}` : [i]th element is a function f(rs, us, r, Rtip) that returns the axial component of rotor-induced velocity at distance r from the rotor axis based on the calculated axial induced velocities output from CCBlade of the ith rotor
+        13 `swirlinterpolations::Vector{Function}` : [i]th element is a function f(rs, us, r, Rtip) that returns the swirl component of rotor-induced velocity at distance r from the rotor axis based on the calculated axial induced velocities output from CCBlade of the ith rotor
+        14 `axialmultipliers::Vector{Function}` : [i]th element is a function f(distance2plane, Rtip) that is multiplied by the axial induced velocity function of the ith rotor
+        15 `swirlmultipliers::Vector{Function}` : [i]th element is a function f(distance2plane, Rtip) that is multiplied by the swirl induced velocity function of the ith rotor
+        16 `CLs::Vector{Vector{Float64}}` : a vector of length `length(steprange)` containing lift coefficients at each step
+        17 `CDs::Vector{Vector{Float64}}` : a vector of length `length(steprange)` containing drag coefficients at each step
+        18 `CYs::Vector{Vector{Float64}}` : a vector of length `length(steprange)` containing side force coefficients at each step
+        19 `cls::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local lift coefficients at each lifting line section, corresponding to each lifting surface
+        20 `cds::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local drag coefficients at each lifting line section, corresponding to each lifting surface
+        21 `cys::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local side force coefficients at each lifting line section, corresponding to each lifting surface
+        22 `cmxs::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local x-axis (roll) moment coefficients at each lifting line section, corresponding to each lifting surface
+        23 `cmys::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local y-axis (pitch) moment coefficients at each lifting line section, corresponding to each lifting surface
+        24 `cmzs::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local z-axis (yaw) moment force coefficients at each lifting line section, corresponding to each lifting surface
     =#
 
     params_post_plot_cl_alpha_sweep = post_plot_cl_alpha_sweep(aircraft, steprange)
     #= Contains:
-        * `CLs::Vector{Float64}` : CL corresponding to the ith step
-        * `CDs::Vector{Float64}` : CD corresponding to the ith step
-        * `CYs::Vector{Float64}` : CY corresponding to the ith step
-        * `plotdirectory::String` : directory where plots are saved
-        * `plotbasename::String` : first portion of the saved figure file name
-        * `plotextension::String` : extension of saved figure files
+        1 `CLs::Vector{Float64}` : CL corresponding to the ith step
+        2 `CDs::Vector{Float64}` : CD corresponding to the ith step
+        3 `CYs::Vector{Float64}` : CY corresponding to the ith step
+        4 `plotdirectory::String` : directory where plots are saved
+        5 `plotbasename::String` : first portion of the saved figure file name
+        6 `plotextension::String` : extension of saved figure files
     =#
 
     params_post_plot_lift_moment_distribution = post_plot_lift_moment_distribution(aircraft, steprange)
     #= Contains:
-        * `cls::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local lift coefficients at each lifting line section, corresponding to each lifting surface
-        * `cds::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local drag coefficients at each lifting line section, corresponding to each lifting surface
-        * `cys::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local side force coefficients at each lifting line section, corresponding to each lifting surface
-        * `cmxs::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local x-axis (roll) moment coefficients at each lifting line section, corresponding to each lifting surface
-        * `cmys::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local y-axis (pitch) moment coefficients at each lifting line section, corresponding to each lifting surface
-        * `cmzs::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local z-axis (yaw) moment force coefficients at each lifting line section, corresponding to each lifting surface
-        * `cfs::Vector{Array{Float64,2}}` : vector with length equal to the number of lifting surfaces, each member containing an array of size (3,nspanwisepanels) of force coefficients cd, cy, cl
-        * `cms::Vector{Array{Float64,2}}` : vector with length equal to the number of lifting surfaces, each member containing an array of size (3,nspanwisepanels) of moment coefficients cmx, cmy,
-        * `surfacenames::Vector{String}` : names of each lifting surface to be shown in the legend
-        * `plotdirectory::String` : path to the folder where plots will be saved
-        * `plotbasename::String` : first part of saved figure file names
-        * `plotextension::String` : extension of saved figure file names
-        * `plotstepi::Vector{Int}` : which steps at which to plot
+        1 `cls::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local lift coefficients at each lifting line section, corresponding to each lifting surface
+        2 `cds::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local drag coefficients at each lifting line section, corresponding to each lifting surface
+        3 `cys::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local side force coefficients at each lifting line section, corresponding to each lifting surface
+        4 `cmxs::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local x-axis (roll) moment coefficients at each lifting line section, corresponding to each lifting surface
+        5 `cmys::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local y-axis (pitch) moment coefficients at each lifting line section, corresponding to each lifting surface
+        6 `cmzs::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local z-axis (yaw) moment force coefficients at each lifting line section, corresponding to each lifting surface
+        7 `cfs::Vector{Array{Float64,2}}` : vector with length equal to the number of lifting surfaces, each member containing an array of size (3,nspanwisepanels) of force coefficients cd, cy, cl
+        8 `cms::Vector{Array{Float64,2}}` : vector with length equal to the number of lifting surfaces, each member containing an array of size (3,nspanwisepanels) of moment coefficients cmx, cmy,
+        9 `surfacenames::Vector{String}` : names of each lifting surface to be shown in the legend
+        10 `plotdirectory::String` : path to the folder where plots will be saved
+        11 `plotbasename::String` : first part of saved figure file names
+        12 `plotextension::String` : extension of saved figure file names
+        13 `plotstepi::Vector{Int}` : which steps at which to plot
     =#
     # println("Sherlock! \n\ttypeof(params_post_plot_lift_moment_distribution) = $(typeof(params_post_plot_lift_moment_distribution))")
     # println("\tparams_post_plot_lift_moment_distribution = $params_post_plot_lift_moment_distribution")
@@ -213,22 +230,24 @@ function vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, wing_AR, wi
 
     params_post_plot_rotor_sweep = post_plot_rotor_sweep(aircraft, steprange)
     #= Contains:
-        * `Js::AbstractArray` : array of advance ratios of the ith rotor at the jth step
-        * `CTs::Array{Float64,2}` : array of thrust coefficients of the ith rotor at the jth step
-        * `CQs::Array{Float64,2}` : array of torque coefficients of the ith rotor at the jth step
-        * `ηs::Array{Float64,2}` : array of propulsive efficiencies of the ith rotor at the jth step
-        * `rotornames::Vector{String}` : vector of rotor names for use in plot legend
-        * `plotdirectory::String` : directory where plots are saved
-        * `plotbasename::String` : first portion of the saved figure file name
-        * `plotextension::String` : extension of saved figure files
+        1 `Js::AbstractArray` : array of advance ratios of the ith rotor at the jth step
+        2 `CTs::Array{Float64,2}` : array of thrust coefficients of the ith rotor at the jth step
+        3 `CQs::Array{Float64,2}` : array of torque coefficients of the ith rotor at the jth step
+        4 `ηs::Array{Float64,2}` : array of propulsive efficiencies of the ith rotor at the jth step
+        5 `rotornames::Vector{String}` : vector of rotor names for use in plot legend
+        6 `plotdirectory::String` : directory where plots are saved
+        7 `plotbasename::String` : first portion of the saved figure file name
+        8 `plotextension::String` : extension of saved figure files
     =#
+
     if !isnothing(rotornames); params_post_plot_rotor_sweep[5] .= rotornames; end
     # prepare plot directory
     if !isdir(plotdirectory); mkpath(plotdirectory); end
     println("==== MSG ====\n\tplotdirectory = $plotdirectory")
     
     # build parameters struct
-    parameters = VLM_BEM(omegas, params_solve_vlm_bem[2:end]..., params_post_plot_lift_moment_distribution[7:9]..., params_post_plot_rotor_sweep[5], plotdirectory, plotbasename, plotextension, plotstepi)
+    parameters = VLM_BEM(params_solve_vlm_bem..., params_post_plot_lift_moment_distribution[7:9]..., params_post_plot_rotor_sweep[5], plotdirectory, plotbasename, plotextension, plotstepi)
+    
     # build freestream_function
     function freestream_function(aircraft, parameters, environment, alphas, stepi)
 

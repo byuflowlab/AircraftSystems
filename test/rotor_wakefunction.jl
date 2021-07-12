@@ -6,12 +6,17 @@ struct TestParams
     us
     vs
     wakefunctions
+    wakeshapefunctions
+    axialinterpolation
+    swirlinterpolation
+    axialmultiplier
+    swirlmultiplier
 end
 
 nsteps = length(parameters.us)
 stepi = 5
 
-testparams = TestParams(deepcopy(parameters.us), deepcopy(parameters.vs), Vector{Any}(nothing,nsteps))
+testparams = TestParams(deepcopy(parameters.us), deepcopy(parameters.vs), Vector{Any}(nothing,nsteps), fill((Rtip, x) -> Rtip, length(aircraft.rotorsystem.index)), fill((rs, us, r, Rtip) -> FM.linear(rs, us, r), length(aircraft.rotorsystem.index)), fill((rs, vs, r, Rtip) -> FM.linear(rs, vs, r), length(aircraft.rotorsystem.index)), fill((distance2plane, Rtip) -> 2, length(aircraft.rotorsystem.index)), fill((distance2plane, Rtip) -> 1, length(aircraft.rotorsystem.index)))
 
 for i=1:nsteps
     AS.solve_rotor_wake(aircraft, testparams, nothing, nothing, nothing, i, nothing)
@@ -44,9 +49,9 @@ fig.clear()
 ax = fig.add_subplot(111, projection="3d")
 ax.quiver3D(xs / r, ys / r, zs / r, us, vs, ws, length=0.01)#, normalize=true)
 
-ax.set_xlabel(L"x/r")
-ax.set_ylabel(L"y/r")
-ax.set_zlabel(L"z/r")
+ax.set_xlabel(LS.L"x/r")
+ax.set_ylabel(LS.L"y/r")
+ax.set_zlabel(LS.L"z/r")
 
 fig2d = plt.figure("test_wakefunction_2d")
 fig2d.clear()
@@ -56,8 +61,8 @@ thetas = range(0,2*pi,length=100)
 rotor_y = cos.(thetas)
 rotor_z = sin.(thetas)
 ax2.plot(rotor_y, rotor_z, color="blue")
-ax2.set_xlabel(L"x/r")
-ax2.set_ylabel(L"y/r")
+ax2.set_xlabel(LS.L"x/r")
+ax2.set_ylabel(LS.L"y/r")
 
 rs = range(r/200, 1.5*r, length=100)
 xs_3 = vcat(-reverse(rs), rs)
@@ -72,9 +77,9 @@ ax_u = fig3.add_subplot(311)
 ax_v = fig3.add_subplot(312)
 ax_w = fig3.add_subplot(313)
 ax_u.plot(xs_3 ./ r, us)
-ax_u.set_ylabel(L"u[m/s]")
+ax_u.set_ylabel(LS.L"u[m/s]")
 ax_v.plot(xs_3 ./ r, vs)
-ax_v.set_ylabel(L"v[m/s]")
+ax_v.set_ylabel(LS.L"v[m/s]")
 ax_w.plot(xs_3 ./ r, ws)
-ax_w.set_ylabel(L"w[m/s]")
-ax_w.set_xlabel(L"y/R, x=z=0")
+ax_w.set_ylabel(LS.L"w[m/s]")
+ax_w.set_xlabel(LS.L"y/R, x=z=0")

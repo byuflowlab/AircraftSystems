@@ -210,7 +210,11 @@ spindirections = [true]
 
 # call template
 plotbasename = "PROWIM_propson"
+wakedevelopementfactor = 0.0
+swirlrecoveryfactor = 0.5
 simulationdata = AS.vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, omegas, nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, index, rotor_X, rotor_orientation, spindirections, Res_list, Ms_list;
+        wakedevelopementfactor = wakedevelopementfactor, # fully developed by default
+        swirlrecoveryfactor = swirlrecoveryfactor, # as described in Veldhuis' paper
         polardirectory = polardirectory,
         surfacenames = ["wing"],
         rotornames = ["rotor"],
@@ -220,6 +224,13 @@ simulationdata = AS.vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, 
 objective = AS.runsimulation!(simulationdata...)
 
 # plot validation
+if isapprox(wakedevelopementfactor, 0.0; atol=1e-8)
+    waketag = "_ud"
+elseif isapprox(wakedevelopementfactor, 1.0; atol=1e-8)
+    waketag = "_fd"
+else
+    waketag = "_wdf_$(round(wakedevelopementfactor; digits=1))"
+end
 fig_rotor = plt.figure(plotbasename * "_rotorsweep")
 ax_rotor = fig_rotor.get_axes()[1]
 ax_rotor.scatter(0.85, 0.168, c="r", label="Velduis")
@@ -317,7 +328,7 @@ cldata = [
     0.921265858873842 0.4177049180327871;
     ]
 ]
-plot_labels = "Velduis, " .* [L"\alpha = 0^\circ", L"\alpha = 4^\circ", L"\alpha = 10^\circ"]
+plot_labels = "Velduis, " .* [LS.L"\alpha = 0^\circ", LS.L"\alpha = 4^\circ", LS.L"\alpha = 10^\circ"]
 aircraft = simulationdata[1]
 b = aircraft.wingsystem.lifting_line_rs[1][2,end]
 for (i, data) in enumerate(cldata)
