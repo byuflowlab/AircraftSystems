@@ -42,7 +42,7 @@ Parameters for a blown wing system.
 * `plotstepi::V10`
 
 """
-struct VLM_BEM{V1,V2,V3,V4,V5,V6,V7,V8,V9,V10} <: Parameters
+struct VLM_BEM{V1,V2,V3,V4,V5,V6,V7,V8,V9,V10,V11,V12,V13,V14,V15} <: Parameters
     omegas::V1
     Js::V2
     Ts::V2
@@ -135,7 +135,7 @@ end
 * `stepsymbol` : symbol in plots and terminal output describing each step
 
 """
-function vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, omegas, nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, index, rotor_X, rotor_orientation, spindirections, Res_list, Ms_list;
+function vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, omegas, nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, index, rotor_positions, rotor_orientation, spindirections, Res_list, Ms_list;
     wakedevelopementfactor = 1.0, # fully developed by default
     swirlrecoveryfactor = 0.5, # as described in Veldhuis' paper
     surfacenames = ["default wing"],
