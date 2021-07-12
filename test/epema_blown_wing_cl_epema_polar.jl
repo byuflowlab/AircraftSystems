@@ -26,7 +26,7 @@ rotor_chords = [rotor_chord_data[:,2] * rtip[1]]
 rotor_twists = [FM.linear(rotor_twist_data[:,1]*rtip[1], rotor_twist_data[:,2], radii[1])]
 # @infiltrate
 
-airfoilcontour = joinpath(AS.topdirectory, "data", "airfoil", "contours", "epema_interpolated_bspline_n30_0700.dat")
+airfoilcontour = joinpath(contourdirectory, "epema_interpolated_bspline_n30_0700.dat")
 airfoilcontours = [fill(airfoilcontour, length(radii[1]))]
 airfoilname = "epema_interpolated_bspline_n30_0700"
 airfoilnames = [fill(airfoilname, length(radii[1]))]
@@ -44,7 +44,6 @@ wing_twist = [0.0, 0.0, 0.0]
 wing_phi = [0.0, 0.0, 0.0]
 
 surfacenames = ["epema wing"]
-polardirectory=joinpath(AS.topdirectory, "data","airfoil","polars","20210708")
 
 wing_npanels = 256
 Res = [5e4, 1e5, 5e5, 1e6, 1e7]
@@ -96,11 +95,11 @@ plt.figure()
 plt.plot(span_plot, cls_plot, label="BEM+VLM")
 plt.plot(results[:"lift distribution VLM rotors on"][:,1], results[:"lift distribution VLM rotors on"][:,2], label="Epema VLM model")
 plt.scatter(results[:"normalized cl experimental"][:,1], results[:"normalized cl experimental"][:,2], label="Epema experimental")
-plt.plot(span_plot, cls_new, label=L"2 * Γ / V_{\infty}")
-plt.plot(span_plot, cls_new2, label=L"2 * Γ (V_{infty} + V_w)/ V_{\infty}^2")
-plt.plot(span_plot, cls_new3, label=L"2 * Γ (V_{infty} + V_w + V_r)/ V_{\infty}^2")
-plt.xlabel(L"2y/b")
-plt.ylabel(L"normalized\ c_l (c/c_{mac})")
+plt.plot(span_plot, cls_new, label="2 * Γ / V_{infty}")
+plt.plot(span_plot, cls_new2, label="2 * Γ (V_{infty} + V_w)/ V_{infty}^2")
+plt.plot(span_plot, cls_new3, label="2 * Γ (V_{infty} + V_w + V_r)/ V_{infty}^2")
+plt.xlabel("2y/b")
+plt.ylabel("normalized c_l (c/c_{mac})")
 plt.legend()
 
 # no tests for now - eventually would like to add some tests on cl values, as well as add results to the plot
