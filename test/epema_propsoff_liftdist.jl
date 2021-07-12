@@ -70,7 +70,7 @@ axs = fig.get_axes()
 alpha_labels = [0,4,10]
 for (idata, data) in enumerate(prowim_liftdistribution)
     cratio = idata / length(alpha_labels)
-    axs[3].scatter(data[:,1], data[:,2], marker = "x", color = (0.05, 0.85-cratio*0.7, 0.15 + 0.75 * cratio), label=L"PROWIM, \alpha = " * "$(alpha_labels[idata])" * L"^\circ")
+    axs[3].scatter(data[:,1], data[:,2], marker = "x", color = (0.05, 0.85-cratio*0.7, 0.15 + 0.75 * cratio), label=LS.L"PROWIM, \alpha = " * "$(alpha_labels[idata])" * LS.L"^\circ")
 end
 axs[3].legend(loc="upper left", bbox_to_anchor=(1.01,1))
 # @test objective == 0

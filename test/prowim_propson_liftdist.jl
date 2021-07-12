@@ -324,7 +324,7 @@ cldata = [
     0.921265858873842 0.4177049180327871;
     ]
 ]
-plot_labels = "Velduis, " .* [L"\alpha = 0^\circ", L"\alpha = 4^\circ", L"\alpha = 10^\circ"]
+plot_labels = "Velduis, " .* [LS.L"\alpha = 0^\circ", LS.L"\alpha = 4^\circ", LS.L"\alpha = 10^\circ"]
 aircraft = simulationdata[1]
 b = aircraft.wingsystem.lifting_line_rs[1][2,end]
 for (i, data) in enumerate(cldata)
