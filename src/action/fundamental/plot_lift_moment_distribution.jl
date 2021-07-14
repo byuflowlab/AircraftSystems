@@ -48,6 +48,7 @@ function plot_lift_moment_distribution(aircraft, parameters, freestream, environ
         # cl_ylim = parameters.cl_ylim
         # cd_ylim = parameters.cd_ylim
         # cy_ylim = parameters.cy_ylim
+
         # create axes
         fig = plt.figure(basename * "_liftdistribution")
         nsurfaces = length(surfacenames)
@@ -71,16 +72,19 @@ function plot_lift_moment_distribution(aircraft, parameters, freestream, environ
                 # axs[3].set_ylabel(L"c_l")
             end
         end
-        axs = fig.get_axes()
+
         # get color
         cratio = findfirst((x)->x==stepi,plotstepi) / length(plotstepi)
+
         # plot
+        axs = fig.get_axes()
         for (isurface,cf) in enumerate(cfs)
             rs_plot = get_midpoints(lifting_line_rs[isurface][2,:])
             for icf = 1:3
                 axs[(isurface - 1) * nsurfaces + icf].plot(rs_plot, cf[icf,:], color=(0.05, 0.85-cratio*0.7, 0.15 + 0.75 * cratio), label="$stepsymbol = $(round(steprange[stepi],digits=3))")
             end
         end
+
         # save
         if stepi == plotstepi[end] # last step
             axs[3].legend(loc="upper left", bbox_to_anchor=(1.01,1)) # set legend
@@ -112,14 +116,16 @@ function plot_lift_moment_distribution(aircraft, parameters, freestream, environ
                 # axs[3].set_ylabel(L"c_l")
             end
         end
-        axs = fig.get_axes()
+
         # plot
+        axs = fig.get_axes()
         for (isurface,cm) in enumerate(cms)
             rs_plot = get_midpoints(lifting_line_rs[isurface][2,:])
             for icf = 1:3
                 axs[(isurface - 1) * nsurfaces + icf].plot(rs_plot, cm[icf,:], color=(0.05, 0.85-cratio*0.7, 0.15 + 0.75 * cratio), label="$stepsymbol = $(round(steprange[stepi],digits=3))")
             end
         end
+
         # save
         if stepi == plotstepi[end]
             axs[2].legend(loc="upper left", bbox_to_anchor=(1.01,1)) # set legend
@@ -128,6 +134,7 @@ function plot_lift_moment_distribution(aircraft, parameters, freestream, environ
             fig.savefig(savepath, bbox_inches="tight")
         end
     end
+
     return false
 end
 

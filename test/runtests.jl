@@ -2,11 +2,9 @@ println("Begin importing packages for `runtests.jl`...")
 using AircraftSystems
 AS = AircraftSystems
 FM = AS.FLOWMath
-# using LaTeXStrings
-LS = LaTeXStrings
+LS = AS.LaTeXStrings
 plt = AS.PyPlot
 # plt.pygui(false)
-# using Test
 T = AS.Test
 VL = AS.VortexLattice
 println("Finished.")
@@ -20,11 +18,11 @@ include("EpemaData3.jl")
 contourdirectory = joinpath(AS.topdirectory, "test", "data", "airfoil", "contours")
 polardirectory = joinpath(AS.topdirectory, "test", "data", "airfoil", "polars")
 rs_desired = [0.207, 0.3, 0.4, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0]
-EpemaData3.scans_to_interpolated_contours(contourdirectory, plotdirectory, rs_desired)
+# EpemaData3.scans_to_interpolated_contours(contourdirectory, plotdirectory, rs_desired)
 
 # T.@testset "rotors" begin
 
-include("epema_rotor_sweep.jl")
+# include("epema_rotor_sweep.jl")
 
 # include("rotor_wakefunction.jl")
 
@@ -32,9 +30,11 @@ include("epema_rotor_sweep.jl")
 
 # T.@testset "wings" begin
 
-# include("prowim_propsoff_clalpha.jl")
+include("prowim_propsoff_clalpha.jl")
 
-# include("prowim_propsoff_liftdist.jl")
+include("prowim_propsoff_liftdist.jl")
+
+include("prowim_test_cl_CL.jl")
 
 # end # test wings
 

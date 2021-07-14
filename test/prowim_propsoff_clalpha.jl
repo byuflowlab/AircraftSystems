@@ -7,12 +7,12 @@ wing_AR = wing_b / wing_c
 wing_θroot = 0.0
 wing_θtip = 0.0
 plotbasename = "PROWIM_propsoff_CF"
-simulationdata = AS.cl_alpha_sweep_template(alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip;
+simulationdata_CL_alpha = AS.cl_alpha_sweep_template(alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip;
         plotdirectory = joinpath(AS.topdirectory, "data","plots",TODAY),
         plotbasename = plotbasename,
         plotextension = ".pdf"
     )
-objective = AS.runsimulation!(simulationdata...)
+objective = AS.runsimulation!(simulationdata_CL_alpha...)
 alpha_prowim = [
     0;
     1.079545454545455;
@@ -63,6 +63,6 @@ axs[2].legend(loc="upper left", bbox_to_anchor=(1.01,1))
 
 fig_propsoff_clalpha.tight_layout()
 fig_propsoff_clalpha.savefig(joinpath(plotdirectory,"PROWIM_propsoff_clalphasweep.pdf"), bbox_inches="tight")
-fig_propsoff_clalpha.savefig(joinpath(notebookdirectory,"PROWIM_propsoff_clalphasweep.pdf"), bbox_inches="tight")
+# fig_propsoff_clalpha.savefig(joinpath(notebookdirectory,"PROWIM_propsoff_clalphasweep.pdf"), bbox_inches="tight")
 
 # @test objective == 0

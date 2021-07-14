@@ -83,6 +83,6 @@ end
 axs[3].legend(loc="upper left", bbox_to_anchor=(1.01,1))
 fig.tight_layout()
 fig.savefig(joinpath(plotdirectory,"PROWIM_propsoff_liftdistribution.pdf"), bbox_inches="tight")
-fig.savefig(joinpath(notebookdirectory,"PROWIM_propsoff_liftdistribution.pdf"), bbox_inches="tight")
+# fig.savefig(joinpath(notebookdirectory,"PROWIM_propsoff_liftdistribution.pdf"), bbox_inches="tight")
 
 # @test objective == 0

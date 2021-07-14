@@ -209,163 +209,162 @@ spindirections = [true]
 
 # call template
 plotbasename = "PROWIM_propson"
-wakedevelopementfactor = 0.0
-swirlrecoveryfactor = 0.5
-simulationdata = AS.vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, omegas, nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, index, rotor_X, rotor_orientation, spindirections, Res_list, Ms_list;
-        wakedevelopementfactor = wakedevelopementfactor, # fully developed by default
-        swirlrecoveryfactor = swirlrecoveryfactor, # as described in Veldhuis' paper
-        polardirectory = polardirectory,
-        surfacenames = ["wing"],
-        rotornames = ["rotor"],
-        plotbasename = plotbasename,
-        plotextension = ".pdf"
-    )
-objective = AS.runsimulation!(simulationdata...)
+wakedevelopementfactors = [0.0, 0.5, 1.0]
+swirlrecoveryfactors = [0.0, 0.5, 1.0]
 
-# plot validation
-if isapprox(wakedevelopementfactor, 0.0; atol=1e-8)
-    waketag = "_ud"
-elseif isapprox(wakedevelopementfactor, 1.0; atol=1e-8)
-    waketag = "_fd"
-else
-    waketag = "_wdf_$(round(wakedevelopementfactor; digits=1))"
+for wakedevelopementfactor in wakedevelopementfactors
+    for swirlrecoveryfactor in swirlrecoveryfactors
+        simulationdata = AS.vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, omegas, nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, index, rotor_X, rotor_orientation, spindirections, Res_list, Ms_list;
+                wakedevelopementfactor = wakedevelopementfactor, # fully developed by default
+                swirlrecoveryfactor = swirlrecoveryfactor, # as described in Veldhuis' paper
+                polardirectory = polardirectory,
+                surfacenames = ["wing"],
+                rotornames = ["rotor"],
+                plotbasename = plotbasename,
+                plotextension = ".pdf"
+            )
+        objective = AS.runsimulation!(simulationdata...)
+
+        # plot validation
+        waketag = "_wdf_$(round(wakedevelopementfactor; digits=1))_srf_$(round(swirlrecoveryfactor; digits=1))"
+        fig_rotor = plt.figure(plotbasename * "_rotorsweep")
+        ax_rotor = fig_rotor.get_axes()[1]
+        ax_rotor.scatter(0.85, 0.168, c="r", label="Velduis")
+        ax_rotor.legend(loc="upper left", bbox_to_anchor=(1.01,1))
+        fig_rotor.tight_layout()
+        fig_rotor.savefig(joinpath(plotdirectory,"PROWIM_propson_rotorsweep" * waketag * ".pdf"), bbox_inches="tight")
+        # fig_rotor.savefig(joinpath(notebookdirectory,"PROWIM_propson_rotorsweep.pdf"), bbox_inches="tight")
+
+        fig_cf = plt.figure(plotbasename * "_liftdistribution")
+        axs_cf = fig_cf.get_axes()
+        cldata = [
+            [
+            0.0972762645914397 0.02932960893854747;
+            0.17509727626459146 0.032681564245810035;
+            0.2529182879377432 0.04273743016759776;
+            0.28404669260700395 0.04273743016759776;
+            0.3151750972762646 0.09636871508379888;
+            0.3424124513618677 0.08966480446927375;
+            0.377431906614786 0.0812849162011173;
+            0.4085603112840467 0.05111731843575418;
+            0.52918287937743195 -0.02597765363128493;
+            0.5603112840466927 -0.05782122905027934;
+            0.5914396887159533 -0.07793296089385479;
+            0.622568093385214 -0.08296089385474861;
+            0.6536964980544747 -0.04608938547486033;
+            0.6848249027237355 -0.020949720670391053;
+            0.7470817120622567 -0.019273743016759798;
+            0.8093385214007782 -0.01424581005586592;
+            0.8715953307392996 -0.010893854748603354;
+            0.9182879377431905 -0.00754189944134078;
+            ],
+            [
+            0.09737827715355792 0.36797752808988776;
+            0.17228464419475642 0.37078651685393266;
+            0.25093632958801493 0.38202247191011246;
+            0.28089887640449433 0.3792134831460675;
+            0.31460674157303373 0.43258426966292146;
+            0.3445692883895131 0.4241573033707866;
+            0.37453183520599225 0.41292134831460686;
+            0.40823970037453165 0.34831460674157316;
+            0.52808988764044926 0.2500000000000001;
+            0.56179775280898866 0.24719101123595516;
+            0.5917602996254681 0.23595505617977536;
+            0.6217228464419475 0.22752808988764056;
+            0.6554307116104869 0.27247191011235966;
+            0.6853932584269663 0.2640449438202248;
+            0.7490636704119848 0.2500000000000001;
+            0.8127340823970036 0.23033707865168546;
+            0.8726591760299624 0.19943820224719117;
+            0.9213483146067418 0.16292134831460686
+            ],
+
+        # cldata["clalpha8"] = [
+        #     9.701492537313438 0.6500000000000001;
+        #     17.537313432835827 0.6590909090909094;
+        #     25.000000000000004 0.6636363636363638;
+        #     27.98507462686567 0.6545454545454548;
+        #     31.34328358208956 0.7181818181818183;
+        #     34.32835820895524 0.7227272727272729;
+        #     37.68656716417911 0.7181818181818183;
+        #     40.67164179104479 0.6409090909090913;
+        #     52.98507462686568 0.5227272727272729;
+        #     55.97014925373135 0.5454545454545456;
+        #     59.32835820895524 0.5363636363636366;
+        #     62.313432835820905 0.5227272727272729;
+        #     65.29850746268657 0.5590909090909093;
+        #     68.65671641791046 0.5181818181818183;
+        #     74.62686567164181 0.4818181818181819;
+        #     80.97014925373136 0.44545454545454555;
+        #     87.31343283582092 0.3909090909090911;
+        #     91.79104477611942 0.331818181818182
+        # ]
+
+            [
+            0.09699786172487529 0.7809836065573772;
+            0.1743920171062011 0.7796721311475411;
+            0.25263863150392024 0.7862295081967214;
+            0.28307626514611556 0.7849180327868854;
+            0.3143036350677122 0.8203278688524591;
+            0.34641197434069865 0.8504918032786886;
+            0.3768153955808981 0.8649180327868854;
+            0.40916892373485386 0.7822950819672132;
+            0.530289379900214 0.6668852459016394;
+            0.5615224518888098 0.6996721311475411;
+            0.5928353528153958 0.6957377049180329;
+            0.6242024233784746 0.6668852459016394;
+            0.655498218104063 0.6708196721311477;
+            0.6877348538845331 0.6419672131147542;
+            0.7478203848895228 0.6026229508196721;
+            0.8122708481824661 0.5554098360655738;
+            0.8724105488239489 0.4911475409836068;
+            0.921265858873842 0.4177049180327871;
+            ]
+        ]
+        plot_labels = "Velduis, " .* [LS.L"\alpha = 0^\circ", LS.L"\alpha = 4^\circ", LS.L"\alpha = 10^\circ"]
+        aircraft = simulationdata[1]
+        b = aircraft.wingsystem.lifting_line_rs[1][2,end]
+        for (i, data) in enumerate(cldata)
+            cratio = i / length(cldata)
+            axs_cf[3].scatter(data[:,1] .* b, data[:,2], marker="+", color=(0.05, 0.85-cratio*0.7, 0.15 + 0.75 * cratio), label=plot_labels[i])
+        end
+        axs_cf[3].legend(loc="upper left", bbox_to_anchor=(1.01,1))
+        fig_cf.tight_layout()
+        fig_cf.savefig(joinpath(plotdirectory,"PROWIM_propson_liftdistribution" * waketag * ".pdf"), bbox_inches="tight")
+        # fig_cf.savefig(joinpath(notebookdirectory,"PROWIM_propson_liftdistribution" * waketag * ".pdf"), bbox_inches="tight")
+
+        fig_CF = plt.figure(plotbasename * "_clalphasweep")
+        axs_CF = fig_CF.get_axes()
+        CLdata = [
+            0 0;
+            2.007575757575758 0.1661202185792351;
+            4.015151515151515 0.3256830601092897;
+            6.0227272727272725 0.47650273224043715;
+            7.992424242424243 0.6229508196721312;
+            10 0.7693989071038252
+        ]
+
+        CDdata_balance = [
+            0.0 0.01498445595854922;
+            1.9999999999999982 0.01597927461139896;
+            3.9999999999999982 0.019834196891191702;
+            5.973684210526317 0.026735751295336778;
+            7.999999999999998 0.035875647668393774;
+            9.973684210526315 0.04837305699481864;
+        ]
+
+        CDdata_wakesurvey = [
+            3.973684210526315 0.019274611398963727;
+        9.973684210526315 0.046010362694300505;
+        ]
+
+        axs_CF[1].scatter(CLdata[:,1], CLdata[:,2], marker = "+", label="Velduis")
+        axs_CF[1].legend(loc="upper left", bbox_to_anchor=(1.01,1))
+        axs_CF[2].scatter(CDdata_balance[:,1], CDdata_balance[:,2], marker = "+", label="Velduis, balance")
+        axs_CF[2].scatter(CDdata_wakesurvey[:,1], CDdata_wakesurvey[:,2], marker = "+", label="Velduis, wake survey")
+        axs_CF[2].legend(loc="upper left", bbox_to_anchor=(1.01,1))
+        fig_CF.tight_layout()
+        fig_CF.savefig(joinpath(plotdirectory,"PROWIM_propson_clalphasweep" * waketag * ".pdf"), bbox_inches="tight")
+        # fig_CF.savefig(joinpath(notebookdirectory,"PROWIM_propson_clalphasweep" * waketag * ".pdf"), bbox_inches="tight")
+    end
 end
-fig_rotor = plt.figure(plotbasename * "_rotorsweep")
-ax_rotor = fig_rotor.get_axes()[1]
-ax_rotor.scatter(0.85, 0.168, c="r", label="Velduis")
-ax_rotor.legend(loc="upper left", bbox_to_anchor=(1.01,1))
-fig_rotor.tight_layout()
-fig_rotor.savefig(joinpath(plotdirectory,"PROWIM_propson_rotorsweep.pdf"), bbox_inches="tight")
-fig_rotor.savefig(joinpath(notebookdirectory,"PROWIM_propson_rotorsweep.pdf"), bbox_inches="tight")
-
-fig_cf = plt.figure(plotbasename * "_liftdistribution")
-axs_cf = fig_cf.get_axes()
-cldata = [
-    [
-    0.0972762645914397 0.02932960893854747;
-    0.17509727626459146 0.032681564245810035;
-    0.2529182879377432 0.04273743016759776;
-    0.28404669260700395 0.04273743016759776;
-    0.3151750972762646 0.09636871508379888;
-    0.3424124513618677 0.08966480446927375;
-    0.377431906614786 0.0812849162011173;
-    0.4085603112840467 0.05111731843575418;
-    0.52918287937743195 -0.02597765363128493;
-    0.5603112840466927 -0.05782122905027934;
-    0.5914396887159533 -0.07793296089385479;
-    0.622568093385214 -0.08296089385474861;
-    0.6536964980544747 -0.04608938547486033;
-    0.6848249027237355 -0.020949720670391053;
-    0.7470817120622567 -0.019273743016759798;
-    0.8093385214007782 -0.01424581005586592;
-    0.8715953307392996 -0.010893854748603354;
-    0.9182879377431905 -0.00754189944134078;
-    ],
-    [
-    0.09737827715355792 0.36797752808988776;
-    0.17228464419475642 0.37078651685393266;
-    0.25093632958801493 0.38202247191011246;
-    0.28089887640449433 0.3792134831460675;
-    0.31460674157303373 0.43258426966292146;
-    0.3445692883895131 0.4241573033707866;
-    0.37453183520599225 0.41292134831460686;
-    0.40823970037453165 0.34831460674157316;
-    0.52808988764044926 0.2500000000000001;
-    0.56179775280898866 0.24719101123595516;
-    0.5917602996254681 0.23595505617977536;
-    0.6217228464419475 0.22752808988764056;
-    0.6554307116104869 0.27247191011235966;
-    0.6853932584269663 0.2640449438202248;
-    0.7490636704119848 0.2500000000000001;
-    0.8127340823970036 0.23033707865168546;
-    0.8726591760299624 0.19943820224719117;
-    0.9213483146067418 0.16292134831460686
-    ],
-
-# cldata["clalpha8"] = [
-#     9.701492537313438 0.6500000000000001;
-#     17.537313432835827 0.6590909090909094;
-#     25.000000000000004 0.6636363636363638;
-#     27.98507462686567 0.6545454545454548;
-#     31.34328358208956 0.7181818181818183;
-#     34.32835820895524 0.7227272727272729;
-#     37.68656716417911 0.7181818181818183;
-#     40.67164179104479 0.6409090909090913;
-#     52.98507462686568 0.5227272727272729;
-#     55.97014925373135 0.5454545454545456;
-#     59.32835820895524 0.5363636363636366;
-#     62.313432835820905 0.5227272727272729;
-#     65.29850746268657 0.5590909090909093;
-#     68.65671641791046 0.5181818181818183;
-#     74.62686567164181 0.4818181818181819;
-#     80.97014925373136 0.44545454545454555;
-#     87.31343283582092 0.3909090909090911;
-#     91.79104477611942 0.331818181818182
-# ]
-
-    [
-    0.09699786172487529 0.7809836065573772;
-    0.1743920171062011 0.7796721311475411;
-    0.25263863150392024 0.7862295081967214;
-    0.28307626514611556 0.7849180327868854;
-    0.3143036350677122 0.8203278688524591;
-    0.34641197434069865 0.8504918032786886;
-    0.3768153955808981 0.8649180327868854;
-    0.40916892373485386 0.7822950819672132;
-    0.530289379900214 0.6668852459016394;
-    0.5615224518888098 0.6996721311475411;
-    0.5928353528153958 0.6957377049180329;
-    0.6242024233784746 0.6668852459016394;
-    0.655498218104063 0.6708196721311477;
-    0.6877348538845331 0.6419672131147542;
-    0.7478203848895228 0.6026229508196721;
-    0.8122708481824661 0.5554098360655738;
-    0.8724105488239489 0.4911475409836068;
-    0.921265858873842 0.4177049180327871;
-    ]
-]
-plot_labels = "Velduis, " .* [LS.L"\alpha = 0^\circ", LS.L"\alpha = 4^\circ", LS.L"\alpha = 10^\circ"]
-aircraft = simulationdata[1]
-b = aircraft.wingsystem.lifting_line_rs[1][2,end]
-for (i, data) in enumerate(cldata)
-    cratio = i / length(cldata)
-    axs_cf[3].scatter(data[:,1] .* b, data[:,2], marker="+", color=(0.05, 0.85-cratio*0.7, 0.15 + 0.75 * cratio), label=plot_labels[i])
-end
-axs_cf[3].legend(loc="upper left", bbox_to_anchor=(1.01,1))
-fig_cf.tight_layout()
-fig_cf.savefig(joinpath(plotdirectory,"PROWIM_propson_liftdistribution" * waketag * ".pdf"), bbox_inches="tight")
-fig_cf.savefig(joinpath(notebookdirectory,"PROWIM_propson_liftdistribution" * waketag * ".pdf"), bbox_inches="tight")
-
-fig_CF = plt.figure(plotbasename * "_clalphasweep")
-axs_CF = fig_CF.get_axes()
-CLdata = [
-    0 0;
-    2.007575757575758 0.1661202185792351;
-    4.015151515151515 0.3256830601092897;
-    6.0227272727272725 0.47650273224043715;
-    7.992424242424243 0.6229508196721312;
-    10 0.7693989071038252
-]
-
-CDdata_balance = [
-    0.0 0.01498445595854922;
-    1.9999999999999982 0.01597927461139896;
-    3.9999999999999982 0.019834196891191702;
-    5.973684210526317 0.026735751295336778;
-    7.999999999999998 0.035875647668393774;
-    9.973684210526315 0.04837305699481864;
-]
-
-CDdata_wakesurvey = [
-    3.973684210526315 0.019274611398963727;
-9.973684210526315 0.046010362694300505;
-]
-
-axs_CF[1].scatter(CLdata[:,1], CLdata[:,2], marker = "+", label="Velduis")
-axs_CF[1].legend(loc="upper left", bbox_to_anchor=(1.01,1))
-axs_CF[2].scatter(CDdata_balance[:,1], CDdata_balance[:,2], marker = "+", label="Velduis, balance")
-axs_CF[2].scatter(CDdata_wakesurvey[:,1], CDdata_wakesurvey[:,2], marker = "+", label="Velduis, wake survey")
-axs_CF[2].legend(loc="upper left", bbox_to_anchor=(1.01,1))
-fig_CF.tight_layout()
-fig_CF.savefig(joinpath(plotdirectory,"PROWIM_propson_clalphasweep" * waketag * ".pdf"), bbox_inches="tight")
-fig_CF.savefig(joinpath(notebookdirectory,"PROWIM_propson_clalphasweep" * waketag * ".pdf"), bbox_inches="tight")

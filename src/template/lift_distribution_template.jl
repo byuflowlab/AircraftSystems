@@ -63,7 +63,7 @@ function lift_distribution_template(ploti, alphas, wing_b, wing_TR, wing_AR, win
         kwargs...
     )
     # prepare subsystems
-    wings = simplewingsystem(wing_b = wing_b, wing_TR = wing_TR, wing_AR = wing_AR, wing_θroot = wing_θroot, wing_θtip = wing_θtip, kwargs...)
+    wings = simplewingsystem(wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip; kwargs...)
     rotors = nothing
     nonliftingbodies = nothing
     structures = nothing

@@ -36,7 +36,7 @@ Inputs:
 """
 function lift_moment_distribution(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol)
     # extract lift and moment distribution
-    cfs, cms = VL.lifting_line_coefficients(aircraft.wingsystem.system, aircraft.wingsystem.lifting_line_rs, aircraft.wingsystem.lifting_line_chords)
+    cfs, cms = VL.lifting_line_coefficients(aircraft.wingsystem.system, aircraft.wingsystem.lifting_line_rs, aircraft.wingsystem.lifting_line_chords, VL.Freestream(freestream), VL.Wind())
     # store to `parameters`
     nwings = length(aircraft.wingsystem.system.surfaces)
     for iwing in 1:nwings

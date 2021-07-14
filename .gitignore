@@ -26,5 +26,8 @@ Manifest.toml
 # Temporary data
 data/
 test/data
+*.vtk
+*.vtm
+*.vtp
 
 .DS_Store

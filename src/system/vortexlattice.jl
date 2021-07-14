@@ -143,15 +143,15 @@ get_midpoints(a) = [(a[i] + a[i+1])/2 for i in 1:length(a)-1]
 """
 Convenience constructor for a single wing `VortexLatticeSystem`.
 
-Inputs:
+Arguments:
 
-* `wing_b = 2.0` : wing span
-* `wing_TR = 0.8` : wing taper ratio
-* `wing_AR = 8.0` : wing aspect ratio
-* `wing_θroot = 0.0` : wing root twist
-* `wing_θtip = 0.0` : wing tip twist
+* `wing_b` : wing span
+* `wing_TR` : wing taper ratio
+* `wing_AR` : wing aspect ratio
+* `wing_θroot` : wing root twist
+* `wing_θtip` : wing tip twist
 
-Optional Inputs:
+Keyword Arguments:
 
 * `wing_camber = fill((xc) -> 0, 2)` : camberline function for each section
 * `wing_npanels = 50` : number of spanwise panels for the wing
@@ -161,7 +161,7 @@ Optional Inputs:
 * `symmetric = true` : mirrors the geometry over the x-z plane
 
 """
-function simplewingsystem(wing_b = 2.0, wing_TR = 0.8, wing_AR = 8.0, wing_θroot = 0.0, wing_θtip = 0.0;
+function simplewingsystem(wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip;
     wing_camber = fill((xc) -> 0, 2), # camberline function for each section
     wing_npanels = 50, wing_nchordwisepanels = 1,
     wing_spacing_s = VL.Cosine(), wing_spacing_c = VL.Uniform(),
@@ -175,10 +175,17 @@ function simplewingsystem(wing_b = 2.0, wing_TR = 0.8, wing_AR = 8.0, wing_θroo
     #=
     cr + ct = cmac * 2
     ct = λ * cr
-    cr = cmac * 2 / (1 + λ)
-    ct = cmac * 2 / (1/λ + 1)
+    ct = cmac * 2 - cr
+    λ * cr = cmac * 2 - cr
+    cr = 2 * cmac / (1 + λ)
+
+    cr = cmac * 2 - ct
+    cr = ct / λ
+    cmac * 2 - ct = ct / λ
+    cmac * 2 = ct * (1 + 1/λ)
+    ct = cmac * 2 / (1 + 1/λ)
     =#
-    chord = [cmac * 2 / (1 + wing_TR), cmac * 2 / (1/wing_TR + 1)]
+    chord = [cmac * 2 / (1 + wing_TR), cmac * 2 / (1 + 1/wing_TR )]
     theta = [wing_θroot, wing_θtip]
     phi = [0.0, 0.0]
 
@@ -187,6 +194,7 @@ function simplewingsystem(wing_b = 2.0, wing_TR = 0.8, wing_AR = 8.0, wing_θroo
     nc = wing_nchordwisepanels
 
     # construct surfaces and grids
+    println("Sherlock!\n\twing_TR = $wing_TR\n\twing_AR = $wing_AR\n\n\txle = $xle\n\tyle = $yle\n\tzle = $zle\n\tchord = $chord\n\ttheta = $theta")
     grid, surface = VL.wing_to_surface_panels(xle, yle, zle, chord, theta, phi, ns, nc;
         fc = wing_camber, spacing_s=wing_spacing_s, spacing_c=wing_spacing_c)
     grids = [grid]
