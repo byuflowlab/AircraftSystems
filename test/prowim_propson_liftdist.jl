@@ -1,5 +1,5 @@
 # simulation controls
-alphas = [0.0, 4.0, 10.0] .* pi/180
+alphas = [0.0, 4.0, 9.0] .* pi/180
 ploti = 1:length(alphas)
 # wing definition
 wing_b = 640e-3 * 2
@@ -238,8 +238,10 @@ for wakedevelopementfactor in wakedevelopementfactors
         fig_rotor.savefig(joinpath(plotdirectory,"PROWIM_props_on_rotor_sweep" * waketag * ".pdf"), bbox_inches="tight")
         # fig_rotor.savefig(joinpath(notebookdirectory,"PROWIM_propson_rotorsweep.pdf"), bbox_inches="tight")
 
-        fig_cf = plt.figure(plotbasename * "_lift_distribution")
+        fig_cf = plt.figure(plotbasename * "_cf_distribution")
+        fig_lift = plt.figure(plotbasename * "_lift_distribution")
         axs_cf = fig_cf.get_axes()
+        ax_lift = fig_lift.get_axes()[1]
         cl_data_props_on = PROWIMData.props_on["lift_distribution"]
         plot_labels = "Velduis, " .* [LS.L"\alpha = 0^\circ", LS.L"\alpha = 4^\circ", LS.L"\alpha = 10^\circ"]
         local aircraft = data_PROWIM_vlm_bem[1]
@@ -247,10 +249,14 @@ for wakedevelopementfactor in wakedevelopementfactors
         for (i, data) in enumerate(cl_data_props_on)
             cratio = i / length(cl_data_props_on)
             axs_cf[3].scatter(data[:,1] .* b, data[:,2], marker="+", color=(0.05, 0.85-cratio*0.7, 0.15 + 0.75 * cratio), label=plot_labels[i])
+            ax_lift.scatter(data[:,1], data[:,2], marker="+", color=(0.05, 0.85-cratio*0.7, 0.15 + 0.75 * cratio), label=plot_labels[i])
         end
         axs_cf[3].legend(loc="upper left", bbox_to_anchor=(1.01,1))
         fig_cf.tight_layout()
-        fig_cf.savefig(joinpath(plotdirectory,"PROWIM_props_on_lift_distribution" * waketag * ".pdf"), bbox_inches="tight")
+        fig_cf.savefig(joinpath(plotdirectory,"PROWIM_props_on_cf_distribution" * waketag * ".pdf"), bbox_inches="tight")
+        ax_lift.legend(loc="upper left", bbox_to_anchor=(1.01,1))
+        fig_lift.tight_layout()
+        fig_lift.savefig(joinpath(plotdirectory,"PROWIM_props_on_lift_distribution" * waketag * ".pdf"), bbox_inches="tight")
         # fig_cf.savefig(joinpath(notebookdirectory,"PROWIM_propson_lift_distribution" * waketag * ".pdf"), bbox_inches="tight")
 
         fig_CF = plt.figure(plotbasename * "_cl_alpha_sweep")
