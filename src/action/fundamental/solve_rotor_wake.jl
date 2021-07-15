@@ -5,18 +5,19 @@ Contact: rymanderson@gmail.com
 README: define an `Action` object to solve for the wake of a rotor system
 =###############################################################################################
 
+
 """
-    solve_rotor_wake <: Action
+    solve_rotor_wake(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol) <: Action
 
-Inputs:
+# Arguments:
 
-* `aircraft::Aircraft` : `Aircraft` system object
+* `aircraft::Aircraft`: `Aircraft` system object
 * `parameters<:Parameters` `Parameters` struct
-* `freestream::Freestream` : `Freestream` object
+* `freestream::Freestream`: `Freestream` object
 * `environment::Environment` `Environment` object
-* `steprange::AbstractArray` : array of times for which the simulation is run
-* `stepi::Int` : index of the current step
-* `stepsymbol::String` : defines the step, e.g. `alpha` or `time`
+* `steprange::AbstractArray`: array of times for which the simulation is run
+* `stepi::Int`: index of the current step
+* `stepsymbol::String`: defines the step, e.g. `alpha` or `time`
 
 `parameters <: Parameters` requires the following elements:
 
@@ -52,17 +53,18 @@ function solve_rotor_wake(aircraft, parameters, freestream, environment, stepran
     return false
 end
 
+
 """
-    solve_rotor_wake(system, steprange)
+    solve_rotor_wake(aircraft, steprange)
 
 Method returns initialized elements required for the `parameters <: Parameters` struct during simulation.
 
-Inputs:
+# Arguments:
 
 * `aircraft::Aircraft` : system to be simulated
 * `steprange::AbstractArray` : defines each step of the simulation
 
-Outputs:
+# Returns:
 
 * `wakefunctions::Union{Function, Nothing}` : a function describing the induced velocity behind each propeller as a function of global coordinates
 * `us::Vector{Vector{Vector{Float64}}}` : each [i][j][k]th element is the axial induced velocity at ith step of the jth rotor at the kth radial section
@@ -75,6 +77,7 @@ Outputs:
 
 """
 function solve_rotor_wake(aircraft, steprange)
+    
     wakefunctions = Vector{Any}(nothing,length(steprange))
     _, _, _, _, us, vs = solve_rotor(aircraft, steprange)
 

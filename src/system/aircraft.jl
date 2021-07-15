@@ -7,13 +7,15 @@ README: this file defines the `Aircraft` system struct.
 
 
 """
+    Aircraft{w,r,n,s,m,b}
+    
 `Aircraft` system object.
 
 Members are subsystems of the aircraft. Subsystems are not typed to provide flexibility as to what models are used. This
 allows simulations of a wide range of interchangeable models. Functionality is defined in
 instances of the `Action` types.
 
-Contains:
+# Fields:
 
 * `wingsystem` : comprehensively defines the aircraft's wings
 * `rotorsystem` : comprehensively defines the aircraft's rotors

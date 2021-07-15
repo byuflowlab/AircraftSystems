@@ -7,6 +7,20 @@ README: this is a template file. Convenience methods are provided to prepare a s
 =###############################################################################################
 
 # initialize parameters
+"""
+    CLAlphaSweep{V1,V2,V3,V4,V5,V6} <: Parameters
+
+# Fields:
+
+* `CLs::V1`
+* `CDs::V1`
+* `CYs::V1`
+* `wakefunctions::V2`
+* `plotdirectory::V3`
+* `plotbasename::V3`
+* `plotextension::V3`
+
+"""
 struct CLAlphaSweep{V1,V2,V3} <: Parameters
     CLs::V1
     CDs::V1
@@ -25,15 +39,44 @@ end
 
 # rs(alphas, omega, nblades...)
 
-function cl_alpha_sweep_template(alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip;
+"""
+    cl_alpha_sweep_template(alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip;
         plotdirectory = joinpath(topdirectory, "data","plots",TODAY),
         plotbasename = "default",
         plotextension = ".pdf",
-        stepsymbol = L"\alpha[^\circ]",
-        kwargs...
-    )
+        stepsymbol = L"/alpha[^/circ]", # these forward slashes actually represent backslashes, but those cause an error in the docstrings
+        kwargs...)
+
+# Arguments:
+
+* `alphas`
+* `wing_b`
+* `wing_TR`
+* `wing_AR`
+* `wing_θroot`
+* `wing_θtip`
+
+# Keyword Arguments:
+
+* `plotdirectory`
+* `plotbasename`
+* `plotextension`
+* `stepsymbol`
+
+"""
+function cl_alpha_sweep_template(alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip;
+            plotdirectory=joinpath(topdirectory,"data","plots",TODAY),
+            plotbasename="default",
+            plotextension=".pdf",
+            stepsymbol=L"\alpha[^\circ]",
+            kwargs...)
+
     # prepare subsystems
+<<<<<<< HEAD
     wings = simplewingsystem(wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip; kwargs...)
+=======
+    wings = simplewingsystem(; wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, kwargs...)
+>>>>>>> 779f9ec261fa9820596a550792d2e421c84812ea
     rotors = nothing
     nonliftingbodies = nothing
     structures = nothing
@@ -53,16 +96,19 @@ function cl_alpha_sweep_template(alphas, wing_b, wing_TR, wing_AR, wing_θroot, 
     @assert length(CLs) == length(alphas) "length of parameter CLs and alphas inconsistent"
     @assert length(CDs) == length(alphas) "length of parameter CDs and alphas inconsistent"
     @assert length(CYs) == length(alphas) "length of parameter CYs and alphas inconsistent"
+    
     parameters = CLAlphaSweep(CLs, CDs, CYs, wakefunctions, plotdirectory, plotbasename, plotextension)
 
     # build freestream_function
     function freestream_function(aircraft, parameters, environment, alphas, stepi)
+
         # calculate freestream
         Vinf = 1.0 # arbitrary for CL-alpha sweep
         alpha = alphas[stepi]
         beta = 0.0
         Omega = zeros(3)
         freestream = Freestream(Vinf, alpha, beta, Omega)
+
         return freestream
     end
 

@@ -1,4 +1,3 @@
-AS = AircraftSystems
 aircraft = data_epema_rotor_sweep[1]
 parameters = data_epema_rotor_sweep[2]
 

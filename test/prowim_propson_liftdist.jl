@@ -190,10 +190,11 @@ locations[1:end-1] = "0" .* locations[1:end-1]
 # contourfilenames = "epema_interpolated_bspline_n30_" .* locations
 # try just repeating the r/R = 0.7 airfoil and see how this looks
 contourfilenames = fill("epema_interpolated_bspline_n30_" * locations[8],length(radii[1]))
-airfoilcontours = fill(joinpath.(AS.topdirectory, "data", "airfoil", "contours", "20210702", contourfilenames .* ".dat"),length(nblades))
+airfoilcontours = fill(joinpath.(contourdirectory, contourfilenames .* ".dat"),length(nblades))
+# airfoilcontours = fill(joinpath.(AS.topdirectory, "data", "airfoil", "contours", "20210702", contourfilenames .* ".dat"),length(nblades))
 airfoilnames = fill(contourfilenames, length(nblades))
 
-polardirectory = joinpath(AS.topdirectory, "data", "airfoil", "polars", "20210703")
+polardirectory = polardirectory
 plotstepi = 1:length(alphas)
 
 Res = [5e4, 1e5, 5e5, 1e6, 1e7]

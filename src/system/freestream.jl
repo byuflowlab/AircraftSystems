@@ -6,9 +6,11 @@ README: this file defines freestream and interstream properties
 =###############################################################################################
 
 """
+    Freestream{F, VF <: AbstractArray}
+
 Describes the freestream.
 
-Inputs:
+# Arguments:
 
 * `Vinf::Float64` : magnitude of the freestream
 * `alpha::Float64` : angle of attack of the aircraft
@@ -24,16 +26,19 @@ struct Freestream{F, VF <: AbstractArray}
 end
 
 """
-Inputs:
+    freestream2vector(freestream)
 
-* `freestream::Freestream` : freestream properties
+# Argument:
 
-Outputs:
+* `freestream::Freestream`: freestream properties
 
-* `Vinf::Vector{Float64}` : freestream velocity in the body frame (aft-starboard-up)
+# Returns:
+
+* `Vinf::Vector{Float64}`: freestream velocity in the body frame (aft-starboard-up)
 
 """
 function freestream2vector(freestream)
+
     vinf = LA.norm(freestream.vinf)
     alpha = freestream.alpha
     beta = freestream.beta
@@ -42,6 +47,7 @@ function freestream2vector(freestream)
             -sin(beta),
             sin(alpha) * cos(beta)
         ]
+        
     return Vinf
 end
 

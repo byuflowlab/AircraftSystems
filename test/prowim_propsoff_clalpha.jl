@@ -20,16 +20,17 @@ CD_data_balance = PROWIMData.props_off["CD_alpha_balance"]
 CD_data_wake_survey = PROWIMData.props_off["CD_alpha_wake_survey"]
 
 # Update plots.
-fig_propsoff_cl_alpha = plt.figure(plotbasename * "_cl_alpha_sweep")
-axs = fig_propsoff_cl_alpha.get_axes()
+fig_props_off_cl_alpha = plt.figure(plotbasename * "_cl_alpha_sweep")
+axs = fig_props_off_cl_alpha.get_axes()
 axs[1].scatter(CL_data[:,1], CL_data[:,2], marker = "x", label="Veldhuis")
 axs[1].legend(loc="upper left", bbox_to_anchor=(1.01,1))
 axs[2].scatter(CD_data_balance[:,1], CD_data_balance[:,2], marker = "+", label = "balance")
 axs[2].scatter(CD_data_wake_survey[:,1], CD_data_wake_survey[:,2], marker = "x", label = "wake survey")
 axs[2].legend(loc="upper left", bbox_to_anchor=(1.01,1))
 
-fig_propsoff_cl_alpha.tight_layout()
-fig_propsoff_cl_alpha.savefig(joinpath(plotdirectory,"PROWIM_props_off_cl_alpha_sweep.pdf"), bbox_inches="tight")
-# fig_propsoff_clalpha.savefig(joinpath(notebookdirectory,"PROWIM_propsoff_clalphasweep.pdf"), bbox_inches="tight")
+fig_props_off_cl_alpha.tight_layout()
+if savefigs
+    fig_props_off_cl_alpha.savefig(joinpath(plotdirectory,"PROWIM_props_off_cl_alpha_sweep.pdf"), bbox_inches="tight")
+end
 
 # @test objective == 0

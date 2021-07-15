@@ -6,18 +6,20 @@ README: this file defines environmental properties
 =###############################################################################################
 
 """
+    Environment{F}
+
 Contains environmental properties.
 
-Inputs:
+# Fields:
 
-* `ρ::Float64` : freestream fluid density
-* `ν::Float64` : freestream fluid kinematic viscocity
-* `μ::Float64` : freestream fluid dynamic viscosity
-* `g::Float64` : acceleration due to gravity
-* `T::Float64` : freestream fluid temperature
-* `γ::Float64` : freestream fluid specific heat ratio
-* `R::Float64` : freestream fluid gas constant
-* `a::Float64` : speed of sound
+* `ρ::F` : freestream fluid density
+* `ν::F` : freestream fluid kinematic viscocity
+* `μ::F` : freestream fluid dynamic viscosity
+* `g::F` : acceleration due to gravity
+* `T::F` : freestream fluid temperature
+* `γ::F` : freestream fluid specific heat ratio
+* `R::F` : freestream fluid gas constant
+* `a::F` : speed of sound
 
 """
 struct Environment{F}
@@ -32,9 +34,7 @@ struct Environment{F}
 end
 
 """
-Convenience constructor for `Environment` struct.
-"""
-function Environment(;
+    Environment(;
         ρ = 1.225, # kg/m^3
         ν = 1.5e-5, # m^2/s
         μ = ν * ρ, # kg/m-s
@@ -42,7 +42,31 @@ function Environment(;
         T = 288.15, # K = 15 deg C
         γ = 1.4,
         R = 287.05, # J/kg-K
-        a = sqrt(γ * R * T)
-    )
+        a = sqrt(γ * R * T))
+
+Convenience constructor for `Environment` struct.
+
+# Keyword Arguments
+
+* `ρ`: air density
+* `ν`: air kinematic viscosity
+* `μ`: air dynamic viscosity
+* `g`: gravity acceleration
+* `T`: temperature (K)
+* `γ`:
+* `R`:
+* `a`: speed of sound
+
+"""
+function Environment(;
+        ρ=1.225, # kg/m^3
+        ν=1.5e-5, # m^2/s
+        μ=ν * ρ, # kg/m-s
+        g=9.81, # m/s^2
+        T=288.15, # K = 15 deg C
+        γ=1.4,
+        R=287.05, # J/kg-K
+        a=sqrt(γ * R * T))
+
     return Environment(ρ, ν, μ, g, T, γ, R, a)
 end
