@@ -1,7 +1,7 @@
 # Integrate cl distributions
 
-aircraft_CL = simulationdata_CL_alpha[1]
-parameters_CL = simulationdata_CL_alpha[2]
+aircraft_CL = data_PROWIM_CL_alpha[1]
+parameters_CL = data_PROWIM_CL_alpha[2]
 
 lifting_line_rs_CL = aircraft_CL.wingsystem.lifting_line_rs[1]
 lifting_line_xs_CL = lifting_line_rs_CL[1,:]
@@ -12,8 +12,8 @@ cpxs_CL = vcat([panel.rtl[1] for panel in aircraft_CL.wingsystem.system.surfaces
 cpys_CL = vcat([panel.rtl[2] for panel in aircraft_CL.wingsystem.system.surfaces[1]][1,:], aircraft_CL.wingsystem.system.surfaces[1][end].rtr[2])
 cpzs_CL = vcat([panel.rtl[3] for panel in aircraft_CL.wingsystem.system.surfaces[1]][1,:], aircraft_CL.wingsystem.system.surfaces[1][end].rtr[3])
 
-aircraft_cl = simulationdata[1]
-parameters_cl = simulationdata[2]
+aircraft_cl = data_PROWIM_lift_distribution[1]
+parameters_cl = data_PROWIM_lift_distribution[2]
 
 lifting_line_rs_cl = aircraft_cl.wingsystem.lifting_line_rs[1]
 lifting_line_xs_cl = lifting_line_rs_cl[1,:]

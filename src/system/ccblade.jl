@@ -1172,8 +1172,8 @@ Inputs:
 Keyword Arguments:
 
 * `wakeshapefunction = (Rtip, x) -> Rtip,` : function accepts a rotor radius and axial coordinate and returns the local wake radius
-* `axialinterpolation = (rs, us, r) -> FM.linear(rs, us, r)` : function accepts radial stations, axial velocities, and the radial coordinate and returns the unmodified axial induced velocity
-* `swirlinterpolation = (rs, vs, r) -> FM.linear(rs, vs, r)` : function accepts radial stations, swirl velocities, and the radial coordinate and returns the unmodified swirl induced velocity
+* `axialinterpolations = (rs, us, r) -> FM.linear(rs, us, r)` : function accepts radial stations, axial velocities, and the radial coordinate and returns the unmodified axial induced velocity
+* `swirlinterpolations = (rs, vs, r) -> FM.linear(rs, vs, r)` : function accepts radial stations, swirl velocities, and the radial coordinate and returns the unmodified swirl induced velocity
 * `axialmultiplier = (u, distance2plane, Rtip) -> u * 2` : function multiplied by the axial interpolation function
 * `swirlmultiplier = (v, distance2plane, Rtip) -> v` : function multiplied by the swirlinterpolation function
 

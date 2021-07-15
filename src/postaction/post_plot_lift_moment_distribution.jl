@@ -120,7 +120,7 @@ function post_plot_lift_moment_distribution(aircraft, steprange)
     cfs = [zeros(nsteps, nspanwisepanels[i]) for i in 1:length(surfacenames)]
     cms = deepcopy(cfs)
     plotdirectory = ""
-    plotbasename = "defaultplot"
+    plotbasename = "default"
     plotextension = ".pdf"
     plotstepi = deepcopy(steprange)
     # cl_ylim = zeros(2)

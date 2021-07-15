@@ -40,7 +40,7 @@ function post_plot_cl_alpha_sweep(aircraft, parameters, alpharange, stepsymbol)
     # check data
     @assert isdir(plotdirectory) "plotdirectory $plotdirectory does not exist"
     # prepare figure
-    fig = plt.figure(plotbasename * "_clalphasweep")
+    fig = plt.figure(plotbasename * "_cl_alpha_sweep")
     fig.clear()
     fig.add_subplot(311, ylabel = L"C_L")
     fig.add_subplot(312, ylabel = L"C_D")
@@ -51,7 +51,7 @@ function post_plot_cl_alpha_sweep(aircraft, parameters, alpharange, stepsymbol)
         ax.plot(alpharange .* 180/pi, data[i], label = "VortexLattice")
     end
     # save
-    savepath = joinpath(plotdirectory, plotbasename * "_clalphasweep" * plotextension)
+    savepath = joinpath(plotdirectory, plotbasename * "_cl_alpha_sweep" * plotextension)
     fig.savefig(savepath, bbox_inches="tight")
     return false
 end
@@ -81,7 +81,7 @@ function post_plot_cl_alpha_sweep(aircraft, steprange)
     CDs = zeros(length(steprange))
     CYs = zeros(length(steprange))
     plotdirectory = ""
-    plotbasename = "defaultplot"
+    plotbasename = "default"
     plotextension = ".pdf"
 
     return CLs, CDs, CYs, plotdirectory, plotbasename, plotextension

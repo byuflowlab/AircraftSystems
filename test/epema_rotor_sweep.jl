@@ -54,7 +54,7 @@ orientations = fill([-1.0, 0.0, 0.0],3)
 spindirections = fill(true,3)
 
 plotbasename = "epema"
-simulationdata = AS.rotor_sweep_template(Js, omegas, nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, index, positions, orientations, spindirections, Res_list, Ms_list;
+data_epema_rotor_sweep = AS.rotor_sweep_template(Js, omegas, nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, index, positions, orientations, spindirections, Res_list, Ms_list;
     polardirectory = polardirectory,
     closefigure = true,
     useoldfiles = true,
@@ -63,7 +63,7 @@ simulationdata = AS.rotor_sweep_template(Js, omegas, nblades, rhub, rtip, radii,
     plotbasename = plotbasename,
     plotextension = ".pdf"
     )
-objective = AS.runsimulation!(simulationdata...)
+objective = AS.runsimulation!(data_epema_rotor_sweep...)
 
 epema_eta = EpemaData3.epema_eta
 
@@ -72,7 +72,7 @@ epema_ct = EpemaData3.epema_ct
 # Epema xrotor data
 ct_xrotor = EpemaData3.ct_xrotor
 
-fig = plt.figure(plotbasename * "_rotorsweep")
+fig = plt.figure(plotbasename * "_rotor_sweep")
 axs = fig.get_axes()
 
 # plot CTs
@@ -91,5 +91,5 @@ end
 axs[3].legend(loc="upper left", bbox_to_anchor=(1.01,1))
 
 # save figure
-savename = plotbasename * "_rotorsweep_extratwist_$(round(twist_extra * 180/pi; digits = 0))" * repeattag * ".pdf"
+savename = plotbasename * "_rotor_sweep_extratwist_$(round(twist_extra * 180/pi; digits = 0))" * repeattag * ".pdf"
 fig.savefig(joinpath(plotdirectory, savename), bbox_inches="tight")

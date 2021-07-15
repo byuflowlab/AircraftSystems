@@ -1,16 +1,16 @@
 AS = AircraftSystems
-aircraft = simulationdata[1]
-parameters = simulationdata[2]
+aircraft = data_epema_rotor_sweep[1]
+parameters = data_epema_rotor_sweep[2]
 
 struct TestParams
     us
     vs
     wakefunctions
     wakeshapefunctions
-    axialinterpolation
-    swirlinterpolation
-    axialmultiplier
-    swirlmultiplier
+    axialinterpolations
+    swirlinterpolations
+    axialmultipliers
+    swirlmultipliers
 end
 
 nsteps = length(parameters.us)

@@ -50,7 +50,7 @@ function plot_lift_moment_distribution(aircraft, parameters, freestream, environ
         # cy_ylim = parameters.cy_ylim
 
         # create axes
-        fig = plt.figure(basename * "_liftdistribution")
+        fig = plt.figure(basename * "_lift_distribution")
         nsurfaces = length(surfacenames)
         nsubplotbase = 300 + 10 * nsurfaces
         if stepi == parameters.plotstepi[1]
@@ -89,12 +89,12 @@ function plot_lift_moment_distribution(aircraft, parameters, freestream, environ
         if stepi == plotstepi[end] # last step
             axs[3].legend(loc="upper left", bbox_to_anchor=(1.01,1)) # set legend
             fig.tight_layout() # clean up white space
-            savepath = joinpath(plotdirectory, plotbasename * "_liftdistribution" * plotextension)
+            savepath = joinpath(plotdirectory, plotbasename * "_lift_distribution" * plotextension)
             fig.savefig(savepath, bbox_inches="tight")
         end
 
         # cms plot
-        fig = plt.figure(basename * "_momentdistribution")
+        fig = plt.figure(basename * "_moment_distribution")
         nsurfaces = length(surfacenames)
         nsubplotbase = 300 + 10 * nsurfaces
         if stepi == parameters.plotstepi[1]
@@ -130,7 +130,7 @@ function plot_lift_moment_distribution(aircraft, parameters, freestream, environ
         if stepi == plotstepi[end]
             axs[2].legend(loc="upper left", bbox_to_anchor=(1.01,1)) # set legend
             fig.tight_layout() # clean up white space
-            savepath = joinpath(plotdirectory, plotbasename * "_momentdistribution" * plotextension)
+            savepath = joinpath(plotdirectory, plotbasename * "_moment_distribution" * plotextension)
             fig.savefig(savepath, bbox_inches="tight")
         end
     end
@@ -171,7 +171,7 @@ function plot_lift_moment_distribution(aircraft, steprange)
     cfs = [zeros(3, length(aircraft.wingsystem.surfaces[i])) for i in 1:nwings]
     cms = deepcopy(cfs)
     plotdirectory = ""
-    plotbasename = "defaultplot"
+    plotbasename = "default"
     plotextension = ".pdf"
     plotstepi = deepcopy(steprange)
     # cl_ylim = zeros(2)
