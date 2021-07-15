@@ -40,12 +40,14 @@ zle = [0.0, 0.0]
 wing_chord = veldhuis_chords[:,2]
 wing_twist = [0.0, 0.0]
 wing_phi = [0.0, 0.0]
+wing_le_sweep = 0.0
+wing_ϕ = 0.0
 
 # Res_list = [fill([VeldhuisData.setup[:"Re"]], length(radii))]
 surfacenames = ["epema wing"]
 polardirectory=joinpath(AS.topdirectory, "data","airfoil","polars","20210618")
 
-args = AS.vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip,
+args = AS.vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, wing_le_sweep, wing_ϕ,
                         rotor_omegas, nblades, rhub, rtip, radii, rotor_chords, rotor_twists,
                         airfoilcontours, airfoilnames, index, rotor_positions, rotor_orientations,
                         spindirections;

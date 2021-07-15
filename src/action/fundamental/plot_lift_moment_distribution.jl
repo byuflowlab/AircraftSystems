@@ -34,13 +34,13 @@ README: `<: Action` function plots the lift distribution of all lifting surfaces
 
 
 function plot_lift_moment_distribution(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol)
-    
+
     # extract plot indices
     plotstepi = parameters.plotstepi
     basename = parameters.plotbasename
-    
+
     if stepi in plotstepi
-        
+
         # extract info
         surfacenames = parameters.surfacenames
         cfs = parameters.cfs
@@ -52,23 +52,19 @@ function plot_lift_moment_distribution(aircraft, parameters, freestream, environ
         # cl_ylim = parameters.cl_ylim
         # cd_ylim = parameters.cd_ylim
         # cy_ylim = parameters.cy_ylim
-<<<<<<< HEAD
 
-=======
-        
->>>>>>> 779f9ec261fa9820596a550792d2e421c84812ea
         # create axes
-        fig = plt.figure(basename * "_lift_distribution")
+        fig_lift_distribution = plt.figure(basename * "_lift_distribution")
         nsurfaces = length(surfacenames)
         nsubplotbase = 300 + 10 * nsurfaces
         if stepi == parameters.plotstepi[1]
-            fig.clear()
+            fig_lift_distribution.clear()
             for isurface = 1:nsurfaces
-                fig.add_subplot(nsubplotbase + 2 + (isurface-1) * nsurfaces, ylabel = L"c_d") # drag ylim = cd_ylim,
-                fig.add_subplot(nsubplotbase + 3 + (isurface-1) * nsurfaces, ylabel = L"c_y", xlabel = L"y [m]") # side force ylim = cy_ylim,
-                fig.add_subplot(nsubplotbase + 1 + (isurface-1) * nsurfaces, ylabel = L"c_l", title = surfacenames[isurface]) # lift ylim = cl_ylim,
-                # fig.suptitle("t = $(steprange[stepi]), ti = $stepi") # add title
-                
+                fig_lift_distribution.add_subplot(nsubplotbase + 2 + (isurface-1) * nsurfaces, ylabel = L"c_d") # drag ylim = cd_ylim,
+                fig_lift_distribution.add_subplot(nsubplotbase + 3 + (isurface-1) * nsurfaces, ylabel = L"c_y", xlabel = L"y [m]") # side force ylim = cy_ylim,
+                fig_lift_distribution.add_subplot(nsubplotbase + 1 + (isurface-1) * nsurfaces, ylabel = L"c_l", title = surfacenames[isurface]) # lift ylim = cl_ylim,
+                # fig_lift_distribution.suptitle("t = $(steprange[stepi]), ti = $stepi") # add title
+
                 # set axes
                 # axs[1].set_ylim(cd_ylim)
                 # axs[1].set_ylabel(L"c_d")
@@ -81,51 +77,40 @@ function plot_lift_moment_distribution(aircraft, parameters, freestream, environ
                 # axs[3].set_ylabel(L"c_l")
             end
         end
-<<<<<<< HEAD
+        axs = fig_lift_distribution.get_axes()
 
         # get color
         cratio = findfirst((x)->x==stepi,plotstepi) / length(plotstepi)
 
-=======
-        axs = fig.get_axes()
-        
-        # get color
-        cratio = findfirst((x)->x==stepi,plotstepi) / length(plotstepi)
-        
->>>>>>> 779f9ec261fa9820596a550792d2e421c84812ea
         # plot
-        axs = fig.get_axes()
+        axs = fig_lift_distribution.get_axes()
         for (isurface,cf) in enumerate(cfs)
             rs_plot = get_midpoints(lifting_line_rs[isurface][2,:])
             for icf = 1:3
                 axs[(isurface - 1) * nsurfaces + icf].plot(rs_plot, cf[icf,:], color=(0.05, 0.85-cratio*0.7, 0.15 + 0.75 * cratio), label="$stepsymbol = $(round(steprange[stepi],digits=3))")
             end
         end
-<<<<<<< HEAD
 
-=======
-        
->>>>>>> 779f9ec261fa9820596a550792d2e421c84812ea
         # save
         if stepi == plotstepi[end] # last step
             axs[3].legend(loc="upper left", bbox_to_anchor=(1.01,1)) # set legend
-            fig.tight_layout() # clean up white space
+            fig_lift_distribution.tight_layout() # clean up white space
             savepath = joinpath(plotdirectory, plotbasename * "_lift_distribution" * plotextension)
-            fig.savefig(savepath, bbox_inches="tight")
+            fig_lift_distribution.savefig(savepath, bbox_inches="tight")
         end
 
         # cms plot
-        fig = plt.figure(basename * "_moment_distribution")
+        fig_moment_distribution = plt.figure(basename * "_moment_distribution")
         nsurfaces = length(surfacenames)
         nsubplotbase = 300 + 10 * nsurfaces
         if stepi == parameters.plotstepi[1]
-            fig.clear()
+            fig_moment_distribution.clear()
             for isurface = 1:nsurfaces
-                fig.add_subplot(nsubplotbase + 2 + (isurface-1) * nsurfaces, ylabel = L"c_{mx}") # drag ylim = cd_ylim,
-                fig.add_subplot(nsubplotbase + 1 + (isurface-1) * nsurfaces, ylabel = L"c_{my}", title = surfacenames[isurface]) # lift ylim = cl_ylim,
-                fig.add_subplot(nsubplotbase + 3 + (isurface-1) * nsurfaces, ylabel = L"c_{mz}", xlabel = L"y [m]") # side force ylim = cy_ylim,
-                # fig.suptitle("t = $(steprange[stepi]), ti = $stepi") # add title
-                
+                fig_moment_distribution.add_subplot(nsubplotbase + 2 + (isurface-1) * nsurfaces, ylabel = L"c_{mx}") # drag ylim = cd_ylim,
+                fig_moment_distribution.add_subplot(nsubplotbase + 1 + (isurface-1) * nsurfaces, ylabel = L"c_{my}", title = surfacenames[isurface]) # lift ylim = cl_ylim,
+                fig_moment_distribution.add_subplot(nsubplotbase + 3 + (isurface-1) * nsurfaces, ylabel = L"c_{mz}", xlabel = L"y [m]") # side force ylim = cy_ylim,
+                # fig_moment_distribution.suptitle("t = $(steprange[stepi]), ti = $stepi") # add title
+
                 # set axes
                 # axs[1].set_ylim(cd_ylim)
                 # axs[1].set_ylabel(L"c_d")
@@ -138,39 +123,26 @@ function plot_lift_moment_distribution(aircraft, parameters, freestream, environ
                 # axs[3].set_ylabel(L"c_l")
             end
         end
-<<<<<<< HEAD
 
-=======
-        
-        axs = fig.get_axes()
-        
->>>>>>> 779f9ec261fa9820596a550792d2e421c84812ea
         # plot
-        axs = fig.get_axes()
+        axs = fig_moment_distribution.get_axes()
+
         for (isurface,cm) in enumerate(cms)
             rs_plot = get_midpoints(lifting_line_rs[isurface][2,:])
             for icf = 1:3
                 axs[(isurface - 1) * nsurfaces + icf].plot(rs_plot, cm[icf,:], color=(0.05, 0.85-cratio*0.7, 0.15 + 0.75 * cratio), label="$stepsymbol = $(round(steprange[stepi],digits=3))")
             end
         end
-<<<<<<< HEAD
 
-=======
-        
->>>>>>> 779f9ec261fa9820596a550792d2e421c84812ea
         # save
         if stepi == plotstepi[end]
             axs[2].legend(loc="upper left", bbox_to_anchor=(1.01,1)) # set legend
-            fig.tight_layout() # clean up white space
+            fig_moment_distribution.tight_layout() # clean up white space
             savepath = joinpath(plotdirectory, plotbasename * "_moment_distribution" * plotextension)
-            fig.savefig(savepath, bbox_inches="tight")
+            fig_moment_distribution.savefig(savepath, bbox_inches="tight")
         end
     end
-<<<<<<< HEAD
 
-=======
-    
->>>>>>> 779f9ec261fa9820596a550792d2e421c84812ea
     return false
 end
 

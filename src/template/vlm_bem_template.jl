@@ -86,42 +86,29 @@ end
 # rs(alphas, omega, nblades...)
 
 """
-<<<<<<< HEAD
     vlm_bem_template(vinfs, plotstepi, alphas,
         wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip,
         omegas, nblades, rhub, rtip, radii, chords, twists,
         airfoilcontours, airfoilnames, index,
-        rotor_X, rotor_orientation, spindirections, Res_list, Ms_list;
+        rotor_positions, rotor_orientation, spindirections, Res_list, Ms_list;
             wakedevelopementfactor = 1.0, # fully developed by default
             swirlrecoveryfactor = 0.5, # as described in Veldhuis' paper
-=======
-    vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, 
-            omegas, nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, 
-            index, rotor_X, rotor_orientation, spindirections, 
-            Res_list = [fill([5e4, 1e5, 1e6], length(radii))];
->>>>>>> 779f9ec261fa9820596a550792d2e421c84812ea
             surfacenames = ["default wing"],
             rotornames = ["rotor 1"],
             plotdirectory = joinpath(topdirectory, "data","plots",TODAY),
             plotbasename = "default",
             plotextension = ".pdf",
             stepsymbol = L"\alpha ",
-<<<<<<< HEAD
             kwargs...
     ) <: Template
 
 Template function returns inputs for a VLM + BEM simulation.
 
-## Inputs
-=======
-            kwargs...)
-
 # Arguments:
->>>>>>> 779f9ec261fa9820596a550792d2e421c84812ea
 
 * `vinfs`
 * `plotstepi`
-* `alphas::Vector{Float64}`: angles of attack 
+* `alphas::Vector{Float64}`: angles of attack
 * `wing_b::Float64`: wing span
 * `wing_TR::Float64`: wing taper ratio
 * `wing_AR::Float64`: wing aspect ratio
@@ -143,11 +130,7 @@ Template function returns inputs for a VLM + BEM simulation.
 * `Res_list`
 * `Ms_list`
 
-<<<<<<< HEAD
-## Keyword Arguments
-=======
 # Keyword Arguments:
->>>>>>> 779f9ec261fa9820596a550792d2e421c84812ea
 
 * `wakedevelopementfactor` : value between 0-1 with 0 meaning not developed at all and 1 meaning fully developed
 * `surfacenames` : names for each lifting surface used in plots
@@ -158,12 +141,11 @@ Template function returns inputs for a VLM + BEM simulation.
 * `stepsymbol` : symbol in plots and terminal output describing each step
 
 """
-<<<<<<< HEAD
 function vlm_bem_template(vinfs, plotstepi, alphas,
-    wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip,
+    wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, wing_le_sweep, wing_ϕ,
     omegas, nblades, rhub, rtip, radii, chords, twists,
     airfoilcontours, airfoilnames, index,
-    rotor_X, rotor_orientation, spindirections, Res_list, Ms_list;
+    rotor_positions, rotor_orientation, spindirections, Res_list, Ms_list;
         wakedevelopementfactor = 1.0, # fully developed by default
         swirlrecoveryfactor = 0.5, # as described in Veldhuis' paper
         surfacenames = ["default wing"],
@@ -174,22 +156,8 @@ function vlm_bem_template(vinfs, plotstepi, alphas,
         stepsymbol = L"\alpha ",
         kwargs...
 )
-=======
-function vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, omegas, nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, index, rotor_positions, rotor_orientation, spindirections, Res_list, Ms_list;
-    wakedevelopementfactor = 1.0, # fully developed by default
-    swirlrecoveryfactor = 0.5, # as described in Veldhuis' paper
-    surfacenames = ["default wing"],
-    rotornames = ["rotor 1"],
-    plotdirectory = joinpath(topdirectory, "data","plots",TODAY),
-    plotbasename = "default",
-    plotextension = ".pdf",
-    stepsymbol = L"\alpha ",
-    kwargs...
-)
-
->>>>>>> 779f9ec261fa9820596a550792d2e421c84812ea
     # prepare subsystems
-    wings = simplewingsystem(; wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, kwargs...)
+    wings = simplewingsystem(wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, wing_le_sweep, wing_ϕ; kwargs...)
     rotors = CCBladeSystem(nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, index, rotor_positions, rotor_orientation, spindirections, Res_list, Ms_list; kwargs...)
     nonliftingbodies = nothing
     structures = nothing
@@ -206,11 +174,7 @@ function vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, wing_AR, wi
     steprange = alphas
     params_solve_vlm_bem = solve_vlm_bem(aircraft, steprange)
     params_solve_vlm_bem[1] .*= omegas
-<<<<<<< HEAD
 
-=======
-    
->>>>>>> 779f9ec261fa9820596a550792d2e421c84812ea
     # set wake development parameters
     @assert wakedevelopementfactor <= 1 && wakedevelopementfactor >= 0 "`wakedevelopementfactor` must be between 0 and 1"
     axialmultipliers = fill((distance2plane, Rtip) -> 1 + wakedevelopementfactor, length(aircraft.rotorsystem.index))
@@ -288,10 +252,10 @@ function vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, wing_AR, wi
     # prepare plot directory
     if !isdir(plotdirectory); mkpath(plotdirectory); end
     println("==== MSG ====\n\tplotdirectory = $plotdirectory")
-    
+
     # build parameters struct
     parameters = VLM_BEM(params_solve_vlm_bem..., params_post_plot_lift_moment_distribution[7:9]..., params_post_plot_rotor_sweep[5], plotdirectory, plotbasename, plotextension, plotstepi)
-    
+
     # build freestream_function
     function freestream_function(aircraft, parameters, environment, alphas, stepi)
 

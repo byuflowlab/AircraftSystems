@@ -7,7 +7,8 @@ wing_c = 240e-3
 wing_AR = wing_b / wing_c
 wing_θroot = 0.0
 wing_θtip = 0.0
-simulationdata = AS.lift_distribution_template(ploti, alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip; surfacenames = ["PROWIM, w/o props"])
+wing_ϕ = 0.0
+simulationdata = AS.lift_distribution_template(ploti, alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, wing_ϕ; surfacenames = ["PROWIM, w/o props"])
 objective = AS.runsimulation!(simulationdata...)
 
 y2b_cn_0deg_noprops = [

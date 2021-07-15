@@ -8,6 +8,8 @@ wing_c = 240e-3
 wing_AR = wing_b / wing_c
 wing_θroot = 0.0
 wing_θtip = 0.0
+wing_le_sweep = 0.0
+wing_ϕ = 0.0
 # environment
 environment = AS.Environment()
 ν = environment.ν
@@ -209,13 +211,13 @@ rotor_orientation = [[-1.0, 0.0, 0.0]]
 spindirections = [true]
 
 # call template
-plotbasename = "PROWIM_propson"
-wakedevelopementfactors = [0.0, 0.5, 1.0]
-swirlrecoveryfactors = [0.0, 0.5, 1.0]
+plotbasename = "PROWIM_props_on"
+wakedevelopementfactors = [1.0] #[0.0, 0.5, 1.0]
+swirlrecoveryfactors = [0.5] #[0.0, 0.5, 1.0]
 
 for wakedevelopementfactor in wakedevelopementfactors
     for swirlrecoveryfactor in swirlrecoveryfactors
-        local data_PROWIM_vlm_bem = AS.vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, omegas, nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, index, rotor_X, rotor_orientation, spindirections, Res_list, Ms_list;
+        local data_PROWIM_vlm_bem = AS.vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, wing_le_sweep, wing_ϕ, omegas, nblades, rhub, rtip, radii, chords, twists, airfoilcontours, airfoilnames, index, rotor_X, rotor_orientation, spindirections, Res_list, Ms_list;
                 wakedevelopementfactor = wakedevelopementfactor, # fully developed by default
                 swirlrecoveryfactor = swirlrecoveryfactor, # as described in Veldhuis' paper
                 polardirectory = polardirectory,

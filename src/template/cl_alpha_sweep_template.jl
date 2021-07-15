@@ -64,7 +64,7 @@ end
 * `stepsymbol`
 
 """
-function cl_alpha_sweep_template(alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip;
+function cl_alpha_sweep_template(alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, wing_le_sweep, wing_ϕ;
             plotdirectory=joinpath(topdirectory,"data","plots",TODAY),
             plotbasename="default",
             plotextension=".pdf",
@@ -72,11 +72,7 @@ function cl_alpha_sweep_template(alphas, wing_b, wing_TR, wing_AR, wing_θroot, 
             kwargs...)
 
     # prepare subsystems
-<<<<<<< HEAD
-    wings = simplewingsystem(wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip; kwargs...)
-=======
-    wings = simplewingsystem(; wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, kwargs...)
->>>>>>> 779f9ec261fa9820596a550792d2e421c84812ea
+    wings = simplewingsystem(wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, wing_le_sweep, wing_ϕ; kwargs...)
     rotors = nothing
     nonliftingbodies = nothing
     structures = nothing
@@ -96,7 +92,7 @@ function cl_alpha_sweep_template(alphas, wing_b, wing_TR, wing_AR, wing_θroot, 
     @assert length(CLs) == length(alphas) "length of parameter CLs and alphas inconsistent"
     @assert length(CDs) == length(alphas) "length of parameter CDs and alphas inconsistent"
     @assert length(CYs) == length(alphas) "length of parameter CYs and alphas inconsistent"
-    
+
     parameters = CLAlphaSweep(CLs, CDs, CYs, wakefunctions, plotdirectory, plotbasename, plotextension)
 
     # build freestream_function

@@ -37,14 +37,9 @@ NOTE: THIS ACTION DOES NOT SOLVE THE VORTEX LATTICE. Call `solve_wing_CF` prior 
 
 """
 function lift_moment_distribution(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol)
-    
-    # extract lift and moment distribution
-<<<<<<< HEAD
-    cfs, cms = VL.lifting_line_coefficients(aircraft.wingsystem.system, aircraft.wingsystem.lifting_line_rs, aircraft.wingsystem.lifting_line_chords, VL.Freestream(freestream), VL.Wind())
-=======
-    cfs, cms = VL.lifting_line_coefficients(aircraft.wingsystem.system, aircraft.wingsystem.lifting_line_rs, aircraft.wingsystem.lifting_line_chords)
 
->>>>>>> 779f9ec261fa9820596a550792d2e421c84812ea
+    # extract lift and moment distribution
+    cfs, cms = VL.lifting_line_coefficients(aircraft.wingsystem.system, aircraft.wingsystem.lifting_line_rs, aircraft.wingsystem.lifting_line_chords; frame = VL.Wind())
     # store to `parameters`
     nwings = length(aircraft.wingsystem.system.surfaces)
     for iwing in 1:nwings
@@ -92,7 +87,7 @@ NOTE: THIS ACTION DOES NOT SOLVE THE VORTEX LATTICE. Call `solve_CF` prior to ca
 
 """
 function lift_moment_distribution_blownwing(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol)
-    
+
     # extract lift and moment distribution
     cfs, cms = lifting_line_coefficients_blownwing(aircraft.wingsystem.system, aircraft.wingsystem.lifting_line_rs, aircraft.wingsystem.lifting_line_chords, parameters.wakefunctions[stepi])
 
@@ -219,10 +214,10 @@ function lifting_line_coefficients_blownwing!(cf, cm, system, r, c, wakefunction
                 # add influence of bound vortex
                 rb = VL.top_center(panels[i,j])
                 Γ = properties[i,j].gamma
-                Vlocal = properties[i,j].velocity 
+                Vlocal = properties[i,j].velocity
                 Vlocal -= wakefunction(rb)
 
-                Δs = VL.top_vector(panels[I]) 
+                Δs = VL.top_vector(panels[I])
                 cfb = VL.RHO * Γ * cross(Vlocal, Δs)
 
                 # cfb = properties[i,j].cfb

@@ -41,13 +41,14 @@ zle = [0.0, 0.0, 0.0]
 wing_chord = epema_chords[:,2]
 wing_twist = [0.0, 0.0, 0.0]
 wing_phi = [0.0, 0.0, 0.0]
+wing_ϕ = 0.0
 
 surfacenames = ["epema wing"]
 polardirectory=joinpath(AS.topdirectory, "data","airfoil","polars","20210618")
 
 wing_npanels = 256
 
-args = AS.vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip,
+args = AS.vlm_bem_template(vinfs, plotstepi, alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, wing_le_sweep, wing_ϕ,
                         rotor_omegas, nblades, rhub, rtip, radii, rotor_chords, rotor_twists,
                         airfoilcontours, airfoilnames, index, rotor_positions, rotor_orientations,
                         spindirections;
@@ -71,12 +72,12 @@ gammas = [panel.gamma * Vref for panel in aircraft.wingsystem.system.properties[
 velocities = [panel.velocity * Vref for panel in aircraft.wingsystem.system.properties[1]]
 velocities_minus_rotor = velocities .- parameters.wakefunctions[1].(VL.top_center.(panels)) #w/o rotor-induced velocities
 cr = CartesianIndices(panels)
-Δs = VL.top_vector.(panels) 
+Δs = VL.top_vector.(panels)
 
 # back of the envelope approach
 cls_new = 2 * gammas' ./  (Vinf * wing[:"mac"])
 
-# including wing induced velocities 
+# including wing induced velocities
 v_perp = LA.cross.(velocities_minus_rotor, Δs) ./ LA.norm.(Δs)
 v_perp = LA.norm.([[v[1]; 0.0; v[3]] for v in v_perp])
 cls_new2 = 2 * gammas' .* v_perp' ./ (wing[:"mac"] * Vinf^2)

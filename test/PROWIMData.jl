@@ -6,6 +6,8 @@ wing["chord"] = 240e-3
 wing["TR"] = 1.0
 wing["theta_root"] = 0.0
 wing["theta_tip"] = 0.0
+wing["le_sweep"] = 0.0
+wing["dihedral"] = 0.0
 
 rotor = Dict()
 rotor["diameter"] = 236e-3

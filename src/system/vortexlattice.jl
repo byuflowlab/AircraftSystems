@@ -73,23 +73,23 @@ function VortexLatticeSystem(lexs::AbstractArray{T}, leys, lezs, chords, thetas,
     # build grids and surfaces
     gridssurfaces = [VL.wing_to_surface_panels(lexs[i], leys[i], lezs[i], chords[i], thetas[i], phis[i], nspanwisepanels[i], nchordwisepanels[i];
                     fc = wing_cambers[i], spacing_s=spanwisespacings[i], spacing_c=chordwisespacings[i]) for i in 1:nwings]
-    
+
     # extract grids and surfaces
     grids = [gridsurface[1] for gridsurface in gridssurfaces]
     surfaces = [gridsurface[2] for gridsurface in gridssurfaces]
 
     # build reference
     ref = get_reference(lexs[iref], leys[iref], chords[iref], staticmargin, Vref)
-    
+
     # build freestream
     alpha = 3.0 * pi/180
     beta = 0.0
     Omegas = zeros(3)
     vlmfreestream = VL.Freestream(Vref, alpha, beta, Omegas)
-    
+
     # get lifting line geometry
     rs, chords = VL.lifting_line_geometry(grids)
-    
+
     # build system
     system = VL.steady_analysis(surfaces, ref, vlmfreestream; symmetric=symmetric)
     vlmsystem = VortexLatticeSystem(system, rs, chords, nothing)
@@ -127,9 +127,9 @@ Convencience constructor for a `VortexLatticeSystem` with a single lifting surfa
 
 """
 function VortexLatticeSystem(lexs, leys, lezs, chords, thetas, phis, nspanwisepanels, nchordwisepanels)
-    
+
     @assert !(typeof(lexs[1]) <: AbstractArray) "error in dispatch for VortexLatticeSystem"
-    
+
     return VortexLatticeSystem([lexs], [leys], [lezs], [chords], [thetas], [phis], [nspanwisepanels], [nchordwisepanels]; kwargs...)
 end
 
@@ -165,40 +165,27 @@ weightedmean(set, weights) = sum(set .* weights) / sum(weights)
 get_midpoints(a) = [(a[i] + a[i+1])/2 for i in 1:length(a)-1]
 
 """
-<<<<<<< HEAD
-Convenience constructor for a single wing `VortexLatticeSystem`.
-
-Arguments:
-
-* `wing_b` : wing span
-* `wing_TR` : wing taper ratio
-* `wing_AR` : wing aspect ratio
-* `wing_θroot` : wing root twist
-* `wing_θtip` : wing tip twist
-
-Keyword Arguments:
-=======
-    simplewingsystem(; wing_b=2.0, wing_TR=0.8, wing_AR=8.0, wing_θroot=0.0, wing_θtip=0.0,
-        xle=[0.0, 0.0], yle=[0.0, wing_b/2], zle=[0.0, 0.0], 
-        cmac=wing_b / wing_AR, # AR = b/c => c = b/AR
-        Sref=wing_b * cmac,
-        chord=[cmac * 2 / (1 + wing_TR), cmac * 2 / (1/wing_TR + 1)], twist=[wing_θroot, wing_θtip], phi=[0.0,0.0],
+    simplewingsystem(b, TR, AR, θroot, θtip, le_sweep, ϕ;
+        xle=[0.0, 0.0], yle=[0.0, b/2], zle=[0.0, 0.0],
+        cmac=b / AR, # AR = b/c => c = b/AR
+        Sref=b * cmac,
+        chord=[cmac * 2 / (1 + TR), cmac * 2 / (1/TR + 1)], twist=[θroot, θtip], phi=[0.0,0.0],
         staticmargin=0.10,
-        Vinf=1.0, 
-        Vref=Vinf, 
-        alpha=0.0, 
-        beta=0.0, 
-        Omega=[0.0, 0.0, 0.0], 
-        wing_camber=fill((xc) -> 0, 2), 
-        wing_npanels=50, wing_nchordwisepanels=1,
-        symmetric=true, 
-        spacing_s = symmetric ? VL.Cosine() : VL.Sine(), 
-        spacing_c=VL.Uniform(), 
+        Vinf=1.0,
+        Vref=Vinf,
+        alpha=0.0,
+        beta=0.0,
+        Omega=[0.0, 0.0, 0.0],
+        camber=fill((xc) -> 0, 2),
+        npanels=50, nchordwisepanels=1,
+        symmetric=true,
+        spacing_s = symmetric ? VL.Cosine() : VL.Sine(),
+        spacing_c=VL.Uniform(),
         mirror=!symmetric,
-        kwargs...)
+        kwargs...
+    )
 
 Convenience constructor for a single wing `VortexLatticeSystem`.
->>>>>>> 779f9ec261fa9820596a550792d2e421c84812ea
 
 # Keyword Arguments:
 
@@ -230,39 +217,27 @@ Convenience constructor for a single wing `VortexLatticeSystem`.
 * `wing_spacing_c::Int`: chordwise panel spacing scheme for the wing; defaults to Uniform()
 
 """
-<<<<<<< HEAD
-function simplewingsystem(wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip;
-    wing_camber = fill((xc) -> 0, 2), # camberline function for each section
-    wing_npanels = 50, wing_nchordwisepanels = 1,
-    wing_spacing_s = VL.Cosine(), wing_spacing_c = VL.Uniform(),
-    symmetric = true, kwargs...
+function simplewingsystem(b, TR, AR, θroot, θtip, le_sweep, ϕ;
+    yle = [0.0,b/2], xle = [0.0, yle[2] * tan(le_sweep)], zle = [0.0, yle[2] * tan(ϕ)],
+    cmac = b/AR, # AR = b/c => c = b/AR
+    Sref = b*cmac,
+    chord = [cmac * 2 / (1 + TR), cmac * 2 / (1 + 1/TR)], twist=[θroot, θtip], phi=[ϕ, ϕ],
+    staticmargin = 0.10,
+    Vref = 1.0, # in case you want the reference velocity to be different than the freestream velocity
+    camber = fill((xc) -> 0, length(xle)),
+    npanels = 50, nchordwisepanels=1,
+    symmetric = true, # if true, we don't need to mirror geometry. Good option if parameters/geometry is symmetric and you don't care about lateral stability derivatives
+    mirror = !symmetric,
+    spacing_s = symmetric ? VL.Cosine() : VL.Sine(), # if mirrored, sine spacing becomes cosine spacing
+    spacing_c = VL.Uniform(), # should only ever need uniform chordwise spacing
+    kwargs...
 )
-    # build wing object
-    xle = [0.0, 0.0]
-    yle = [0.0, wing_b/2]
-    zle = [0.0, 0.0]
-    cmac = wing_b / wing_AR # AR = b/c => c = b/AR
-=======
-function simplewingsystem(; wing_b=2.0, wing_TR=0.8, wing_AR=8.0, wing_θroot=0.0, wing_θtip=0.0,
-            xle=[0.0,0.0], yle=[0.0,wing_b/2], zle=[0.0,0.0], 
-            cmac=wing_b/wing_AR, # AR = b/c => c = b/AR
-            Sref=wing_b*cmac,
-            wing_chord=[cmac*2/(1+wing_TR),cmac*2/(1/wing_TR+1)], wing_twist=[wing_θroot,wing_θtip], wing_phi=[0.0,0.0],
-            staticmargin=0.10,
-            Vinf=1.0, 
-            Vref=Vinf, # in case you want the reference velocity to be different than the freestream velocity
-            alpha=0.0,
-            beta=0.0,
-            Omega=[0.0,0.0,0.0], 
-            wing_camber=fill((xc) -> 0, length(xle)),
-            wing_npanels=50, wing_nchordwisepanels=1,
-            symmetric=true, # if true, we don't need to mirror geometry. Good option if parameters/geometry is symmetric and you don't care about lateral stability derivatives
-            mirror=!symmetric,
-            spacing_s = symmetric ? VL.Cosine() : VL.Sine(), # if mirrored, sine spacing becomes cosine spacing
-            spacing_c=VL.Uniform(), # should only ever need uniform chordwise spacing
-            kwargs...)
 
->>>>>>> 779f9ec261fa9820596a550792d2e421c84812ea
+    Vinf = 1.0
+    alpha=0.0
+    beta=0.0
+    Omega=[0.0,0.0,0.0]
+
     #=
     cr + ct = cmac * 2
     ct = λ * cr
@@ -276,45 +251,30 @@ function simplewingsystem(; wing_b=2.0, wing_TR=0.8, wing_AR=8.0, wing_θroot=0.
     cmac * 2 = ct * (1 + 1/λ)
     ct = cmac * 2 / (1 + 1/λ)
     =#
-<<<<<<< HEAD
-    chord = [cmac * 2 / (1 + wing_TR), cmac * 2 / (1 + 1/wing_TR )]
-    theta = [wing_θroot, wing_θtip]
-    phi = [0.0, 0.0]
 
-    # discretization parameters
-    ns = wing_npanels
-    nc = wing_nchordwisepanels
-
-    # construct surfaces and grids
-    println("Sherlock!\n\twing_TR = $wing_TR\n\twing_AR = $wing_AR\n\n\txle = $xle\n\tyle = $yle\n\tzle = $zle\n\tchord = $chord\n\ttheta = $theta")
-    grid, surface = VL.wing_to_surface_panels(xle, yle, zle, chord, theta, phi, ns, nc;
-        fc = wing_camber, spacing_s=wing_spacing_s, spacing_c=wing_spacing_c)
-=======
-    
     # Check for errors
     @assert size(xle) == size(yle)    "size of leading edge xs and ys not consistent"
     @assert size(yle) == size(zle)    "size of leading edge ys and zs not consistent"
-    @assert size(xle) == size(wing_chord)    "size of leading edge xs and wing_chord not consistent"
-    @assert size(xle) == size(wing_twist)    "size of leading edge xs and wing_twist not consistent"
-    @assert size(xle) == size(wing_phi)    "size of leading edge xs and wing_phi not consistent"
+    @assert size(xle) == size(chord)    "size of leading edge xs and chord not consistent"
+    @assert size(xle) == size(twist)    "size of leading edge xs and twist not consistent"
+    @assert size(xle) == size(phi)    "size of leading edge xs and phi not consistent"
     @assert yle[1] == 0.0    "yle must begin at the root (0.0)"
-    @assert yle[end] == wing_b/2    "yle must end at the tip (span/2)"
+    @assert yle[end] == b/2    "yle must end at the tip (span/2)"
     @assert !(symmetric && mirror)    "symmetric and mirror cannot both be true"
-  
-    # construct surfaces and grids
-    grid, surface = VL.wing_to_surface_panels(xle, yle, zle, wing_chord, wing_twist, wing_phi, wing_npanels, wing_nchordwisepanels;
-                        fc = wing_camber, spacing_s, spacing_c, mirror)
 
->>>>>>> 779f9ec261fa9820596a550792d2e421c84812ea
+    # construct surfaces and grids
+    grid, surface = VL.wing_to_surface_panels(xle, yle, zle, chord, twist, phi, npanels, nchordwisepanels;
+                        fc = camber, spacing_s, spacing_c, mirror)
+
     grids = [grid]
     surfaces = [surface]
 
     # reference parameters
     cgx = cmac * (0.25 - staticmargin)
     rref = [cgx, 0.0, 0.0]
-    reference = VL.Reference(Sref, cmac, wing_b, rref, Vref)
+    reference = VL.Reference(Sref, cmac, b, rref, Vref)
 
-    # initialize freestream parameters
+    # initialize dummy freestream parameters
     fs = VL.Freestream(Vinf, alpha, beta, Omega)
 
     # perform steady state analysis
@@ -327,54 +287,54 @@ end
 
 
 """
-    simpleairplanesystem(; 
+    simpleairplanesystem(;
         # wing geometry
         wing_b=2.0, wing_TR=0.8, wing_AR=8.0, wing_θroot=0.0, wing_θtip=0.0,
-        wing_xle=[0.0,0.0], wing_yle=[0.0, wing_b/2], wing_zle=[0.0,0.0], 
+        wing_xle=[0.0,0.0], wing_yle=[0.0, wing_b/2], wing_zle=[0.0,0.0],
         wing_cmac=wing_b/wing_AR, # AR = b/c => c = b/AR
-        wing_chord=[wing_cmac * 2 / (1 + wing_TR), wing_cmac * 2 / (1/wing_TR + 1)], 
+        wing_chord=[wing_cmac * 2 / (1 + wing_TR), wing_cmac * 2 / (1/wing_TR + 1)],
         wing_theta=[wing_θroot, wing_θtip],
-        wing_phi=[1.0,1.0] * 3pi/180.0, 
-        wing_camber=fill((xc) -> 0, length(wing_xle)), 
+        wing_phi=[1.0,1.0] * 3pi/180.0,
+        wing_camber=fill((xc) -> 0, length(wing_xle)),
         # tail geometry
-        tail_b=0.4, tail_TR=0.7, tail_AR=6.0, tail_θroot=0.0, tail_θtip=0.0, 
+        tail_b=0.4, tail_TR=0.7, tail_AR=6.0, tail_θroot=0.0, tail_θtip=0.0,
         tail_incidence=3pi/180, tail_position=[1.5,0.0,0.1], tail_cmac=tail_b/tail_AR,
-        tail_xle=[tail_position[1],tail_position[1]], 
-        tail_yle=[0.0,tail_b/2], 
+        tail_xle=[tail_position[1],tail_position[1]],
+        tail_yle=[0.0,tail_b/2],
         tail_zle=[tail_position[3],tail_position[3]],
-        tail_chord=[tail_cmac*2/(1+tail_TR),tail_cmac*2/(1/tail_TR+1)], 
+        tail_chord=[tail_cmac*2/(1+tail_TR),tail_cmac*2/(1/tail_TR+1)],
         tail_twist=[tail_θroot, tail_θtip] .- tail_incidence,
-        tail_phi=[0.0,0.0], 
-        tail_camber=fill((xc) -> 0, length(tail_xle)), 
+        tail_phi=[0.0,0.0],
+        tail_camber=fill((xc) -> 0, length(tail_xle)),
         # vertical tail geometry
-        vertical_tail_b=0.4, vertical_tail_TR=0.7, vertical_tail_AR=6.0, vertical_tail_θroot=0.0, vertical_tail_θtip=0.0, 
+        vertical_tail_b=0.4, vertical_tail_TR=0.7, vertical_tail_AR=6.0, vertical_tail_θroot=0.0, vertical_tail_θtip=0.0,
         vertical_tail_cmac=vertical_tail_b/vertical_tail_AR,
-        vertical_tail_xle=[tail_position[1], tail_position[1]], 
-        vertical_tail_yle=[0.0,0.0], 
+        vertical_tail_xle=[tail_position[1], tail_position[1]],
+        vertical_tail_yle=[0.0,0.0],
         vertical_tail_zle=[tail_position[3], tail_position[3] + vertical_tail_b],
         vertical_tail_chord=[cmac_vertical_tail * 2 / (1 + vertical_tail_TR), cmac_vertical_tail * 2 / (1/vertical_tail_TR + 1)],
-        vertical_tail_theta=[vertical_tail_θroot, vertical_tail_θtip], 
+        vertical_tail_theta=[vertical_tail_θroot, vertical_tail_θtip],
         vertical_tail_phi=[0.0, 0.0],
-        vertical_tail_camber=fill((xc) -> 0, length(vertical_tail_xle)), 
+        vertical_tail_camber=fill((xc) -> 0, length(vertical_tail_xle)),
         # other parameters/reference values
         Sref=wing_b*cmac,
         staticmargin=0.10,
         Vinf=1.0,
         Vref=Vinf,
         alpha=0.0,
-        beta=0.0, 
+        beta=0.0,
         Omega=[0.0,0.0,0.0]
-        symmetric=[true, true, false], 
+        symmetric=[true, true, false],
         mirror=[false, false, false],
         # panel setup
         wing_npanels=50, wing_nchordwisepanels=3,
         wing_spacing_s= mirror[1] ? VL.Sine() : VL.Cosine(), # if mirrored, Sine becomes Cosine
         wing_spacing_c=VL.Uniform(),
         tail_npanels=20, tail_nchordwisepanels=1,
-        tail_spacing_s= mirror[2] ? VL.Sine() : VL.Cosine(), 
+        tail_spacing_s= mirror[2] ? VL.Sine() : VL.Cosine(),
         tail_spacing_c=VL.Uniform(),
         vertical_tail_npanels=20, vertical_tail_nchordwisepanels=1,
-        vertical_tail_spacing_s= mirror[3] ? VL.Sine() : VL.Cosine(), 
+        vertical_tail_spacing_s= mirror[3] ? VL.Sine() : VL.Cosine(),
         vertical_tail_spacing_c=VL.Uniform(),
         kwargs...)
 
@@ -434,7 +394,7 @@ Convenience constructor for a simple airplane `VortexLatticeSystem`.
 * `beta`: wing slipstream angle (radians)
 * `Omega`: rotational velocity around the reference location
 * `symmetric`: uses a mirror image when calculating induced velocities
-* `mirror`: adds mirrored image to the geometry and solves without symmetry 
+* `mirror`: adds mirrored image to the geometry and solves without symmetry
 
 * `wing_npanels`: number of spanwise panels for the wing
 * `wing_nchordwisepanels`: number of chordwise panels for the wing
@@ -450,54 +410,54 @@ Convenience constructor for a simple airplane `VortexLatticeSystem`.
 * `vertical_tail_spacing_c`: chordwise panel spacing scheme for the vertical tail
 
 """
-function simpleairplanesystem(; 
+function simpleairplanesystem(;
             # wing geometry
             wing_b=2.0, wing_TR=0.8, wing_AR=8.0, wing_θroot=0.0, wing_θtip=0.0,
-            wing_xle=[0.0,0.0], wing_yle=[0.0, wing_b/2], wing_zle=[0.0,0.0], 
+            wing_xle=[0.0,0.0], wing_yle=[0.0, wing_b/2], wing_zle=[0.0,0.0],
             wing_cmac=wing_b/wing_AR, # AR = b/c => c = b/AR
-            wing_chord=[wing_cmac * 2 / (1 + wing_TR), wing_cmac * 2 / (1/wing_TR + 1)], 
+            wing_chord=[wing_cmac * 2 / (1 + wing_TR), wing_cmac * 2 / (1/wing_TR + 1)],
             wing_theta=[wing_θroot, wing_θtip],
-            wing_phi=[1.0,1.0] * 3pi/180.0, 
-            wing_camber=fill((xc) -> 0, length(wing_xle)), 
+            wing_phi=[1.0,1.0] * 3pi/180.0,
+            wing_camber=fill((xc) -> 0, length(wing_xle)),
             # tail geometry
-            tail_b=0.4, tail_TR=0.7, tail_AR=6.0, tail_θroot=0.0, tail_θtip=0.0, 
+            tail_b=0.4, tail_TR=0.7, tail_AR=6.0, tail_θroot=0.0, tail_θtip=0.0,
             tail_incidence=3pi/180, tail_position=[1.5,0.0,0.1], tail_cmac=tail_b/tail_AR,
-            tail_xle=[tail_position[1],tail_position[1]], 
-            tail_yle=[0.0,tail_b/2], 
+            tail_xle=[tail_position[1],tail_position[1]],
+            tail_yle=[0.0,tail_b/2],
             tail_zle=[tail_position[3],tail_position[3]],
-            tail_chord=[tail_cmac*2/(1+tail_TR),tail_cmac*2/(1/tail_TR+1)], 
+            tail_chord=[tail_cmac*2/(1+tail_TR),tail_cmac*2/(1/tail_TR+1)],
             tail_twist=[tail_θroot, tail_θtip] .- tail_incidence,
-            tail_phi=[0.0,0.0], 
-            tail_camber=fill((xc) -> 0, length(tail_xle)), 
+            tail_phi=[0.0,0.0],
+            tail_camber=fill((xc) -> 0, length(tail_xle)),
             # vertical tail geometry
-            vertical_tail_b=0.4, vertical_tail_TR=0.7, vertical_tail_AR=6.0, vertical_tail_θroot=0.0, vertical_tail_θtip=0.0, 
+            vertical_tail_b=0.4, vertical_tail_TR=0.7, vertical_tail_AR=6.0, vertical_tail_θroot=0.0, vertical_tail_θtip=0.0,
             vertical_tail_cmac=vertical_tail_b/vertical_tail_AR,
-            vertical_tail_xle=[tail_position[1], tail_position[1]], 
-            vertical_tail_yle=[0.0,0.0], 
+            vertical_tail_xle=[tail_position[1], tail_position[1]],
+            vertical_tail_yle=[0.0,0.0],
             vertical_tail_zle=[tail_position[3], tail_position[3] + vertical_tail_b],
             vertical_tail_chord=[cmac_vertical_tail * 2 / (1 + vertical_tail_TR), cmac_vertical_tail * 2 / (1/vertical_tail_TR + 1)],
-            vertical_tail_theta=[vertical_tail_θroot, vertical_tail_θtip], 
+            vertical_tail_theta=[vertical_tail_θroot, vertical_tail_θtip],
             vertical_tail_phi=[0.0, 0.0],
-            vertical_tail_camber=fill((xc) -> 0, length(vertical_tail_xle)), 
+            vertical_tail_camber=fill((xc) -> 0, length(vertical_tail_xle)),
             # other parameters/reference values
             Sref=wing_b*cmac,
             staticmargin=0.10,
             Vinf=1.0,
             Vref=Vinf,
             alpha=0.0,
-            beta=0.0, 
+            beta=0.0,
             Omega=[0.0,0.0,0.0],
-            symmetric=[true, true, false], 
+            symmetric=[true, true, false],
             mirror=[false, false, false],
             # panel setup
             wing_npanels=50, wing_nchordwisepanels=3,
             wing_spacing_s= mirror[1] ? VL.Sine() : VL.Cosine(), # if mirrored, Sine becomes Cosine
             wing_spacing_c=VL.Uniform(),
             tail_npanels=20, tail_nchordwisepanels=1,
-            tail_spacing_s= mirror[2] ? VL.Sine() : VL.Cosine(), 
+            tail_spacing_s= mirror[2] ? VL.Sine() : VL.Cosine(),
             tail_spacing_c=VL.Uniform(),
             vertical_tail_npanels=20, vertical_tail_nchordwisepanels=1,
-            vertical_tail_spacing_s= mirror[3] ? VL.Sine() : VL.Cosine(), 
+            vertical_tail_spacing_s= mirror[3] ? VL.Sine() : VL.Cosine(),
             vertical_tail_spacing_c=VL.Uniform(),
             kwargs...)
 
@@ -538,7 +498,7 @@ function simpleairplanesystem(;
                                     fc = tail_camber, spacing_s=tail_spacing_s, spacing_c=tail_spacing_c, mirror=mirror[2])
 
     # construct vertical tail surfaces and grids
-    vertical_tail_grid, vertical_tail_surface = VL.wing_to_surface_panels(vertical_tail_xle, vertical_tail_yle, vertical_tail_zle, vertical_tail_chord, 
+    vertical_tail_grid, vertical_tail_surface = VL.wing_to_surface_panels(vertical_tail_xle, vertical_tail_yle, vertical_tail_zle, vertical_tail_chord,
                                                     vertical_tail_theta, vertical_tail_phi, vertical_tail_npanels, vertical_tail_nchordwisepanels;
                                                     fc = vertical_tail_camber, spacing_s=vertical_tail_spacing_s, spacing_c=vertical_tail_spacing_c, mirror=mirror[3])
 

@@ -11,7 +11,7 @@ README: this file is meant to provide convenience functions for building CCBlade
 """
     CCBladeSystem{V1,V2,V3,V4,V5,V6,V7}
 
-Defines CCBlade rotor geometry. 
+Defines CCBlade rotor geometry.
 
 # Fields:
 
@@ -36,7 +36,7 @@ end
 
 
 """
-    CCBladeSystem(nblades_list, rhub_list, rtip_list, radii_list, chords_list, twists_list, 
+    CCBladeSystem(nblades_list, rhub_list, rtip_list, radii_list, chords_list, twists_list,
         airfoilcontours_list, airfoilnames_list, index, positions, orientations, spindirections,
         Res_list = [fill([5e4, 1e5, 1e6], length(radii_list[i])) for i in 1:length(nblades_list)];
         kwargs...)
@@ -94,7 +94,7 @@ Convenience constructor for `CCBladeSystem`.
 * `rotorsystem::CCBladeSystem`: constructs a `CCBladeSystem` struct
 
 """
-function CCBladeSystem(nblades_list, rhub_list, rtip_list, radii_list, chords_list, twists_list, 
+function CCBladeSystem(nblades_list, rhub_list, rtip_list, radii_list, chords_list, twists_list,
             airfoilcontours_list::Vector{Vector{String}}, airfoilnames_list, index, positions, orientations, spindirections;
             Res_list = [fill([5e4, 1e5, 1e6], length(radii_list[i])) for i in 1:length(nblades_list)],
             kwargs...)
@@ -109,15 +109,15 @@ function CCBladeSystem(nblades_list, rhub_list, rtip_list, radii_list, chords_li
 
     # build CCBlade.Section lists
     sectionlists = buildsections(nblades_list, rtip_list, radii_list, chords_list, twists_list, Res_list, airfoilcontours_list, airfoilnames_list; kwargs...)
-    
+
     # build rlists
     rlists = sections2radii.(sectionlists)
-    
+
     # check index length
     @assert length(index) == length(positions) "length of `index` must match the length of `positions`"
     @assert length(index) == length(orientations) "length of `index` must match the length of `orientations`"
     @assert maximum(index) <= length(rotors) "maximum rotor index cannot exceed the number of rotors"
-    
+
     # build rotor system
     rotorsystem = CCBladeSystem(rotors, sectionlists, rlists, index, positions, orientations, spindirections)
 
@@ -128,8 +128,8 @@ end
 """
 Multiple dispatch for multiple Mach numbers.
 """
-function CCBladeSystem(nblades_list, rhub_list, rtip_list, radii_list, chords_list, twists_list, 
-            airfoilcontours_list::Vector{Vector{String}}, airfoilnames_list, index, positions, 
+function CCBladeSystem(nblades_list, rhub_list, rtip_list, radii_list, chords_list, twists_list,
+            airfoilcontours_list::Vector{Vector{String}}, airfoilnames_list, index, positions,
             orientations, spindirections, Res_list, Ms_list;
             kwargs...#, closefigure = true
             )
@@ -144,15 +144,15 @@ function CCBladeSystem(nblades_list, rhub_list, rtip_list, radii_list, chords_li
 
     # build CCBlade.Section lists
     sectionlists = buildsections(nblades_list, rtip_list, radii_list, chords_list, twists_list, Res_list, Ms_list, airfoilcontours_list, airfoilnames_list; kwargs...)
-    
+
     # build rlists
     rlists = sections2radii.(sectionlists)
-    
+
     # check index length
     @assert length(index) == length(positions) "length of `index` must match the length of `positions`"
     @assert length(index) == length(orientations) "length of `index` must match the length of `orientations`"
     @assert maximum(index) <= length(rotors) "maximum rotor index cannot exceed the number of rotors"
-    
+
     # build rotor system
     rotorsystem = CCBladeSystem(rotors, sectionlists, rlists, index, positions, orientations, spindirections)
 
@@ -163,7 +163,7 @@ end
 """
 Multiple dispatch for pre-created airfoil object.
 """
-function CCBladeSystem(nblades_list, rhub_list, rtip_list, radii_list, chords_list, twists_list, 
+function CCBladeSystem(nblades_list, rhub_list, rtip_list, radii_list, chords_list, twists_list,
             airfoilfunctions, index, positions, orientations, spindirections;
             kwargs...#, closefigure = true
             )
@@ -175,18 +175,18 @@ function CCBladeSystem(nblades_list, rhub_list, rtip_list, radii_list, chords_li
 
     # build CCBlade.Rotor objects
     rotors = buildrotors(nblades_list, radii_list, rhub_list, rtip_list; kwargs...)
-    
+
     # build CCBlade.Section lists
     sectionlists = buildsections(nblades_list, rtip_list, radii_list, chords_list, twists_list, airfoilfunctions; kwargs...)
-    
+
     # build rlists
     rlists = sections2radii.(sectionlists)
-    
+
     # check index length
     @assert length(index) == length(positions) "length of `index` must match the length of `positions`"
     @assert length(index) == length(orientations) "length of `index` must match the length of `orientations`"
     @assert maximum(index) <= length(rotors) "maximum rotor index cannot exceed the number of rotors"
-    
+
     # build rotor system
     rotorsystem = CCBladeSystem(rotors, sectionlists, rlists, index, positions, orientations, spindirections)
 
@@ -195,11 +195,11 @@ end
 
 
 @inline function buildrotors(nblades_list, radii_list, rhub_list, rtip_list; machcorrection = nothing, kwargs...)
-    
+
     @assert length(nblades_list) == length(radii_list) "list of nblades and list of radii must be the same length"
     @assert length(nblades_list) == length(rhub_list) "list of nblades and list of hub radii must be the same length"
     @assert length(nblades_list) == length(rtip_list) "list of nblades and list of tip radii must be the same length"
-    
+
     rotors = Vector{CC.Rotor}(undef,length(nblades_list))
     for i in 1:length(rotors)
         # note: Mach correction on the fly not required
@@ -210,24 +210,24 @@ end
 
 
 @inline function buildsections(nblades_list, rtip_list, radii_list, chords_list, twists_list, airfoilfunctions; kwargs...)
-    
+
     @assert length(nblades_list) == length(chords_list) "list of nblades and list of chords must be the same length"
     @assert length(nblades_list) == length(twists_list) "list of nblades and list of twists must be the same length"
     @assert length(nblades_list) == length(airfoilfunctions) "list of nblades and list of airfoilfunctions must be the same length"
-    
+
     sectionlists = rotor2sections.(rtip_list, radii_list, chords_list, twists_list, airfoilfunctions; kwargs...)
-    
+
     return sectionlists
 end
 
 
 @inline function buildsections(nblades_list, rtip_list, radii_list, chords_list, twists_list, Res_list, Ms_list, airfoilcontours_list, airfoilnames_list; kwargs...)
-    
+
     @assert length(nblades_list) == length(chords_list) "list of nblades and list of chords must be the same length"
     @assert length(nblades_list) == length(twists_list) "list of nblades and list of twists must be the same length"
     @assert length(nblades_list) == length(airfoilcontours_list) "list of nblades and list of airfoil contour files must be the same length"
     @assert length(nblades_list) == length(airfoilnames_list) "list of nblades and list of airfoil names must be the same length"
-    
+
     # sectionlists = Vector{Vector{CC.Section}}(undef,length(rotors))
     sectionlists = rotor2sections.(rtip_list, radii_list, chords_list, twists_list, Res_list, Ms_list, airfoilcontours_list, airfoilnames_list; kwargs...)
     return sectionlists
@@ -235,15 +235,15 @@ end
 
 
 @inline function buildsections(nblades_list, rtip_list, radii_list, chords_list, twists_list, Res_list, airfoilcontours_list, airfoilnames_list; kwargs...)
-    
+
     @assert length(nblades_list) == length(chords_list) "list of nblades and list of chords must be the same length"
     @assert length(nblades_list) == length(twists_list) "list of nblades and list of twists must be the same length"
     @assert length(nblades_list) == length(airfoilcontours_list) "list of nblades and list of airfoil contour files must be the same length"
     @assert length(nblades_list) == length(airfoilnames_list) "list of nblades and list of airfoil names must be the same length"
-    
+
     # sectionlists = Vector{Vector{CC.Section}}(undef,length(rotors))
     sectionlists = rotor2sections.(rtip_list, radii_list, chords_list, twists_list, Res_list, airfoilcontours_list, airfoilnames_list; kwargs...)
-    
+
     return sectionlists
 end
 
@@ -288,7 +288,7 @@ end
 
 """
 function rotor2sections(rtip, radii, chords, twists, Res, Ms, airfoilcontours, airfoilnames; kwargs...)
-    
+
     cr75 = FM.linear(radii ./ rtip, chords, 0.75) / FM.linear(radii ./ rtip, radii, 0.75)
     polars = rotor2polars(radii, chords, cr75, Res, Ms, airfoilcontours, airfoilnames; kwargs...)
     sections = CC.Section.(radii, chords, twists, polars)
@@ -309,10 +309,10 @@ end
 
 """
 function rotor2sections(rtip, radii, chords, twists, airfoilfunctions; kwargs...)
-    
+
     cr75 = FM.linear(radii ./ rtip, chords, 0.75) / FM.linear(radii ./ rtip, radii, 0.75)
     sections = CC.Section.(radii, chords, twists, airfoilfunctions)
-    
+
     return sections
 end
 
@@ -348,14 +348,14 @@ Rather than provide Reynolds numbers for each section, provide performance metri
 * `N_Re_list::Vector{Vector{Int}}` : each element is a vector whose elements prescribe how many Reynold's numbers to use at each radial station to interpolate airfoil data
 
 """
-function CCBladeSystem(nblades_list, rhub_list, rtip_list, radii_list, chords_list, twists_list, 
+function CCBladeSystem(nblades_list, rhub_list, rtip_list, radii_list, chords_list, twists_list,
             airfoilcontours_list, airfoilnames_list, index, positions, orientations, spindirection,
             vinf_low, vinf_high, rpm_low, rpm_high, N_Re_list;
             kwargs...)
 
     Res_list = Re_range.(radii_list, chords_list, Ref(vinf_low), Ref(vinf_high), Ref(rpm_low), Ref(rpm_high), N_Re_list; kwargs...)
 
-    return CCBladeSystem(nblades_list, rhub_list, rtip_list, radii_list, chords_list, twists_list, 
+    return CCBladeSystem(nblades_list, rhub_list, rtip_list, radii_list, chords_list, twists_list,
                 airfoilcontours_list, airfoilnames_list, index, positions, orientations, spindirection, Res_list; kwargs...)
 end
 
@@ -415,8 +415,8 @@ Build a vector of airfoil functions for each rotor section.
 
 """
 function rotor2polars(radii, chords, cr75, Res_list, contourfiles, airfoilnames;
-            polardirectory = joinpath(topdirectory, "data", "airfoil", "polars", TODAY), 
-            runxfoil = true, useoldfiles = true, viternaextrapolation=true, 
+            polardirectory = joinpath(topdirectory, "data", "airfoil", "polars", TODAY),
+            runxfoil = true, useoldfiles = true, viternaextrapolation=true,
             rotationcorrection=true, radians = false, kwargs...)
 
     @assert length(radii) == length(chords) "length of radii and chords inconsistent"
@@ -459,10 +459,10 @@ function rotor2polars(radii, chords, cr75, Res_list, contourfiles, airfoilnames;
         if runxfoil && (!useoldfiles || !prod(i_existingfiles_uncorrected))
             airfoil2xfoil(Res, contourfiles[i_radius], airfoilnames[i_radius]; runxfoil, useoldfiles, polardirectory, kwargs...)
         end
-        
+
         airfoilobjects[i_radius] = correctalignpolars(Res, airfoilnames[i_radius], cr75; polardirectory, viternaextrapolation, rotationcorrection, kwargs...)
     end
-    
+
     return airfoilobjects
 end
 
@@ -471,8 +471,8 @@ end
 Multiple dispatch for providing Mach corrections a priori.
 """
 function rotor2polars(radii, chords, cr75, Res_list, Ms_list, contourfiles, airfoilnames;
-            polardirectory=joinpath(topdirectory, "data", "airfoil", "polars", TODAY), 
-            runxfoil=true, useoldfiles=true, viternaextrapolation=true, 
+            polardirectory=joinpath(topdirectory, "data", "airfoil", "polars", TODAY),
+            runxfoil=true, useoldfiles=true, viternaextrapolation=true,
             rotationcorrection=true, radians=false, kwargs...)
 
     @assert length(radii) == length(chords) "length of radii and chords inconsistent"
@@ -496,7 +496,7 @@ function rotor2polars(radii, chords, cr75, Res_list, Ms_list, contourfiles, airf
             filenames_corrected = airfoilfilenames(airfoilnames[i_radius], Res, Ms; viternaextrapolation=viternaextrapolation, rotationcorrection=rotationcorrection, aoaset=false)
             filepaths_corrected = joinpath.(Ref(polardirectory), filenames_corrected)
             i_existingfiles_corrected = isfile.(filepaths_corrected)
-            
+
             if prod(i_existingfiles_corrected)
                 if length(Res) == 1
                     airfoilobjects[i_radius] = CC.AlphaMachAF(filepaths_corrected; radians)
@@ -607,15 +607,15 @@ function airfoil2xfoil(Res, contourfile, airfoilname;
 
     # if verbose; println("\t"^v_lvl, "Preparing $contourfile:\n","\t"^v_lvl,"------------------------------------\n"); end
     @assert isfile(contourfile) "`contourfile` must be a path to a csv formatted airfoil contour file"
-    
+
     # bookkeeping for filenames
     filenames_uncorrected = airfoilfilenames(airfoilname, Res; M=0, viternaextrapolation=false, rotationcorrection=false, aoaset=false)
     filepaths_uncorrected = joinpath.(Ref(polardirectory), filenames_uncorrected)
     i_existingfiles_uncorrected = isfile.(filepaths_uncorrected)
-    
+
     # prepare polar directory
     if !isdir(polardirectory); mkpath(polardirectory); end
-    
+
     # write vanilla polars from xfoil
     if verbose; println("\t"^v_lvl, "Reading $contourfile\n"); end
 
@@ -623,7 +623,7 @@ function airfoil2xfoil(Res, contourfile, airfoilname;
 
     for (i_Re, Re) in enumerate(Res)
         if verbose; println("\n\t"^v_lvl, "==================== Re = $Re, M = $M ===================="); end
-        
+
         if !i_existingfiles_uncorrected[i_Re] || !useoldfiles
 
             # write uncorrected polar
@@ -669,26 +669,26 @@ function airfoil2xfoil(Res, Ms, contourfile, airfoilname;
 
     # if verbose; println("\t"^v_lvl, "Preparing $contourfile:\n","\t"^v_lvl,"------------------------------------\n"); end
     @assert isfile(contourfile) "`contourfile` must be a path to a csv formatted airfoil contour file"
-    
+
     # bookkeeping for filenames
     filenames_uncorrected = airfoilfilenames(airfoilname, Res, Ms; viternaextrapolation=false, rotationcorrection=false, aoaset=false)
     filepaths_uncorrected = joinpath.(Ref(polardirectory), filenames_uncorrected)
     i_existingfiles_uncorrected = isfile.(filepaths_uncorrected)
-    
+
     # prepare polar directory
     if !isdir(polardirectory); mkpath(polardirectory); end
-    
+
     # write vanilla polars from xfoil
     if verbose; println("\t"^v_lvl, "Reading $contourfile\n"); end
-    
+
     xy = DF.readdlm(contourfile, ',', Float64, '\n'; skipstart = skipstart)
-    
+
     for (i_M, M) in enumerate(Ms)
         for (i_Re, Re) in enumerate(Res)
             if verbose; println("\n\t"^v_lvl, "==================== Re = $Re, M = $M ===================="); end
-            
+
             if !i_existingfiles_uncorrected[i_Re] || !useoldfiles
-                
+
                 # write uncorrected polar
                 cl, cd, cdp, cm, conv = XF.alpha_sweep(xy[:,1], xy[:,2], xfoil_alpha, Re;
                                             iter=xfoil_iter,
@@ -704,7 +704,7 @@ function airfoil2xfoil(Res, Ms, contourfile, airfoilname;
                 angleconversion = radians ? pi / 180.0 : 1
                 thisobject = CC.AlphaAF(xfoil_alpha[conv] .* angleconversion, cl[conv], cd[conv], airfoilname, Re * 1.0, M * 1.0)
                 CC.write_af(filepaths_uncorrected[i_Re, i_M], thisobject)
-                
+
                 if plotoutput
                     plotairfoil(thisobject, filenames_uncorrected[i_Re, i_M], airfoilname, Re, M;
                         viternaextrapolation=false, rotationcorrection=false,
@@ -833,7 +833,7 @@ function correctalignpolars(Res, airfoilname, cr75;
     objecttags = ""
     if viternaextrapolation; objecttags *= ", extrapolated"; end
     if rotationcorrection; objecttags *= ", w/ rotation correction"; end
-    @infiltrate
+    # @infiltrate
     airfoilobject = CC.AlphaReAF(α_table, typeof(α_table[1]).(Re_table), cl_table, cd_table, "$airfoilname" * objecttags)
 
     # save files
@@ -865,22 +865,22 @@ function correctalignpolars(Res, Ms, airfoilname, cr75;
 
     # filenames_aoaset = airfoilfilenames(airfoilname, Res; M=0, viternaextrapolation, rotationcorrection, aoaset=true)
     # filepaths_aoaset = joinpath.(Ref(polardirectory), filenames_aoaset)
-    
+
     # compile viterna and rotation corrected files
     α_list = Array{Vector,2}(undef, length(Res), length(Ms))
     cl_list = Array{Vector,2}(undef, length(Res), length(Ms))
     cd_list = Array{Vector,2}(undef, length(Res), length(Ms))
     for (i_M, M) in enumerate(Ms)
         for (i_Re, Re) in enumerate(Res)
-            
+
             thisobject = CC.AlphaAF(filepaths_uncorrected[i_Re, i_M]; radians)
             α = thisobject.alpha
             cl = thisobject.cl
             cd = thisobject.cd
-            
+
             if viternaextrapolation
                 α, cl, cd = CC.viterna(α, cl, cd, cr75) # only use converged values
-                
+
                 if plotoutput
                     plotairfoil(α, cl, cd, filenames[i_Re, i_M], airfoilname, Re, M;
                         viternaextrapolation = true, rotationcorrection = false,
@@ -888,12 +888,12 @@ function correctalignpolars(Res, Ms, airfoilname, cr75;
                         extension = plotextension, tag = "", clearfigure = true, closefigure = true)
                 end
             end
-            
+
             if rotationcorrection
                 for (i_α, this_α) in enumerate(α)
                     cl[i_α], cd[i_α] = CC.rotation_correction(CC.DuSeligEggers(), cl[i_α], cd[i_α], cr75, 0.75, pi/rotationcorrection_J, this_α)
                 end
-                
+
                 if plotoutput
                     plotairfoil(α, cl, cd, filenames[i_Re, i_M], airfoilname, Re, M;
                         viternaextrapolation = viternaextrapolation, rotationcorrection = true,
@@ -906,7 +906,7 @@ function correctalignpolars(Res, Ms, airfoilname, cr75;
             cd_list[i_Re, i_M] = cd
         end
     end
-    
+
     # interpolate to common alphas
     α_table = α_list[1,1]
     Re_table = Res
@@ -919,13 +919,13 @@ function correctalignpolars(Res, Ms, airfoilname, cr75;
             cd_table[:,i_Re, i_M] .= FM.linear(α_list[i_Re, i_M], cd_list[i_Re, i_M], α_table)
         end
     end
-    
+
     # build object
     objecttags = ""
     if viternaextrapolation; objecttags *= ", extrapolated"; end
     if rotationcorrection; objecttags *= ", w/ rotation correction"; end
     airfoilobject = CC.AlphaReMachAF(α_table, typeof(α_table[1]).(Re_table), typeof(α_table[1]).(M_table), cl_table, cd_table, "$airfoilname" * objecttags)
-    
+
     # save files
     if savefiles
         CC.write_af(filepaths, airfoilobject)
@@ -1000,7 +1000,7 @@ end
 
 
 """
-    Re_range(radius, chord, vinf_low, vinf_high, rpm_low, rpm_high, N_Re; 
+    Re_range(radius, chord, vinf_low, vinf_high, rpm_low, rpm_high, N_Re;
         ν = 1.5e-5, Re_digits=-4, kwargs...)
 
 # Arguments:
@@ -1019,7 +1019,7 @@ end
 * `Re_digits`
 
 """
-function Re_range(radius, chord, vinf_low, vinf_high, rpm_low, rpm_high, N_Re; 
+function Re_range(radius, chord, vinf_low, vinf_high, rpm_low, rpm_high, N_Re;
             ν = 1.5e-5, Re_digits=-4, kwargs...)
 
     vtangential_low = rpm_low / 60.0 * 2 * pi * radius
@@ -1134,7 +1134,7 @@ end
 
 """
     plotrotor(filename, rotorname, rs, chords, twists;
-        cratio=1.0, savefigure=true, savepath=joinpath(topdirectory, "data", "plots", TODAY), 
+        cratio=1.0, savefigure=true, savepath=joinpath(topdirectory, "data", "plots", TODAY),
         extension=".pdf", clearfigure=true, closefigure=true)
 
 Plots rotor geometry.
@@ -1158,7 +1158,7 @@ Plots rotor geometry.
 
 """
 function plotrotor(filename, rotorname, rs, chords, twists;
-            cratio=1.0, savefigure=true, savepath=joinpath(topdirectory, "data", "plots", TODAY), 
+            cratio=1.0, savefigure=true, savepath=joinpath(topdirectory, "data", "plots", TODAY),
             extension=".pdf", clearfigure=true, closefigure=true)
 
     # set up units
@@ -1191,7 +1191,7 @@ function plotrotor(filename, rotorname, rs, chords, twists;
         savename = splitext(filename)[1] * extension
         fig.savefig(joinpath(savepath, savename), bbox_inches="tight")
     end
-    
+
     if closefigure; plt.close(filename); end
 
     return nothing
@@ -1211,7 +1211,7 @@ end
 * `vinflow::Float64`: the magnitude of the freestream in the negative thrust direction.
 """
 function rotorinflow(freestream, orientation)#, interstream)
-    
+
     Vinf = freestream2vector(freestream)
     vinflow = -LA.dot(Vinf, orientation)
 
@@ -1270,7 +1270,7 @@ function solverotorsnondimensional(rotorsystem, omegas, freestream, environment)
 
     # pre-allocate solution
     Js, Ts, Qs, us, vs = solverotors(rotorsystem, omegas, freestream, environment)
-    
+
     CTs = similar(Qs)
     CQs = similar(Qs)
     ηs = similar(Qs)
@@ -1295,13 +1295,13 @@ end
 In-place version of solverotorsnondimensional.
 """
 function solverotorsnondimensional!(Js, Ts, Qs, CTs, CQs, ηs, rotorsystem, omegas, freestream, environment)#, interstream::Interstream)
-    
+
     # extract rotor info
     orientations = rotorsystem.orientations
-    
+
     # operating conditions
     vinflows = rotorinflow.(Ref(freestream), orientations)
-    
+
     # pre-allocate solution
     solverotors!(Js, Ts, Qs, rotorsystem, omegas, freestream, environment)
 
@@ -1323,16 +1323,16 @@ end
 In-place version of solverotorsnondimensional including `us` and `vs`.
 """
 function solverotorsnondimensional!(Js, Ts, Qs, CTs, CQs, ηs, us, vs, rotorsystem, omegas, freestream, environment)#, interstream::Interstream)
-    
+
     # extract rotor info
     orientations = rotorsystem.orientations
-    
+
     # operating conditions
     vinflows = rotorinflow.(Ref(freestream), orientations)
-    
+
     # pre-allocate solution
     solverotors!(Js, Ts, Qs, us, vs, rotorsystem, omegas, freestream, environment)
-    
+
     # iterate over rotors
     for (i, rotorindex) in enumerate(rotorsystem.index)
         # isolate rotor
@@ -1369,7 +1369,7 @@ Solves the rotor system at the specified RPM, freestream, and environment.
 
 """
 function solverotors(rotorsystem, omegas, freestream, environment)#, interstream::Interstream)
-    
+
     # pre-allocate solution
     Js = zeros(length(rotorsystem.index))
     Ts = similar(Js)
@@ -1402,7 +1402,7 @@ In-place instance of `solverotors`.
 
 # Modifies:
 
-* `Js::Vector{Float64}` 
+* `Js::Vector{Float64}`
 * `Ts::Vector{Float64}`
 * `Qs::Vector{Float64}`
 * `us::Vector{Vector{Float64}}`
@@ -1410,25 +1410,25 @@ In-place instance of `solverotors`.
 
 """
 function solverotors!(Js, Ts, Qs, us, vs, rotorsystem, omegas, freestream, environment)#, interstream::Interstream)
-    
+
     # extract rotor info
     rlists = rotorsystem.rlists[rotorsystem.index]
     orientations = rotorsystem.orientations
-    
+
     # operating conditions
     vinflows = rotorinflow.(Ref(freestream), orientations)
     operatingpoints_list = rotor2operatingpoints.(vinflows, rlists, omegas, Ref(environment))
-    
+
     # iterate over rotors
     for (i, rotorindex) in enumerate(rotorsystem.index)
-        
+
         # isolate rotor
         rotor = rotorsystem.rotors[rotorindex]
         sections = rotorsystem.sectionlists[rotorindex]
-        
+
         # isolate operating conditions
         operatingpoints = operatingpoints_list[i]
-        
+
         # solve CCBlade
         outputs = CC.solve.(Ref(rotor), sections, operatingpoints)
         T, Q = CC.thrusttorque(rotor, sections, outputs)
@@ -1437,7 +1437,7 @@ function solverotors!(Js, Ts, Qs, us, vs, rotorsystem, omegas, freestream, envir
         us[i][:] .= outputs.u
         vs[i][:] .= outputs.v
     end
-    
+
     # calculate Js
     Js .= vinflows ./ omegas * 2 * pi ./ [2 * rotor.Rtip for rotor in rotorsystem.rotors[rotorsystem.index]]
 
@@ -1472,31 +1472,31 @@ In-place instance of `solverotors`.
 
 """
 function solverotors!(Js, Ts, Qs, rotorsystem, omegas, freestream, environment)#, interstream::Interstream)
-    
+
     # extract rotor info
     rlists = rotorsystem.rlists[rotorsystem.index]
     orientations = rotorsystem.orientations
-    
+
     # operating conditions
     vinflows = rotorinflow.(Ref(freestream), orientations)
     operatingpoints_list = rotor2operatingpoints.(vinflows, rlists, omegas, Ref(environment))
-    
+
     # iterate over rotors
     for (i, rotorindex) in enumerate(rotorsystem.index)
         # isolate rotor
         rotor = rotorsystem.rotors[rotorindex]
         sections = rotorsystem.sectionlists[rotorindex]
-        
+
         # isolate operating conditions
         operatingpoints = operatingpoints_list[i]
-        
+
         # solve CCBlade
         outputs = CC.solve.(Ref(rotor), sections, operatingpoints)
         T, Q = CC.thrusttorque(rotor, sections, outputs)
         Ts[i] = T
         Qs[i] = Q
     end
-    
+
     # calculate Js
     Js .= vinflows ./ omegas * 2 * pi ./ [2 * rotor.Rtip for rotor in rotorsystem.rotors[rotorsystem.index]]
 
@@ -1523,18 +1523,18 @@ solverotor(rotor, sections, operatingpoints) = CC.solve.(Ref(rotor), sections, o
 
 """
 function solverotors_outputs(rotorsystem, omegas, freestream, environment)
-    
+
     # extract rotor info
     rlists = rotorsystem.rlists[rotorsystem.index]
     orientations = rotorsystem.orientations
-    
+
     # operating conditions
     vinflows = rotorinflow.(Ref(freestream), orientations)
     operatingpoints_list = rotor2operatingpoints.(vinflows, rlists, omegas, Ref(environment))
-    
+
     # solve rotors
     outputs_list = solverotor.(rotorsystem.rotors[rotorsystem.index], rotorsystem.sectionlists[rotorsystem.index], operatingpoints_list)
-    
+
     # calculate Js
     Js = vinflows ./ omegas * 2 * pi ./ [2 * rotor.Rtip for rotor in rotorsystem.rotors[rotorsystem.index]]
 
@@ -1585,20 +1585,20 @@ function induced2wakefunction(rotorsystem, us, vs;
     function wakefunction(X)
         Vwake = zeros(3)
         for (irotor, rotorindex) in enumerate(rotorsystem.index)
-            
+
             # translate origin to rotor center (R is the vector from the rotor center to X)
             R = X - rotorsystem.positions[irotor]
             r = LA.norm(R)
-            
+
             # calculate distance from rotor plane (positive is in the negative thrust direction)
             distance2plane = -LA.dot(R, rotorsystem.orientations[irotor])
-            
+
             # angle between normal and R (\in [0,\pi])
             θ = acos(distance2plane/r)
-            
+
             # calculate distance to centerline
             distance2centerline = r * sin(θ) # always positive
-            
+
             # check if X is within the wake
             Rtip = rotorsystem.rotors[rotorindex].Rtip
             if distance2centerline < wakeshapefunctions[irotor](Rtip, distance2plane)
@@ -1607,17 +1607,17 @@ function induced2wakefunction(rotorsystem, us, vs;
                 v = swirlinterpolations[irotor](rotorsystem.rlists[rotorindex], vs[irotor], distance2centerline, Rtip) * swirlmultipliers[irotor](distance2plane, Rtip)
                 # get axial unit vector
                 axialhat = -rotorsystem.orientations[irotor]
-                
+
                 # get tangential unit vector
                 tangentialhat = LA.cross(rotorsystem.orientations[irotor], R)
                 tangentialhat ./= LA.norm(tangentialhat)
-                
+
                 # project R onto the plane parallel to normal
                 Vinduced = u * axialhat + v * tangentialhat * (rotorsystem.spindirections[irotor] ? 1 : -1)
                 Vwake .+= Vinduced
             end
         end
-        
+
         return Vwake
     end
 end

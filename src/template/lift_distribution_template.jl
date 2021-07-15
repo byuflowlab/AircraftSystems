@@ -52,7 +52,7 @@ struct LiftDistribution{V1,V2,V3,V4,V5,V6,V7} <: Parameters
     surfacenames::V7
 end
 
-LiftDistribution(CLs, CDs, CYs, cls, cds, cys, cmxs, cmys, cmzs, cfs, cms, plotdirectory, plotbasename, plotextension, ploti, surfacenames; wakefunctions=[nothing]) = 
+LiftDistribution(CLs, CDs, CYs, cls, cds, cys, cmxs, cmys, cmzs, cfs, cms, plotdirectory, plotbasename, plotextension, ploti, surfacenames; wakefunctions=[nothing]) =
     LiftDistribution(CLs, CDs, CYs, cls, cds, cys, cmxs, cmys, cmzs, cfs, cms, wakefunctions, plotdirectory, plotbasename, plotextension, ploti, surfacenames)
 
 # function (rs::RotorSweepParameters{V1, V2, V3, V4, V5})(alphas, omega...)
@@ -93,7 +93,7 @@ LiftDistribution(CLs, CDs, CYs, cls, cds, cys, cmxs, cmys, cmzs, cfs, cms, plotd
 * `surfacenames`
 
 """
-function lift_distribution_template(ploti, alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip;
+function lift_distribution_template(ploti, alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, wing_le_sweep, wing_ϕ;
             plotdirectory=joinpath(topdirectory,"data","plots",TODAY),
             plotbasename="default",
             plotextension=".pdf",
@@ -102,11 +102,7 @@ function lift_distribution_template(ploti, alphas, wing_b, wing_TR, wing_AR, win
             kwargs...)
 
     # prepare subsystems
-<<<<<<< HEAD
-    wings = simplewingsystem(wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip; kwargs...)
-=======
-    wings = simplewingsystem(; wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, kwargs...)
->>>>>>> 779f9ec261fa9820596a550792d2e421c84812ea
+    wings = simplewingsystem(wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, wing_le_sweep, wing_ϕ; kwargs...)
     rotors = nothing
     nonliftingbodies = nothing
     structures = nothing
@@ -118,7 +114,7 @@ function lift_distribution_template(ploti, alphas, wing_b, wing_TR, wing_AR, win
 
     # compile actions
     actions = [solve_wing_CF, lift_moment_distribution]
-    
+
     # initialize parameters
     wakefunctions, CLs, CDs, CYs = solve_wing_CF(aircraft, alphas) # let steprange be replaced by alphas
     cls, cds, cys, cmxs, cmys, cmzs = lift_moment_distribution(aircraft, alphas) # let steprange be replaced by alphas
@@ -138,34 +134,34 @@ function lift_distribution_template(ploti, alphas, wing_b, wing_TR, wing_AR, win
     @assert length(cfs) == length(surfacenames) "length of cfs is inconsistent: expected $(length(surfacenames)); got $(length(cfs))"
     @assert length(cms) == length(surfacenames) "length of cms is inconsistent: expected $(length(surfacenames)); got $(length(cms))"
     @assert size(cfs[1]) == (3, nspanwisepanels1) "size of cfs[1] is inconsistent: expected $((3, nspanwisepanels1)); got $(size(cfs[1]))"
-    
+
     # prepare plot directory
     if !isdir(plotdirectory); mkpath(plotdirectory); end
-    
+
     # build parameters struct
     parameters = LiftDistribution(CLs, CDs, CYs, cls, cds, cys, cmxs, cmys, cmzs, cfs, cms, wakefunctions, plotdirectory, plotbasename, plotextension, ploti, surfacenames)
-    
+
     # build freestream_function
     function freestream_function(aircraft, parameters, environment, alphas, stepi)
-        
+
         # calculate freestream
         vinf = 1.0 # + ti # arbitrary for lift distribution?
         alpha = alphas[stepi]
         beta = 0.0
         Omega = zeros(3)
         freestream = Freestream(vinf, alpha, beta, Omega)
-        
+
         return freestream
     end
-    
+
     # build environment_function
     function environment_function(aircraft, parameters, alphas, stepi)
         Environment() # arbitrary
     end
-    
+
     # compile postactions
     postactions = [post_plot_cl_alpha_sweep, post_plot_lift_moment_distribution]
-    
+
     # build objective_function
     objective_function(aircraft, parameters, freestream, environment, alphas) = 0.0
 

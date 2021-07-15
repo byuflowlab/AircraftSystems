@@ -27,18 +27,18 @@ include("PROWIMData.jl")
 
 T.@testset "rotors" begin
 
-include("epema_rotor_sweep.jl")
+# include("epema_rotor_sweep.jl")
 
-include("rotor_wakefunction.jl")
+# include("rotor_wakefunction.jl")
 # include("rotor_wakefunction.jl") #currently doesn't work for me, I think the parameters need adjusting first but I'll let you handle it
 
 end # test rotors
 
 T.@testset "wings" begin
 
-include("prowim_propsoff_clalpha.jl")
+# include("prowim_propsoff_clalpha.jl")
 
-include("prowim_propsoff_liftdist.jl")
+# include("prowim_propsoff_liftdist.jl")
 
 # include("prowim_test_cl_CL.jl")
 
