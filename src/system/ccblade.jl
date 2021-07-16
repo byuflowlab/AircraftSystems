@@ -430,7 +430,6 @@ function rotor2polars(radii, chords, cr75, Res_list, contourfiles, airfoilnames;
         airfoilobjects = Array{CC.AlphaReAF,1}(undef,length(radii))
     end
 
-
     # get polars for each radial station
     for (i_radius, radius) in enumerate(radii)
         Res = Res_list[i_radius]
@@ -481,9 +480,17 @@ function rotor2polars(radii, chords, cr75, Res_list, Ms_list, contourfiles, airf
     @assert length(radii) == length(airfoilnames) "length of radii and airfoilnames inconsistent"
 
     if length(Res_list[1]) == 1
-        airfoilobjects = Array{CC.AlphaMachAF,1}(undef,length(radii))
+        if length(Ms_list[1]) == 1
+            airfoilobjects = Array{CC.AlphaAF,1}(undef,length(radii))
+        else
+            airfoilobjects = Array{CC.AlphaMachAF,1}(undef,length(radii))
+        end
     else
-        airfoilobjects = Array{CC.AlphaReMachAF,1}(undef,length(radii))
+        if length(Ms_list[1]) == 1
+            airfoilobjects = Array{CC.AlphaReAF,1}(undef,length(radii))
+        else
+            airfoilobjects = Array{CC.AlphaReMachAF,1}(undef,length(radii))
+        end
     end
 
     # get polars for each radial station
@@ -498,10 +505,18 @@ function rotor2polars(radii, chords, cr75, Res_list, Ms_list, contourfiles, airf
             i_existingfiles_corrected = isfile.(filepaths_corrected)
 
             if prod(i_existingfiles_corrected)
-                if length(Res) == 1
-                    airfoilobjects[i_radius] = CC.AlphaMachAF(filepaths_corrected; radians)
+                if length(Res) == 1 
+                    if length(Ms) == 1
+                        airfoilobjects[i_radius] = CC.AlphaAF(filepaths_corrected[1]; radians)
+                    else
+                        airfoilobjects[i_radius] = CC.AlphaMachAF(filepaths_corrected; radians)
+                    end
                 else
-                    airfoilobjects[i_radius] = CC.AlphaReMachAF(filepaths_corrected; radians)
+                    if length(Ms) == 1
+                        airfoilobjects[i_radius] = CC.AlphaReAF(filepaths_corrected; radians)
+                    else
+                        airfoilobjects[i_radius] = CC.AlphaReMachAF(filepaths_corrected; radians)
+                    end
                 end
 
                 continue
@@ -833,7 +848,7 @@ function correctalignpolars(Res, airfoilname, cr75;
     objecttags = ""
     if viternaextrapolation; objecttags *= ", extrapolated"; end
     if rotationcorrection; objecttags *= ", w/ rotation correction"; end
-    # @infiltrate
+
     airfoilobject = CC.AlphaReAF(α_table, typeof(α_table[1]).(Re_table), cl_table, cd_table, "$airfoilname" * objecttags)
 
     # save files
@@ -1431,6 +1446,7 @@ function solverotors!(Js, Ts, Qs, us, vs, rotorsystem, omegas, freestream, envir
 
         # solve CCBlade
         outputs = CC.solve.(Ref(rotor), sections, operatingpoints)
+
         T, Q = CC.thrusttorque(rotor, sections, outputs)
         Ts[i] = T
         Qs[i] = Q
@@ -1560,19 +1576,11 @@ Interpolates rotor-induced velocities into a wake function of X.
 
 # Keyword Arguments:
 
-<<<<<<< HEAD
 * `wakeshapefunction = (Rtip, x) -> Rtip,` : function accepts a rotor radius and axial coordinate and returns the local wake radius
 * `axialinterpolations = (rs, us, r) -> FM.linear(rs, us, r)` : function accepts radial stations, axial velocities, and the radial coordinate and returns the unmodified axial induced velocity
 * `swirlinterpolations = (rs, vs, r) -> FM.linear(rs, vs, r)` : function accepts radial stations, swirl velocities, and the radial coordinate and returns the unmodified swirl induced velocity
 * `axialmultiplier = (u, distance2plane, Rtip) -> u * 2` : function multiplied by the axial interpolation function
 * `swirlmultiplier = (v, distance2plane, Rtip) -> v` : function multiplied by the swirlinterpolation function
-=======
-* `wakeshapefunction`: function accepts a rotor radius and axial coordinate and returns the local wake radius
-* `axialinterpolation`: function accepts radial stations, axial velocities, and the radial coordinate and returns the unmodified axial induced velocity
-* `swirlinterpolation`: function accepts radial stations, swirl velocities, and the radial coordinate and returns the unmodified swirl induced velocity
-* `axialmultiplier`: function multiplied by the axial interpolation function
-* `swirlmultiplier`: function multiplied by the swirlinterpolation function
->>>>>>> 779f9ec261fa9820596a550792d2e421c84812ea
 
 """
 function induced2wakefunction(rotorsystem, us, vs;
