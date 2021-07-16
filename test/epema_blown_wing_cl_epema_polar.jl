@@ -17,14 +17,13 @@ wing_θroot = 0.0
 wing_θtip = 0.0
 rotor_omegas = [AS.get_omega(Vinf=setup[:"Vinf"], J=setup[:"J"], D=rotor[:"diameter"])]
 nblades = [rotor[:"Nblades"]]
-rhub = [rotor[:"radius_hub"] / 2]
+rhub = [rotor[:"radius_hub"]]
 rtip = [rotor[:"radius"]]
 rotor_chord_data = rotor["r/R vs chord/R"]
 rotor_twist_data = rotor["r/R vs twist"]
 radii = [rotor_chord_data[:,1] * rtip[1]]
 rotor_chords = [rotor_chord_data[:,2] * rtip[1]]
-rotor_twists = [FM.linear(rotor_twist_data[:,1]*rtip[1], rotor_twist_data[:,2], radii[1])]
-# @infiltrate
+rotor_twists = [FM.linear(rotor_twist_data[:,1]*rtip[1], rotor_twist_data[:,2], radii[1])] * pi/180
 
 airfoilcontour = joinpath(contourdirectory, "epema_interpolated_bspline_n30_0700.dat")
 airfoilcontours = [fill(airfoilcontour, length(radii[1]))]
