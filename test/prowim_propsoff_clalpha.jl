@@ -10,7 +10,7 @@ wing_le_sweep = PROWIMData.wing["le_sweep"]
 wing_ϕ = PROWIMData.wing["dihedral"]
 plotbasename = "PROWIM_props_off"
 data_PROWIM_CL_alpha = AS.cl_alpha_sweep_template(alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, wing_le_sweep, wing_ϕ;
-        plotdirectory = joinpath(AS.topdirectory, "data","plots",TODAY),
+        plotdirectory = joinpath(AS.topdirectory, "data","plots",AS.TODAY),
         plotbasename = plotbasename,
         plotextension = ".pdf"
     )

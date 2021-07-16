@@ -41,11 +41,11 @@ function solve_rotor_wake(aircraft, parameters, freestream, environment, stepran
     axialmultipliers = parameters.axialmultipliers
     swirlmultipliers = parameters.swirlmultipliers
     wakefunction = induced2wakefunction(aircraft.rotorsystem, us, vs;
-        wakeshapefunctions = wakeshapefunctions,
-        axialinterpolations = axialinterpolations,
-        swirlinterpolations = swirlinterpolations,
-        axialmultipliers = axialmultipliers,
-        swirlmultipliers = swirlmultipliers
+        wakeshapefunctions,
+        axialinterpolations,
+        swirlinterpolations,
+        axialmultipliers,
+        swirlmultipliers
     )
 
     parameters.wakefunctions[stepi] = wakefunction
