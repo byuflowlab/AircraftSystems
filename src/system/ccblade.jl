@@ -1609,7 +1609,8 @@ function induced2wakefunction(rotorsystem, us, vs;
 
             # check if X is within the wake
             Rtip = rotorsystem.rotors[rotorindex].Rtip
-            if distance2centerline < wakeshapefunctions[irotor](Rtip, distance2plane)
+            Rhub = rotorsystem.rotors[rotorindex].Rhub
+            if distance2centerline < wakeshapefunctions[irotor](Rtip, distance2plane) && distance2centerline > Rhub #! Quick fix, not as comprehensive. Do we need another function? Or perhaps the wakeshapefunction outputs a lower and upper bound on the radius
                 # interpolate wake velocity
                 u = axialinterpolations[irotor](rotorsystem.rlists[rotorindex], us[irotor], distance2centerline, Rtip) * axialmultipliers[irotor](distance2plane, Rtip)
                 v = swirlinterpolations[irotor](rotorsystem.rlists[rotorindex], vs[irotor], distance2centerline, Rtip) * swirlmultipliers[irotor](distance2plane, Rtip)
