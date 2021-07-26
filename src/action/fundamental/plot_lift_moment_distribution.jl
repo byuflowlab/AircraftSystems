@@ -39,6 +39,12 @@ function plot_lift_moment_distribution(aircraft, parameters, freestream, environ
     plotstepi = parameters.plotstepi
     basename = parameters.plotbasename
 
+    # cycle through styles
+    styles = ["-", "--", "--^", "--v"]
+
+    # extract main wing span
+    b = aircraft.wingsystem.system.surfaces[1][end].rtr[2] * 2
+
     if stepi in plotstepi
 
         # extract info
@@ -55,15 +61,18 @@ function plot_lift_moment_distribution(aircraft, parameters, freestream, environ
 
         # create axes
         fig_lift_distribution = plt.figure(basename * "_lift_distribution")
+        fig_cf_distribution = plt.figure(basename * "_cf_distribution")
         nsurfaces = length(surfacenames)
         nsubplotbase = 300 + 10 * nsurfaces
         if stepi == parameters.plotstepi[1]
             fig_lift_distribution.clear()
+            fig_lift_distribution.add_subplot(111, ylabel = L"c_l", xlabel = L"2y/b")
+            fig_cf_distribution.clear()
             for isurface = 1:nsurfaces
-                fig_lift_distribution.add_subplot(nsubplotbase + 2 + (isurface-1) * nsurfaces, ylabel = L"c_d") # drag ylim = cd_ylim,
-                fig_lift_distribution.add_subplot(nsubplotbase + 3 + (isurface-1) * nsurfaces, ylabel = L"c_y", xlabel = L"y [m]") # side force ylim = cy_ylim,
-                fig_lift_distribution.add_subplot(nsubplotbase + 1 + (isurface-1) * nsurfaces, ylabel = L"c_l", title = surfacenames[isurface]) # lift ylim = cl_ylim,
-                # fig_lift_distribution.suptitle("t = $(steprange[stepi]), ti = $stepi") # add title
+                fig_cf_distribution.add_subplot(nsubplotbase + 2 + (isurface-1) * nsurfaces, ylabel = L"c_d") # drag ylim = cd_ylim,
+                fig_cf_distribution.add_subplot(nsubplotbase + 3 + (isurface-1) * nsurfaces, ylabel = L"c_y", xlabel = L"y [m]") # side force ylim = cy_ylim,
+                fig_cf_distribution.add_subplot(nsubplotbase + 1 + (isurface-1) * nsurfaces, ylabel = L"c_l", title = surfacenames[isurface]) # lift ylim = cl_ylim,
+                # fig_cf_distribution.suptitle("t = $(steprange[stepi]), ti = $stepi") # add title
 
                 # set axes
                 # axs[1].set_ylim(cd_ylim)
@@ -77,26 +86,33 @@ function plot_lift_moment_distribution(aircraft, parameters, freestream, environ
                 # axs[3].set_ylabel(L"c_l")
             end
         end
-        axs = fig_lift_distribution.get_axes()
+        ax_cl = fig_lift_distribution.get_axes()[1]
+        axs_cf = fig_cf_distribution.get_axes()
 
         # get color
         cratio = findfirst((x)->x==stepi,plotstepi) / length(plotstepi)
 
         # plot
-        axs = fig_lift_distribution.get_axes()
         for (isurface,cf) in enumerate(cfs)
             rs_plot = get_midpoints(lifting_line_rs[isurface][2,:])
+            ax_cl.plot(rs_plot ./ b * 2, cf[3,:], styles[isurface], color = (0.05, 0.85-cratio*0.7, 0.15 + 0.75 * cratio), label="$(surfacenames[isurface]), $stepsymbol = $(round(steprange[stepi],digits=3))")
             for icf = 1:3
-                axs[(isurface - 1) * nsurfaces + icf].plot(rs_plot, cf[icf,:], color=(0.05, 0.85-cratio*0.7, 0.15 + 0.75 * cratio), label="$stepsymbol = $(round(steprange[stepi],digits=3))")
+                axs_cf[(isurface - 1) * nsurfaces + icf].plot(rs_plot, cf[icf,:], color=(0.05, 0.85-cratio*0.7, 0.15 + 0.75 * cratio), label="$stepsymbol = $(round(steprange[stepi],digits=3))")
             end
         end
 
         # save
         if stepi == plotstepi[end] # last step
-            axs[3].legend(loc="upper left", bbox_to_anchor=(1.01,1)) # set legend
-            fig_lift_distribution.tight_layout() # clean up white space
-            savepath = joinpath(plotdirectory, plotbasename * "_lift_distribution" * plotextension)
-            fig_lift_distribution.savefig(savepath, bbox_inches="tight")
+            ax_cl.legend(loc="upper left", bbox_to_anchor=(1.01,1))
+            fig_lift_distribution.set_size_inches(10, 6, forward=true)
+            fig_lift_distribution.tight_layout()
+            savepath_cl = joinpath(plotdirectory, plotbasename * "_lift_distribution" * plotextension)
+            fig_lift_distribution.savefig(savepath_cl, bbox_inches="tight")
+            axs_cf[3].legend(loc="upper left", bbox_to_anchor=(1.01,1)) # set legend
+            fig_cf_distribution.set_size_inches(6, 10, forward=true)
+            fig_cf_distribution.tight_layout() # clean up white space
+            savepath_cf = joinpath(plotdirectory, plotbasename * "_cf_distribution" * plotextension)
+            fig_cf_distribution.savefig(savepath_cf, bbox_inches="tight")
         end
 
         # cms plot
@@ -137,6 +153,7 @@ function plot_lift_moment_distribution(aircraft, parameters, freestream, environ
         # save
         if stepi == plotstepi[end]
             axs[2].legend(loc="upper left", bbox_to_anchor=(1.01,1)) # set legend
+            fig_moment_distribution.set_size_inches(6, 10, forward=true)
             fig_moment_distribution.tight_layout() # clean up white space
             savepath = joinpath(plotdirectory, plotbasename * "_moment_distribution" * plotextension)
             fig_moment_distribution.savefig(savepath, bbox_inches="tight")

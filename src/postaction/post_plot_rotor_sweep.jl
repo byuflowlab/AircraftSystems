@@ -30,7 +30,7 @@
 
 """
 function post_plot_rotor_sweep(aircraft, parameters, steprange, stepsymbol)
-    
+
     # extract info
     CTs = parameters.CTs
     CQs = parameters.CQs
@@ -41,11 +41,11 @@ function post_plot_rotor_sweep(aircraft, parameters, steprange, stepsymbol)
     plotbasename = parameters.plotbasename
     plotextension = parameters.plotextension
     nrotors = length(aircraft.rotorsystem.index)
-    
+
     # check data
     @assert length(rotornames) == nrotors "length of rotornames is inconsistent: got $(length(rotornames)); expected $nrotors"
     @assert isdir(plotdirectory) "plotdirectory does not exist"
-    
+
     # prepare figure
     fig = plt.figure(plotbasename * "_rotor_sweep")
     fig.clear()
@@ -53,7 +53,7 @@ function post_plot_rotor_sweep(aircraft, parameters, steprange, stepsymbol)
     fig.add_subplot(312, ylabel = L"C_Q")
     fig.add_subplot(313, ylabel = L"\eta", xlabel = L"J")
     axs = fig.get_axes()
-    
+
     # plot
     for (i,ax) in enumerate(axs)
         for jrotor in 1:nrotors
@@ -64,7 +64,7 @@ function post_plot_rotor_sweep(aircraft, parameters, steprange, stepsymbol)
     end
 
     axs[end].legend(loc="upper left", bbox_to_anchor=(1.01,1))
-    fig.set_size_inches(14, 8, forward=true)
+    fig.set_size_inches(7, 4, forward=true)
     fig.tight_layout()
 
     # save
