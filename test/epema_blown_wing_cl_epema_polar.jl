@@ -69,14 +69,14 @@ parameters = args[2]
 panels = aircraft.wingsystem.system.surfaces[1]
 
 span_plot = aircraft.wingsystem.lifting_line_rs[1][2,2:end] / (wing[:"span"]/2) # normalized
-cls_plot = parameters.cfs[1][3,:]
+cls_plot = parameters.cls[1]
 wing_chords = FM.linear(epema_chords[:,1], epema_chords[:,2], range(epema_chords[1,1], stop=epema_chords[3,1], length=length(span_plot)))
-cls_plot = cls_plot .* wing_chords / wing[:"mac"]
+# cls_plot = cls_plot .* wing_chords / wing[:"mac"] #VortexLattice already normalizes it for now
 
 gammas = [panel.gamma * Vref for panel in aircraft.wingsystem.system.properties[1]]
 velocities = [panel.velocity * Vref for panel in aircraft.wingsystem.system.properties[1]]
 velocities_minus_rotor = velocities .- parameters.wakefunctions[1].(VL.top_center.(panels)) #w/o rotor-induced velocities
-cr = CartesianIndices(panels)
+# cr = CartesianIndices(panels)
 Δs = VL.top_vector.(panels)
 
 # back of the envelope approach
@@ -93,7 +93,7 @@ v_perp3 = LA.norm.([[v[1]; 0.0; v[3]] for v in v_perp3])
 cls_new3 = 2 * gammas' .* v_perp3' ./ (wing[:"mac"] * Vinf^2)
 
 plt.figure()
-plt.plot(span_plot, cls_plot, label="BEM+VLM")
+plt.plot(span_plot, cls_plot, label="VortexLattice output")
 plt.plot(results[:"lift distribution VLM rotors on"][:,1], results[:"lift distribution VLM rotors on"][:,2], label="Epema VLM model")
 plt.scatter(results[:"normalized cl experimental"][:,1], results[:"normalized cl experimental"][:,2], label="Epema experimental")
 plt.plot(span_plot, cls_new, label="2 * Γ / V_{infty}")

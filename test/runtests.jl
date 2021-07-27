@@ -53,8 +53,8 @@ include("PROWIMData.jl")
 
 # T.@testset "Epema Blown Wing Validation" begin #* still a work in progress. No errors that keep it from running, just not great results yet.
 
-# include("epema_blown_wing_cl.jl")
-    # include("epema_blown_wing_cl_epema_polar.jl") # uses the Epema polars from above
+    # include("epema_blown_wing_cl.jl")
+    include("epema_blown_wing_cl_epema_polar.jl") # uses the Epema polars from above
 
 # end
 
