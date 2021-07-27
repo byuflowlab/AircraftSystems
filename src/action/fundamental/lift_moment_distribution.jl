@@ -89,14 +89,30 @@ NOTE: THIS ACTION DOES NOT SOLVE THE VORTEX LATTICE. Call `solve_CF` prior to ca
 function lift_moment_distribution_blownwing(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol)
 
     # extract lift and moment distribution
-    cfs, cms = lifting_line_coefficients_blownwing(aircraft.wingsystem.system, aircraft.wingsystem.lifting_line_rs, aircraft.wingsystem.lifting_line_chords, parameters.wakefunctions[stepi])
+    cfs, cms = VL.lifting_line_coefficients(aircraft.wingsystem.system, aircraft.wingsystem.lifting_line_rs, aircraft.wingsystem.lifting_line_chords; frame = VL.Wind())
 
     # store to `parameters`
     nwings = length(aircraft.wingsystem.system.surfaces)
     for iwing in 1:nwings
+        # first determine cl w/o rotor induced velocities
+        Vref = aircraft.wingsystem.system.reference[1].V
+        panels = aircraft.wingsystem.system.surfaces[iwing]
+        gammas = [panel.gamma * Vref for panel in aircraft.wingsystem.system.properties[iwing]]
+        velocities = [panel.velocity * Vref for panel in aircraft.wingsystem.system.properties[iwing]]
+        velocities_minus_rotor = velocities .- parameters.wakefunctions[iwing].(VL.top_center.(panels)) #w/o rotor-induced velocities
+        Δs = VL.top_vector.(panels)
+        v_perp = LA.cross.(velocities_minus_rotor, Δs) ./ LA.norm.(Δs)
+        v_perp = LA.norm.([[v[1]; 0.0; v[3]] for v in v_perp])
+        Vinf = aircraft.wingsystem.system.freestream[1].Vinf
+
+        # this step normalizes by the mac
+        cls = 2 * gammas' .* v_perp' ./ (aircraft.wingsystem.system.reference[iwing].c * Vinf^2)
+
+        parameters.cls[iwing][:,stepi] = cls
+        # parameters.cls[iwing][:,stepi] = cfs[iwing][3,:]
+        
         parameters.cfs[iwing] = cfs[iwing]
         parameters.cms[iwing] = cms[iwing]
-        parameters.cls[iwing][:,stepi] = cfs[iwing][3,:]
         parameters.cds[iwing][:,stepi] = cfs[iwing][1,:]
         parameters.cys[iwing][:,stepi] = cfs[iwing][2,:]
         parameters.cmxs[iwing][:,stepi] = cms[iwing][1,:]
@@ -150,6 +166,7 @@ This version solves for the lifting line coefficients without the rotor induced 
 Modeled after `lifting_line_coefficients` in `VortexLattice.jl`.
 """
 function lifting_line_coefficients_blownwing(system, r, c, wakefunction)
+
     TF = promote_type(eltype(system), eltype(eltype(r)), eltype(eltype(c)))
     nsurf = length(system.surfaces)
     cf = Vector{Matrix{TF}}(undef, nsurf)
@@ -159,6 +176,7 @@ function lifting_line_coefficients_blownwing(system, r, c, wakefunction)
         cf[isurf] = Matrix{TF}(undef, 3, ns)
         cm[isurf] = Matrix{TF}(undef, 3, ns)
     end
+    
     return lifting_line_coefficients_blownwing!(cf, cm, system, r, c, wakefunction)
 end
 
