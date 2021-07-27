@@ -29,16 +29,15 @@ include("PROWIMData.jl")
 
 # include("epema_rotor_sweep.jl")
 
-# include("rotor_wakefunction.jl")
 # include("rotor_wakefunction.jl") #currently doesn't work for me, I think the parameters need adjusting first but I'll let you handle it
 
 # end # test rotors
 
 # T.@testset "wings" begin
 
-include("prowim_propsoff_clalpha.jl")
+# include("prowim_propsoff_clalpha.jl")
 
-include("prowim_propsoff_liftdist.jl")
+# include("prowim_propsoff_liftdist.jl")
 
 # include("prowim_test_cl_CL.jl")
 
@@ -54,14 +53,14 @@ include("prowim_propsoff_liftdist.jl")
 
 # T.@testset "Epema Blown Wing Validation" begin #* still a work in progress. No errors that keep it from running, just not great results yet.
 
-    # include("epema_blown_wing_cl.jl")
+# include("epema_blown_wing_cl.jl")
     # include("epema_blown_wing_cl_epema_polar.jl") # uses the Epema polars from above
 
 # end
 
 # T.@testset "Veldhuis Blown Wing Validation" begin
 
-#     include("veldhuis_blown_wing_cl.jl")
+# include("veldhuis_blown_wing_cl.jl")
 
 # end
 

@@ -1,14 +1,14 @@
-
-alphas = [0.0, 4.0, 10.0] .* pi/180
+alphas = PROWIMData.props_off["lift_distribution_alpha"]
 ploti = 1:length(alphas)
-wing_b = 640e-3 * 2
-wing_TR = 1.0 # hershey bar
-wing_c = 240e-3
+wing_b = PROWIMData.wing["span"]
+wing_TR = PROWIMData.wing["TR"] # 1.0 # hershey bar
+wing_c = PROWIMData.wing["chord"] # 240e-3
 wing_AR = wing_b / wing_c
-wing_θroot = 0.0
-wing_θtip = 0.0
-wing_le_sweep = 0.0
-wing_ϕ = 0.0
+wing_θroot = PROWIMData.wing["theta_root"]
+wing_θtip = PROWIMData.wing["theta_tip"]
+wing_le_sweep = PROWIMData.wing["le_sweep"]
+wing_ϕ = PROWIMData.wing["dihedral"]
+
 plotbasename = "PROWIM_props_off"
 data_PROWIM_lift_distribution = AS.lift_distribution_template(ploti, alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, wing_le_sweep, wing_ϕ;
     plotdirectory = joinpath(AS.topdirectory, "data","plots",AS.TODAY),
@@ -25,7 +25,7 @@ fig = plt.figure(plotbasename * "_cf_distribution")
 fig_lift = plt.figure(plotbasename * "_lift_distribution")
 axs = fig.get_axes()
 ax_lift = fig_lift.get_axes()[1]
-alpha_labels = [0,4,10]
+alpha_labels = Int.(round.(alphas .* 180/pi, digits=0))
 for (idata, data) in enumerate(prowim_lift_distribution_props_off)
     cratio = idata / length(alpha_labels)
     axs[3].scatter(data[:,1], data[:,2], marker = "x", color = (0.05, 0.85-cratio*0.7, 0.15 + 0.75 * cratio), label=LS.L"PROWIM, \alpha = " * "$(alpha_labels[idata])" * LS.L"^\circ")
