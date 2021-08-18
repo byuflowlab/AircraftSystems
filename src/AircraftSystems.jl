@@ -16,6 +16,8 @@ LA = LinearAlgebra
 import PyPlot
 plt = PyPlot
 import Splines
+import StaticArrays
+import Statistics
 using Test
 import VortexLattice
 VL = VortexLattice

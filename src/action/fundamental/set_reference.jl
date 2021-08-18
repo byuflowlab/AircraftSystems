@@ -6,7 +6,7 @@ README: define an `Action` object to solve a CCBlade rotor
 =###############################################################################################
 
 """
-    set_wing_reference(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol)
+    set_wing_reference(aircraft, parameters, freestream, environment, step_range, stepi, step_symbol)
 
 Action function.
 
@@ -16,21 +16,21 @@ Action function.
 * `parameters<:Parameters`: `Parameters` struct
 * `freestream::Freestream`: `Freestream` object
 * `environment::Environment` `Environment` object
-* `steprange::AbstractArray`: array of times for which the simulation is run
+* `step_range::AbstractArray`: array of times for which the simulation is run
 * `stepi::Int`: index of the current step
-* `stepsymbol::String`: defines the step, e.g. `alpha` or `time`
+* `step_symbol::String`: defines the step, e.g. `alpha` or `time`
 
 `parameters <: Parameters` requires the following elements:
 
 * `wakefunctions::Vector{Function}`: [i]th element is a function vwake(X::Vector{Float64}) describing the wake induced velocity at `X` at the ith step
 
 """
-function set_wing_reference(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol)
-    
+function set_wing_reference(aircraft, parameters, freestream, environment, step_range, stepi, step_symbol)
+
     # interpret freestream
     vlmfreestream = VL.Freestream(freestream)
     vwake = parameters.wakefunctions[stepi]
-    
+
     # read current reference
     reference = aircraft.wingsystem.system.reference[1]
     S = reference.S
@@ -38,13 +38,13 @@ function set_wing_reference(aircraft, parameters, freestream, environment, stepr
     b = reference.b
     r = reference.r
     V = reference.V
-    
+
     # get new V
     newV = freestream.vinf
-    
+
     # build new reference
     newreference = VL.Reference(S,c,b,r,newV)
-    
+
     # set
     aircraft.wingsystem.system.reference[1] = newreference
 
@@ -53,26 +53,23 @@ end
 
 
 """
-    set_wing_reference(aircraft, steprange)
+    set_wing_reference(aircraft, step_range)
 
 Method returns initialized elements required for the `parameters <: Parameters` struct during simulation.
 
 # Arguments:
 
 * `aircraft::Aircraft` : aircraft system to be simulated
-* `steprange::AbstractArray` : defines each step of the simulation
+* `step_range::AbstractArray` : defines each step of the simulation
 
 # Returns:
-* `CLs`
-* `CDs`
-* `CYs`
+
+* `wakefunctions::Vector{Function}`: [i]th element is a function vwake(X::Vector{Float64}) describing the wake induced velocity at `X` at the ith step
 
 """
-function set_wing_reference(aircraft, steprange)
+function set_wing_reference(aircraft, step_range)
 
-    CLs = zeros(length(steprange))
-    CDs = zeros(length(steprange))
-    CYs = zeros(length(steprange))
+    wakefunctions = Function[(x) -> [0.0, 0.0, 0.0] for i in 1:length(step_range)]
 
-    return CLs, CDs, CYs
+    return wakefunctions
 end

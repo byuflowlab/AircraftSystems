@@ -14,9 +14,9 @@ Inputs:
 * `parameters<:Parameters` `Parameters` struct
 * `freestream::Freestream` : `Freestream` object
 * `environment::Environment` `Environment` object
-* `steprange::AbstractArray` : array of times for which the simulation is run
+* `step_range::AbstractArray` : array of times for which the simulation is run
 * `stepi::Int` : index of the current step
-* `stepsymbol::String` : defines the step, e.g. `alpha` or `time`
+* `step_symbol::String` : defines the step, e.g. `alpha` or `time`
 
 `parameters <: Parameters` requires the following elements:
 
@@ -27,7 +27,7 @@ Inputs:
 * `CDs_viscous::Array{Float64,1}` : ith element is the drag coefficient of the aircraft at the ith step
 
 """
-function solve_wing_viscous_drag(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol)
+function solve_wing_viscous_drag(aircraft, parameters, freestream, environment, step_range, stepi, step_symbol)
     # extract parameters
     cls = parameters.cls
     cds = parameters.cds
@@ -56,14 +56,14 @@ function solve_wing_viscous_drag(aircraft, parameters, freestream, environment, 
 end
 
 """
-solve_wing_viscous_drag(system, steprange)
+solve_wing_viscous_drag(system, step_range)
 
 Method returns initialized elements required for the `parameters <: Parameters` struct during simulation.
 
 Inputs:
 
 * `aircraft::Aircraft` : aircraft system to be simulated
-* `steprange::AbstractArray` : defines each step of the simulation
+* `step_range::AbstractArray` : defines each step of the simulation
 
 Outputs:
 
@@ -72,11 +72,11 @@ Outputs:
 * `CYs::Array{Float64,1}` : ith element is the side force coefficient of the aircraft at the ith step
 
 """
-function solve_wing_viscous_drag(aircraft, steprange)
+function solve_wing_viscous_drag(aircraft, step_range)
 
-    CLs = zeros(length(steprange))
-    CDs = zeros(length(steprange))
-    CYs = zeros(length(steprange))
+    CLs = zeros(length(step_range))
+    CDs = zeros(length(step_range))
+    CYs = zeros(length(step_range))
 
     return CLs, CDs, CYs
 end

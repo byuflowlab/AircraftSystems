@@ -66,9 +66,9 @@ ax_z.legend(loc="upper left", bbox_to_anchor=(1.01,1))
 savename_x = "prowim_check_geometry_x.pdf"
 savename_y = "prowim_check_geometry_y.pdf"
 savename_z = "prowim_check_geometry_z.pdf"
-fig_check_geometry_x.savefig(joinpath(plotdirectory, savename_x), bbox_inches="tight")
-fig_check_geometry_y.savefig(joinpath(plotdirectory, savename_y), bbox_inches="tight")
-fig_check_geometry_z.savefig(joinpath(plotdirectory, savename_z), bbox_inches="tight")
+fig_check_geometry_x.savefig(joinpath(plot_directory, savename_x), bbox_inches="tight")
+fig_check_geometry_y.savefig(joinpath(plot_directory, savename_y), bbox_inches="tight")
+fig_check_geometry_z.savefig(joinpath(plot_directory, savename_z), bbox_inches="tight")
 
 # properties_cl = VL.get_surface_properties(aircraft_cl.wingsystem.system)
 

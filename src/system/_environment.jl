@@ -12,25 +12,25 @@ Contains environmental properties.
 
 # Fields:
 
-* `ρ::F` : freestream fluid density
-* `ν::F` : freestream fluid kinematic viscocity
-* `μ::F` : freestream fluid dynamic viscosity
-* `g::F` : acceleration due to gravity
-* `T::F` : freestream fluid temperature
-* `γ::F` : freestream fluid specific heat ratio
-* `R::F` : freestream fluid gas constant
-* `a::F` : speed of sound
+* `ρ::TF` : freestream fluid density
+* `ν::TF` : freestream fluid kinematic viscocity
+* `μ::TF` : freestream fluid dynamic viscosity
+* `g::TF` : acceleration due to gravity
+* `T::TF` : freestream fluid temperature
+* `γ::TF` : freestream fluid specific heat ratio
+* `R::TF` : freestream fluid gas constant
+* `a::TF` : speed of sound
 
 """
-struct Environment{F}
-    ρ::F
-    ν::F
-    μ::F
-    g::F
-    T::F
-    γ::F
-    R::F
-    a::F
+struct Environment{TF}
+    ρ::TF
+    ν::TF
+    μ::TF
+    g::TF
+    T::TF
+    γ::TF
+    R::TF
+    a::TF
 end
 
 """

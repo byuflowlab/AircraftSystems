@@ -16,15 +16,15 @@ Inputs:
 * `freestream_function::Function` : function returns a `::Freestream` object each step
 * `environment_function::Function` : function returns a `::Environment` object each step
 * `objective_function::Function` : function defines what is returned
-* `steprange` : iterable object determining each step
-* `stepsymbol` : symbol defining the step, e.g. `alpha` or `time`
+* `step_range` : iterable object determining each step
+* `step_symbol` : symbol defining the step, e.g. `alpha` or `time`
 
 Outputs:
 
-* `objective` : results of `objective_function(aircraft, parameters, freestream, environment, steprange)` after simulation
+* `objective` : results of `objective_function(aircraft, parameters, freestream, environment, step_range)` after simulation
 
 """
-function runsimulation!(aircraft, parameters, actions, freestream_function, environment_function, postactions, objective_function, steprange, stepsymbol;
+function runsimulation!(aircraft, parameters, actions, freestream_function, environment_function, postactions, objective_function, step_range, step_symbol;
         verbose = true
     )
     # begin simulation
@@ -35,26 +35,26 @@ function runsimulation!(aircraft, parameters, actions, freestream_function, envi
         println("\nRunning simulation...\n")
     end
     # step
-    for (stepi, step) in enumerate(steprange)
-        if verbose; println("\tstep: $stepi\t\t$stepsymbol=$step"); end
-        environment = environment_function(aircraft, parameters, steprange, stepi)
-        freestream = freestream_function(aircraft, parameters, environment, steprange, stepi)
+    for (stepi, step) in enumerate(step_range)
+        if verbose; println("\tstep: $stepi\t\t$step_symbol=$step"); end
+        environment = environment_function(aircraft, parameters, step_range, stepi)
+        freestream = freestream_function(aircraft, parameters, environment, step_range, stepi)
         for action! in actions
-            flag = action!(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol)
+            flag = action!(aircraft, parameters, freestream, environment, step_range, stepi, step_symbol)
             if flag
-                @warn "action $action failed at step=$stepi, $stepsymbol=$step"
+                @warn "action $action failed at step=$stepi, $step_symbol=$step"
             end
         end
     end
     # perform post-processing
     if verbose; println("\nPerforming postprocessing...\n"); end
     for postaction! in postactions
-        flag = postaction!(aircraft, parameters, steprange, stepsymbol)
+        flag = postaction!(aircraft, parameters, step_range, step_symbol)
         if flag
             @warn "postaction $postaction failed"
         end
     end
     if verbose; println("\nSimulation complete.\n"); end
     # return objective
-    return objective_function(aircraft, parameters, freestream, environment, steprange)
+    return objective_function(aircraft, parameters, freestream, environment, step_range)
 end

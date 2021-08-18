@@ -19,11 +19,11 @@ Defines a wing system for use with VortexLattice.jl.
 * `grids::Array{Array{Float64,2}}` : a vector of 2-D arrays, each 2-D array containing wing panel corner locations; returned by `VortexLattice.wing_to_surface_panels()`
 
 """
-struct VortexLatticeSystem{T1, T2, T3, T4}
-    system::T1
-    lifting_line_rs::T2
-    lifting_line_chords::T3
-    airfoil_polars::T4
+struct VortexLatticeSystem{TF}
+    system::VL.System{TF}
+    lifting_line_rs::Vector{Array{TF,2}}
+    lifting_line_chords::Vector{Vector{TF}}
+    airfoil_polars
 end
 
 """
@@ -43,25 +43,26 @@ Constructor for `VortexLatticeSystem`.
 # Keyword Arguments:
 
 * `wing_cambers = [fill((xc) -> 0, length(lex)) for lex in lexs]` : vector of vectors of functions describing the camber line
-* `spanwisespacings = fill(VL.Uniform(), length(lexs))` : vector of `<: VortexLattice.AbstractSpacing` objects describing the spanwise spacing
-* `chordwisespacings = fill(VL.Uniform(), length(lexs))` : vector of `<: VortexLattice.AbstractSpacing` objects describing the chordwise spacing
+* `spanwise_spacings = fill(VL.Uniform(), length(lexs))` : vector of `<: VortexLattice.AbstractSpacing` objects describing the spanwise spacing
+* `chordwise_spacings = fill(VL.Uniform(), length(lexs))` : vector of `<: VortexLattice.AbstractSpacing` objects describing the chordwise spacing
 * `Vref = 1.0` : velocity used to normalize
 * `symmetric = true` : whether or not to mirror the geometry about the x-z plane
 * `iref = 1` : index of `lexs`, `leys`, etc. to use when calculating reference properties
-* `staticmargin = 0.10` : static margin of the `iref`th lifting surface
+* `static_margin = 0.10` : static margin of the `iref`th lifting surface
 
 # Returns:
 
 * `vlmsystem::VortexLatticeSystem`
 
 """
-function VortexLatticeSystem(lexs::AbstractArray{T}, leys, lezs, chords, thetas, phis, nspanwisepanels, nchordwisepanels;
-            wing_cambers = [fill((xc) -> 0, length(lex)) for lex in lexs],
-            spanwisespacings = fill(VL.Uniform(), length(lexs)),
-            chordwisespacings = fill(VL.Uniform(), length(lexs)),
-            Vref = 1.0, symmetric = true, iref = 1, staticmargin = 0.10, liftingline_x_over_c = 0.25
+function VortexLatticeSystem(lexs, leys, lezs, chords, thetas, phis, nspanwisepanels, nchordwisepanels;
+            cambers = [fill((xc) -> 0, length(lex)) for lex in lexs],
+            spanwise_spacings = fill(VL.Uniform(), length(lexs)),
+            chordwise_spacings = fill(VL.Uniform(), length(lexs)),
+            Vref = 1.0, symmetric = true, iref = 1, static_margin = 0.10, liftingline_x_over_c = 0.25
             ) where T <: AbstractArray
 
+    @assert typeof(lexs[1]) <: AbstractArray "lexs must be a vector of vectors"
     @assert size(lexs) == size(leys) && size(lexs[1]) == size(leys[1])   "size of leading edge xs and ys not consistent"
     @assert size(lexs) == size(lezs) && size(lexs[1]) == size(lezs[1])   "size of leading edge xs and zs not consistent"
     @assert size(lexs) == size(chords) && size(lexs[1]) == size(chords[1]) "size of leading edge xs and chords not consistent"
@@ -72,88 +73,53 @@ function VortexLatticeSystem(lexs::AbstractArray{T}, leys, lezs, chords, thetas,
 
     # build grids and surfaces
     gridssurfaces = [VL.wing_to_surface_panels(lexs[i], leys[i], lezs[i], chords[i], thetas[i], phis[i], nspanwisepanels[i], nchordwisepanels[i];
-                    fc = wing_cambers[i], spacing_s=spanwisespacings[i], spacing_c=chordwisespacings[i]) for i in 1:nwings]
+        fc = cambers[i], spacing_s=spanwise_spacings[i], spacing_c=chordwise_spacings[i]) for i in 1:nwings]
 
     # extract grids and surfaces
     grids = [gridsurface[1] for gridsurface in gridssurfaces]
     surfaces = [gridsurface[2] for gridsurface in gridssurfaces]
 
     # build reference
-    ref = get_reference(lexs[iref], leys[iref], chords[iref], staticmargin, Vref)
+    ref = get_reference(lexs[iref], leys[iref], chords[iref], static_margin, Vref; symmetric)
 
     # build freestream
     alpha = 3.0 * pi/180
     beta = 0.0
-    Omegas = zeros(3)
+    Omegas = StaticArrays.@SVector zeros(3)
     vlmfreestream = VL.Freestream(Vref, alpha, beta, Omegas)
 
     # get lifting line geometry
     rs, chords = VL.lifting_line_geometry(grids)
 
     # build system
-    system = VL.steady_analysis(surfaces, ref, vlmfreestream; symmetric=symmetric)
+    system = VL.steady_analysis(surfaces, ref, vlmfreestream; symmetric)
     vlmsystem = VortexLatticeSystem(system, rs, chords, nothing)
 
     return vlmsystem
 end
 
 """
-Convencience constructor for a `VortexLatticeSystem` with a single lifting surface. I.e., each argument has one less dimension:
-
-# Arguments:
-
-* `lexs::Array{Float64,1}` : vector of x coordinates of the leading edge
-* `leys::Array{Float64,1}` : vector of y coordinates of the leading edge
-* `lezs::Array{Float64,1}` : vector of z coordinates of the leading edge
-* `chords::Array{Float64,1}` : vector of chord lengths
-* `thetas::Array{Float64,1}` : vector of twist angles in radians
-* `phis::Array{Float64,1}` : vector of dihedral angles in radians
-* `nspanwisepanels::Int64` : number of desired spanwise panels
-* `nchordwisepanels::Int64` : number of desired chordwise panels
-
-# Keyword Arguments:
-
-* `wing_cambers = [fill((xc) -> 0, length(lex)) for lex in lexs]` : vector of vectors of functions describing the camber line
-* `spanwisespacings = fill(VL.Uniform(), length(lexs))` : vector of `<: VortexLattice.AbstractSpacing` objects describing the spanwise spacing
-* `chordwisespacings = fill(VL.Uniform(), length(lexs))` : vector of `<: VortexLattice.AbstractSpacing` objects describing the chordwise spacing
-* `Vref = 1.0` : velocity used to normalize
-* `symmetric = true` : whether or not to mirror the geometry about the x-z plane
-* `iref = 1` : index of `lexs`, `leys`, etc. to use when calculating reference properties
-* `staticmargin = 0.10` : static margin of the `iref`th lifting surface
-
-# Returns:
-
-* `vlmsystem::VortexLatticeSystem`
-
-"""
-function VortexLatticeSystem(lexs, leys, lezs, chords, thetas, phis, nspanwisepanels, nchordwisepanels)
-
-    @assert !(typeof(lexs[1]) <: AbstractArray) "error in dispatch for VortexLatticeSystem"
-
-    return VortexLatticeSystem([lexs], [leys], [lezs], [chords], [thetas], [phis], [nspanwisepanels], [nchordwisepanels]; kwargs...)
-end
-
-"""
-    get_reference(lex, ley, chord, staticmargin, Vref)
+    get_reference(lex, ley, chord, static_margin, Vref)
 
 # Arguments:
 
 * `lex`
 * `ley`
 * `chord`
-* `staticmargin`
+* `static_margin`
 * `Vref`
 
 """
-function get_reference(lex, ley, chord, staticmargin, Vref)
+function get_reference(lex, ley, chord, static_margin, Vref; symmetric = true)
 
     bref = ley[end] * 2
-    Sref = FM.trapz(ley, chord) # area of the starboard wing
-    cref = Sref / bref * 2
+    Sref = FM.trapz(ley, chord) # area of starboard wing only
+    if symmetric; Sref *= 2; end
+    cref = Sref / bref
     lex_midpoint = get_midpoints(lex)
     dy = [ley[i+1] - ley[i] for i in 1:length(ley)-1]
     xmean = weightedmean(lex_midpoint, dy) # might be worth testing
-    rref = [xmean + cref * (0.25 - staticmargin), 0.0, 0.0]
+    rref = [xmean + cref * (0.25 - static_margin), 0.0, 0.0]
     Vinf = Vref
     ref = VL.Reference(Sref, cref, bref, rref, Vinf)
 
@@ -170,7 +136,7 @@ get_midpoints(a) = [(a[i] + a[i+1])/2 for i in 1:length(a)-1]
         cmac=b / AR, # AR = b/c => c = b/AR
         Sref=b * cmac,
         chord=[cmac * 2 / (1 + TR), cmac * 2 / (1/TR + 1)], twist=[θroot, θtip], phi=[0.0,0.0],
-        staticmargin=0.10,
+        static_margin=0.10,
         Vinf=1.0,
         Vref=Vinf,
         alpha=0.0,
@@ -202,7 +168,7 @@ Convenience constructor for a single wing `VortexLatticeSystem`.
 * `wing_chord`: chord at each wing section
 * `wing_twist`: twist at each wing section
 * `wing_phi`: wing section rotation about the x-axis
-* `staticmargin`: static margin of the wing
+* `static_margin`: static margin of the wing
 * `Vinf`: freestream velocity
 * `Vref`: reference velocity; defaults to freestream velocity
 * `alpha`: angle of attack (radians)
@@ -222,7 +188,7 @@ function simplewingsystem(b, TR, AR, θroot, θtip, le_sweep, ϕ;
     cmac = b/AR, # AR = b/c => c = b/AR
     Sref = b*cmac,
     chord = [cmac * 2 / (1 + TR), cmac * 2 / (1 + 1/TR)], twist=[θroot, θtip], phi=[ϕ, ϕ],
-    staticmargin = 0.10,
+    static_margin = 0.10,
     Vref = 1.0, # in case you want the reference velocity to be different than the freestream velocity
     camber = fill((xc) -> 0, length(xle)),
     npanels = 50, nchordwisepanels=1,
@@ -236,7 +202,7 @@ function simplewingsystem(b, TR, AR, θroot, θtip, le_sweep, ϕ;
     Vinf = 1.0
     alpha=0.0
     beta=0.0
-    Omega=[0.0,0.0,0.0]
+    Omega=StaticArrays.@SVector [0.0,0.0,0.0]
 
     #=
     cr + ct = cmac * 2
@@ -270,7 +236,7 @@ function simplewingsystem(b, TR, AR, θroot, θtip, le_sweep, ϕ;
     surfaces = [surface]
 
     # reference parameters
-    cgx = cmac * (0.25 - staticmargin)
+    cgx = cmac * (0.25 - static_margin)
     rref = [cgx, 0.0, 0.0]
     reference = VL.Reference(Sref, cmac, b, rref, Vref)
 
@@ -318,12 +284,12 @@ end
         vertical_tail_camber=fill((xc) -> 0, length(vertical_tail_xle)),
         # other parameters/reference values
         Sref=wing_b*cmac,
-        staticmargin=0.10,
+        static_margin=0.10,
         Vinf=1.0,
         Vref=Vinf,
         alpha=0.0,
         beta=0.0,
-        Omega=[0.0,0.0,0.0]
+        Omega=@SVector [0.0,0.0,0.0]
         symmetric=[true, true, false],
         mirror=[false, false, false],
         # panel setup
@@ -387,7 +353,7 @@ Convenience constructor for a simple airplane `VortexLatticeSystem`.
 * `vertical_tail_camber`: camberline function for each section
 
 * `Sref`: wing reference area
-* `staticmargin`: wing static margin
+* `static_margin`: wing static margin
 * `Vinf`: freestream velocity
 * `Vref`: reference velocity; defaults to freestream velocity
 * `alpha`: wing angle of attack (radians)
@@ -441,12 +407,12 @@ function simpleairplanesystem(;
             vertical_tail_camber=fill((xc) -> 0, length(vertical_tail_xle)),
             # other parameters/reference values
             Sref=wing_b*cmac,
-            staticmargin=0.10,
+            static_margin=0.10,
             Vinf=1.0,
             Vref=Vinf,
             alpha=0.0,
             beta=0.0,
-            Omega=[0.0,0.0,0.0],
+            Omega=(StaticArrays.@SVector [0.0,0.0,0.0]),
             symmetric=[true, true, false],
             mirror=[false, false, false],
             # panel setup
@@ -507,7 +473,7 @@ function simpleairplanesystem(;
     surfaces = [wing_surface, tail_surface, vertical_tail_surface]
 
     # reference parameters
-    cgx = cmac * (0.25 - staticmargin)
+    cgx = cmac * (0.25 - static_margin)
     rref = [cgx, 0.0, 0.0]
     reference = VL.Reference(Sref, cmac, wing_b, rref, Vref)
 

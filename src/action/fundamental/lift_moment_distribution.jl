@@ -8,11 +8,11 @@ using StaticArrays
 using LinearAlgebra
 
 """
-    lift_moment_distribution(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol) <: Action
+    lift_moment_distribution(aircraft, parameters, freestream, environment, step_range, stepi, step_symbol) <: Action
 
 Solves for the aerodynamic force distribution at each step.
 
-NOTE: THIS ACTION DOES NOT SOLVE THE VORTEX LATTICE. Call `solve_wing_CF` prior to calling this action.
+NOTE: THIS ACTION DOES NOT SOLVE THE VORTEX LATTICE. Call `solve_wing_CF_CM` prior to calling this action.
 
 # Arguments:
 
@@ -20,45 +20,34 @@ NOTE: THIS ACTION DOES NOT SOLVE THE VORTEX LATTICE. Call `solve_wing_CF` prior 
 * `parameters<:Parameters` `Parameters` struct
 * `freestream::Freestream` : `Freestream` object
 * `environment::Environment` `Environment` object
-* `steprange::AbstractArray` : array of steps for which the simulation is run
+* `step_range::AbstractArray` : array of steps for which the simulation is run
 * `stepi::Int` : index of the current step
-* `stepsymbol::String` : defines the step, e.g. `alpha` or `time`
+* `step_symbol::String` : defines the step, e.g. `alpha` or `time`
 
 `parameters <: Parameters` requires the following elements:
 
-* `cfs::Vector{Array{Float64,2}}` : vector with length equal to the number of lifting surfaces, each member containing an array of size (3,nspanwisepanels) of force coefficients cd, cy, cl
-* `cms::Vector{Array{Float64,2}}` : vector with length equal to the number of lifting surfaces, each member containing an array of size (3,nspanwisepanels) of moment coefficients cmx, cmy, cmz
-* `cls::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local lift coefficients at each lifting line section, corresponding to each lifting surface
-* `cds::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local drag coefficients at each lifting line section, corresponding to each lifting surface
-* `cys::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local side force coefficients at each lifting line section, corresponding to each lifting surface
-* `cmxs::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local x-axis (roll) moment coefficients at each lifting line section, corresponding to each lifting surface
-* `cmys::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local y-axis (pitch) moment coefficients at each lifting line section, corresponding to each lifting surface
-* `cmzs::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local z-axis (yaw) moment force coefficients at each lifting line section, corresponding to each lifting surface
+* `cfs::Vector{Vector{Array{Float64,2}}}`: [i][j]th element is an array of size (3,nspanwisepanels) of force coefficients cd, cy, cl corresponding to the ith step, jth lifting surface
+* `cms::Vector{Vector{Array{Float64,2}}}`: [i][j]th element is an array of size (3,nspanwisepanels) of moment coefficients cmx, cmy, cmz corresponding to the ith step, jth lifting surface
 
 """
-function lift_moment_distribution(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol)
+function lift_moment_distribution(aircraft, parameters, freestream, environment, step_range, stepi, step_symbol)
 
     # extract lift and moment distribution
     cfs, cms = VL.lifting_line_coefficients(aircraft.wingsystem.system, aircraft.wingsystem.lifting_line_rs, aircraft.wingsystem.lifting_line_chords; frame = VL.Wind())
     # store to `parameters`
     nwings = length(aircraft.wingsystem.system.surfaces)
-    for iwing in 1:nwings
-        parameters.cfs[iwing] = cfs[iwing]
-        parameters.cms[iwing] = cms[iwing]
-        parameters.cls[iwing][:,stepi] = cfs[iwing][3,:]
-        parameters.cds[iwing][:,stepi] = cfs[iwing][1,:]
-        parameters.cys[iwing][:,stepi] = cfs[iwing][2,:]
-        parameters.cmxs[iwing][:,stepi] = cms[iwing][1,:]
-        parameters.cmys[iwing][:,stepi] = cms[iwing][2,:]
-        parameters.cmzs[iwing][:,stepi] = cms[iwing][3,:]
-    end
+    parameters.cfs[stepi] .= cfs
+    parameters.cms[stepi] .= cms
+    # for iwing in 1:nwings
+
+    # end
 
     return false
 end
 
 
 """
-    lift_moment_distribution_blownwing(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol) <: Action
+    lift_moment_distribution_blownwing(aircraft, parameters, freestream, environment, step_range, stepi, step_symbol) <: Action
 
 Solves for the aerodynamic force distribution at each step. This method solves for the lifting line coefficients without using rotor induced velocity in a blown wing setup, as used in Epema (2017).
 
@@ -70,93 +59,78 @@ NOTE: THIS ACTION DOES NOT SOLVE THE VORTEX LATTICE. Call `solve_CF` prior to ca
 * `parameters<:Parameters` `Parameters` struct
 * `freestream::Freestream` : `Freestream` object
 * `environment::Environment` `Environment` object
-* `steprange::AbstractArray` : array of steps for which the simulation is run
+* `step_range::AbstractArray` : array of steps for which the simulation is run
 * `stepi::Int` : index of the current step
-* `stepsymbol::String` : defines the step, e.g. `alpha` or `time`
+* `step_symbol::String` : defines the step, e.g. `alpha` or `time`
 
 `parameters <: Parameters` requires the following elements:
 
-* `cfs::Vector{Array{Float64,2}}` : vector with length equal to the number of lifting surfaces, each member containing an array of size (3,nspanwisepanels) of force coefficients cd, cy, cl
-* `cms::Vector{Array{Float64,2}}` : vector with length equal to the number of lifting surfaces, each member containing an array of size (3,nspanwisepanels) of moment coefficients cmx, cmy, cmz
-* `cls::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local lift coefficients at each lifting line section, corresponding to each lifting surface
-* `cds::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local drag coefficients at each lifting line section, corresponding to each lifting surface
-* `cys::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local side force coefficients at each lifting line section, corresponding to each lifting surface
-* `cmxs::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local x-axis (roll) moment coefficients at each lifting line section, corresponding to each lifting surface
-* `cmys::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local y-axis (pitch) moment coefficients at each lifting line section, corresponding to each lifting surface
-* `cmzs::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local z-axis (yaw) moment force coefficients at each lifting line section, corresponding to each lifting surface
+* `cfs::Vector{Vector{Array{Float64,2}}}`: [i][j]th element is an array of size (3,nspanwisepanels) of force coefficients cd, cy, cl corresponding to the ith step, jth lifting surface
+* `cms::Vector{Vector{Array{Float64,2}}}`: [i][j]th element is an array of size (3,nspanwisepanels) of moment coefficients cmx, cmy, cmz corresponding to the ith step, jth lifting surface
 
 """
-function lift_moment_distribution_blownwing(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol)
+function lift_moment_distribution_blownwing(aircraft, parameters, freestream, environment, step_range, stepi, step_symbol)
 
     # extract lift and moment distribution
     cfs, cms = VL.lifting_line_coefficients(aircraft.wingsystem.system, aircraft.wingsystem.lifting_line_rs, aircraft.wingsystem.lifting_line_chords; frame = VL.Wind())
 
     # store to `parameters`
+    parameters.cfs[stepi] .= cfs
+    parameters.cms[stepi] .= cms
+
+    # correct lift coefficients as done by Epema
     nwings = length(aircraft.wingsystem.system.surfaces)
+    Vref = aircraft.wingsystem.system.reference[1].V
+    Vinf = aircraft.wingsystem.system.freestream[1].Vinf
     for iwing in 1:nwings
         # first determine cl w/o rotor induced velocities
-        Vref = aircraft.wingsystem.system.reference[1].V
         panels = aircraft.wingsystem.system.surfaces[iwing]
-        gammas = [panel.gamma * Vref for panel in aircraft.wingsystem.system.properties[iwing]]
+        n_spanwise_sections = size(aircraft.wingsystem.system.properties[iwing])[2]
+        gammas = [Vref * sum([panel.gamma for panel in aircraft.wingsystem.system.properties[iwing][:,i_spanwise_section]])  for i_spanwise_section in 1:n_spanwise_sections]
         velocities = [panel.velocity * Vref for panel in aircraft.wingsystem.system.properties[iwing]]
-        velocities_minus_rotor = velocities .- parameters.wakefunctions[iwing].(VL.top_center.(panels)) #w/o rotor-induced velocities
+        vwakes = parameters.wakefunctions[iwing].(VL.top_center.(panels))
+        # vwakes_minus_y = [[v[1]; 0.0; v[3]] for v in vwakes]
+        # velocities_minus_rotor = velocities .- vwakes_minus_y #w/o rotor-induced velocities
+        velocities_minus_rotor = velocities .- vwakes #w/o rotor-induced velocities
         Δs = VL.top_vector.(panels)
-        v_perp = LA.cross.(velocities_minus_rotor, Δs) ./ LA.norm.(Δs)
-        v_perp = LA.norm.([[v[1]; 0.0; v[3]] for v in v_perp])
-        Vinf = aircraft.wingsystem.system.freestream[1].Vinf
-
+        v_perps = LA.cross.(velocities_minus_rotor, Δs) ./ LA.norm.(Δs)
+        v_perp_norm = LA.norm.([[v[1]; 0.0; v[3]] for v in v_perps])
+        # TODO: interpote to get 1/4 chord velocity
+        v_perp = [Statistics.mean(v_perp_norm[:,i]) for i in 1:n_spanwise_sections]
         # this step normalizes by the mac
-        cls = 2 * gammas' .* v_perp' ./ (aircraft.wingsystem.system.reference[iwing].c * Vinf^2)
-
-        parameters.cls[iwing][:,stepi] = cls
-        # parameters.cls[iwing][:,stepi] = cfs[iwing][3,:]
-        
-        parameters.cfs[iwing] = cfs[iwing]
-        parameters.cms[iwing] = cms[iwing]
-        parameters.cds[iwing][:,stepi] = cfs[iwing][1,:]
-        parameters.cys[iwing][:,stepi] = cfs[iwing][2,:]
-        parameters.cmxs[iwing][:,stepi] = cms[iwing][1,:]
-        parameters.cmys[iwing][:,stepi] = cms[iwing][2,:]
-        parameters.cmzs[iwing][:,stepi] = cms[iwing][3,:]
+        cls = 2 * gammas .* v_perp ./ (aircraft.wingsystem.system.reference[iwing].c * Vinf^2)
+        # store to parameters
+        parameters.cfs[stepi][iwing][3,:] .= cls
     end
 
     return false
 end
 
 """
-    lift_moment_distribution(aircraft, steprange)
+    lift_moment_distribution(aircraft, step_range)
 
 Method returns initialized elements required for the `parameters <: Parameters` struct during simulation.
 
 # Arguments:
 
 * `aircraft::Aircraft` : system to be simulated
-* `steprange::AbstractArray` : defines each step of the simulation
+* `step_range::AbstractArray` : defines each step of the simulation
 
 # Returns:
 
-* `cls::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local lift coefficients at each lifting line section, corresponding to each lifting surface
-* `cds::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local drag coefficients at each lifting line section, corresponding to each lifting surface
-* `cys::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local side force coefficients at each lifting line section, corresponding to each lifting surface
-* `cmxs::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local x-axis (roll) moment coefficients at each lifting line section, corresponding to each lifting surface
-* `cmys::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local y-axis (pitch) moment coefficients at each lifting line section, corresponding to each lifting surface
-* `cmzs::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local z-axis (yaw) moment force coefficients at each lifting line section, corresponding to each lifting surface
+* `cfs::Vector{Vector{Array{Float64,2}}}`: [i][j]th element is an array of size (3,nspanwisepanels) of force coefficients cd, cy, cl corresponding to the ith step, jth lifting surface
+* `cms::Vector{Vector{Array{Float64,2}}}`: [i][j]th element is an array of size (3,nspanwisepanels) of moment coefficients cmx, cmy, cmz corresponding to the ith step, jth lifting surface
 
 """
-function lift_moment_distribution(aircraft, steprange)
+function lift_moment_distribution(aircraft, step_range)
 
     nwings = length(aircraft.wingsystem.system.surfaces)
     nspanwisepanels = [size(surface)[2] for surface in aircraft.wingsystem.system.surfaces]
-    cls = [zeros(nspanwisepanels[i], length(steprange)) for i in 1:nwings]
-    cds = deepcopy(cls)
-    cys = deepcopy(cls)
-    cmxs = deepcopy(cls)
-    cmys = deepcopy(cls)
-    cmzs = deepcopy(cls)
+    cfs = [[zeros(3, length(aircraft.wingsystem.system.surfaces[i])) for i in 1:nwings] for j in 1:length(step_range)]
+    cms = deepcopy(cfs)
 
-    return cls, cds, cys, cmxs, cmys, cmzs
+    return cfs, cms
 end
-
 
 """
     lifting_line_coefficients_blownwing(system, r, c, wakefunction)
@@ -176,7 +150,7 @@ function lifting_line_coefficients_blownwing(system, r, c, wakefunction)
         cf[isurf] = Matrix{TF}(undef, 3, ns)
         cm[isurf] = Matrix{TF}(undef, 3, ns)
     end
-    
+
     return lifting_line_coefficients_blownwing!(cf, cm, system, r, c, wakefunction)
 end
 

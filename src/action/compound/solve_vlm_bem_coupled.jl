@@ -10,7 +10,7 @@
 
 # Solves for the aerodynamic force distribution at each step.
 
-# NOTE: THIS ACTION DOES NOT SOLVE THE VORTEX LATTICE. Call `solve_wing_CF` prior to calling this action.
+# NOTE: THIS ACTION DOES NOT SOLVE THE VORTEX LATTICE. Call `solve_wing_CF_CM` prior to calling this action.
 
 # Inputs:
 
@@ -18,9 +18,9 @@
 # * `parameters<:Parameters` `Parameters` struct
 # * `freestream::Freestream` : `Freestream` object
 # * `environment::Environment` `Environment` object
-# * `steprange::AbstractArray` : array of steps for which the simulation is run
+# * `step_range::AbstractArray` : array of steps for which the simulation is run
 # * `stepi::Int` : index of the current step
-# * `stepsymbol::String` : defines the step, e.g. `alpha` or `time`
+# * `step_symbol::String` : defines the step, e.g. `alpha` or `time`
 
 # `parameters <: Parameters` requires the following elements:
 
@@ -32,14 +32,14 @@
 # * `cmxs::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local x-axis (roll) moment coefficients at each lifting line section, corresponding to each lifting surface
 # * `cmys::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local y-axis (pitch) moment coefficients at each lifting line section, corresponding to each lifting surface
 # * `cmzs::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local z-axis (yaw) moment force coefficients at each lifting line section, corresponding to each lifting surface
-# * `omegas::Vector{Float64}` : a vector of length `length(steprange)` containing a vector of rotational velocities for each rotor
-# * `Js::Vector{Vector{Float64}}` : a vector of length `length(steprange)` containing a vector of advance ratios for each rotor
-# * `CTs::Vector{Vector{Float64}}` : a vector of length `length(steprange)` containing a vector of thrust coefficients for each rotor
-# * `CQs::Vector{Vector{Float64}}` : a vector of length `length(steprange)` containing a vector of torque coefficients for each rotor
-# * `ηs::Vector{Vector{Float64}}` : a vector of length `length(steprange)` containing a vector of propulsive efficiencies for each rotor
+# * `omegas::Vector{Float64}` : a vector of length `length(step_range)` containing a vector of rotational velocities for each rotor
+# * `Js::Vector{Vector{Float64}}` : a vector of length `length(step_range)` containing a vector of advance ratios for each rotor
+# * `CTs::Vector{Vector{Float64}}` : a vector of length `length(step_range)` containing a vector of thrust coefficients for each rotor
+# * `CQs::Vector{Vector{Float64}}` : a vector of length `length(step_range)` containing a vector of torque coefficients for each rotor
+# * `ηs::Vector{Vector{Float64}}` : a vector of length `length(step_range)` containing a vector of propulsive efficiencies for each rotor
 
 # """
-# function couple_vlm_bem(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol)
+# function couple_vlm_bem(aircraft, parameters, freestream, environment, step_range, stepi, step_symbol)
 #     # extract lift and moment distribution
 #     cfs, cms = VL.lifting_line_coefficients(aircraft.wingsystem.system, aircraft.wingsystem.lifting_line_rs, aircraft.wingsystem.lifting_line_chords)
 #     # store to `parameters`
@@ -56,14 +56,14 @@
 # end
 
 # """
-# lift_moment_distribution(system, steprange)
+# lift_moment_distribution(system, step_range)
 
 # Method returns initialized elements required for the `parameters <: Parameters` struct during simulation.
 
 # Inputs:
 
 # * `aircraft::Aircraft` : system to be simulated
-# * `steprange::AbstractArray` : defines each step of the simulation
+# * `step_range::AbstractArray` : defines each step of the simulation
 
 # Outputs:
 
@@ -75,11 +75,11 @@
 # * `cmzs::Vector{Array{Float64,2}}` : each element is an array of size (nspanwisepanels, nsteps) containing local z-axis (yaw) moment force coefficients at each lifting line section, corresponding to each lifting surface
 
 # """
-# function lift_moment_distribution(aircraft, steprange)
+# function lift_moment_distribution(aircraft, step_range)
 
 #     nwings = length(aircraft.wingsystem.system.surfaces)
 #     nspanwisepanels = [size(surface)[2] for surface in aircraft.wingsystem.system.surfaces]
-#     cls = [zeros(nspanwisepanels[i], length(steprange)) for i in 1:nwings]
+#     cls = [zeros(nspanwisepanels[i], length(step_range)) for i in 1:nwings]
 #     cds = deepcopy(cls)
 #     cys = deepcopy(cls)
 #     cmxs = deepcopy(cls)

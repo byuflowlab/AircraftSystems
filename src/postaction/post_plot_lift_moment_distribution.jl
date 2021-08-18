@@ -7,14 +7,14 @@ README: `<: PostAction` function plots the lift distribution of all lifting surf
 
 
 """
-    post_plot_lift_moment_distribution(aircraft, parameters, steprange, stepsymbol) <: PostAction
+    post_plot_lift_moment_distribution(aircraft, parameters, step_range, step_symbol) <: PostAction
 
 # Arguments
 
 * `aircraft::Aircraft`: aircraft system struct
 * `parameters <: Parameters`: inherits from the `Parameters` type; object containing data required by `<: Action` functions
-* `steprange::AbstractArray`: range of simulation times
-* `stepsymbol::String`: defines the step, e.g. `alpha` or `time`
+* `step_range::AbstractArray`: range of simulation times
+* `step_symbol::String`: defines the step, e.g. `alpha` or `time`
 
 # Modifies:
 
@@ -24,118 +24,68 @@ README: `<: PostAction` function plots the lift distribution of all lifting surf
 # Returns:
 
 * `flag::Bool`: true if an action experiences errors
-* saves plots in `parameters.plotdirectory`
+* saves plots in `parameters.plot_directory`
 
 `parameters <: Parameters` requires the following elements:
 
 * `surfacenames::Vector{String}`: names of each lifting surface to be shown in the legend
-* `cls::Vector{Array{Float64,2}}`: each element is an array of size (nspanwisepanels, nsteps) containing local lift coefficients at each lifting line section, corresponding to each lifting surface
-* `cds::Vector{Array{Float64,2}}`: each element is an array of size (nspanwisepanels, nsteps) containing local drag coefficients at each lifting line section, corresponding to each lifting surface
-* `cys::Vector{Array{Float64,2}}`: each element is an array of size (nspanwisepanels, nsteps) containing local side force coefficients at each lifting line section, corresponding to each lifting surface
-* `cmxs::Vector{Array{Float64,2}}`: each element is an array of size (nspanwisepanels, nsteps) containing local x-axis (roll) moment coefficients at each lifting line section, corresponding to each lifting surface
-* `cmys::Vector{Array{Float64,2}}`: each element is an array of size (nspanwisepanels, nsteps) containing local y-axis (pitch) moment coefficients at each lifting line section, corresponding to each lifting surface
-* `cmzs::Vector{Array{Float64,2}}`: each element is an array of size (nspanwisepanels, nsteps) containing local z-axis (yaw) moment force coefficients at each lifting line section, corresponding to each lifting surface
-* `cfs::Vector{Array{Float64,2}}`: vector with length equal to the number of lifting surfaces, each member containing an array of size (3,nspanwisepanels) of force coefficients cd, cy, cl
-* `cms::Vector{Array{Float64,2}}`: vector with length equal to the number of lifting surfaces, each member containing an array of size (3,nspanwisepanels) of moment coefficients cmx, cmy,cmz
-* `plotdirectory::String`: path to the folder where plots will be saved
-* `plotbasename::String`: first part of saved figure file names
-* `plotextension::String`: extension of saved figure file names
+* `cfs::Vector{Vector{Array{Float64,2}}}`: [i][j]th element is an array of size (3,nspanwisepanels) of force coefficients cd, cy, cl corresponding to the ith step, jth lifting surface
+* `cms::Vector{Vector{Array{Float64,2}}}`: [i][j]th element is an array of size (3,nspanwisepanels) of moment coefficients cmx, cmy, cmz corresponding to the ith step, jth lifting surface
+* `plot_directory::String`: path to the folder where plots will be saved
+* `plot_base_name::String`: first part of saved figure file names
+* `plot_extension::String`: extension of saved figure file names
 * `plotstepi::Vector{Int}`: which steps at which to plot
+
 """
 # * `cl_ylim::Vector{Float64}`: y axis limits for ploting c_l
 # * `cd_ylim::Vector{Float64}`: y axis limits for ploting c_d
 # * `cy_ylim::Vector{Float64}`: y axis limits for ploting c_y
 
-function post_plot_lift_moment_distribution(aircraft, parameters, steprange, stepsymbol)
-    
-    # extract info
-    cfs = parameters.cfs
-    cms = parameters.cms
-    cls = parameters.cls
-    cds = parameters.cds
-    cys = parameters.cys
-    cmxs = parameters.cmxs
-    cmys = parameters.cmys
-    cmzs = parameters.cmzs
-    
-    nsurfaces = length(aircraft.wingsystem.system.surfaces)
-    for stepi = 1:length(steprange) # loop over all steps
-        for isurface in 1:nsurfaces
-            
-            # update cfs and cms
-            cfs[isurface][1,:] .= cds[isurface][:,stepi]
-            cfs[isurface][2,:] .= cys[isurface][:,stepi]
-            cfs[isurface][3,:] .= cls[isurface][:,stepi]
-            cms[isurface][1,:] .= cmxs[isurface][:,stepi]
-            cms[isurface][2,:] .= cmys[isurface][:,stepi]
-            cms[isurface][3,:] .= cmzs[isurface][:,stepi]
-            
-            # run existing plot function
-            flag = plot_lift_moment_distribution(aircraft, parameters, nothing, nothing, steprange, stepi, stepsymbol)
-        end
+function post_plot_lift_moment_distribution(aircraft, parameters, step_range, step_symbol)
+
+    flags = Vector{Bool}(undef,length(step_range))
+    for stepi = 1:length(step_range) # loop over all steps
+        # run existing plot function
+        flags[stepi] = plot_lift_moment_distribution(aircraft, parameters, nothing, nothing, step_range, stepi, step_symbol)
     end # loop over all steps
-    
-    return false
+
+    return prod(flags)
 end
 
-
-# @assert length(labels) == length(aircraft.wingsystem.system.surfaces) "length of surfacenames and lifting surfaces are inconsistent"
-# @assert ispath(plotdirectory) "plotdirectory does not exist"
-
 """
-    post_plot_lift_moment_distribution(system, steprange)
+    post_plot_lift_moment_distribution(system, step_range)
 
 Method returns initialized elements required for the `parameters <: Parameters` struct during simulation.
 
 # Arguments:
 
 * `aircraft::Aircraft`: system to be simulated
-* `steprange::AbstractArray`: defines each step of the simulation
+* `step_range::AbstractArray`: defines each step of the simulation
 
 # Returns:
 
-* `cls::Vector{Array{Float64,2}}`: each element is an array of size (nspanwisepanels, nsteps) containing local lift coefficients at each lifting line section, corresponding to each lifting surface
-* `cds::Vector{Array{Float64,2}}`: each element is an array of size (nspanwisepanels, nsteps) containing local drag coefficients at each lifting line section, corresponding to each lifting surface
-* `cys::Vector{Array{Float64,2}}`: each element is an array of size (nspanwisepanels, nsteps) containing local side force coefficients at each lifting line section, corresponding to each lifting surface
-* `cmxs::Vector{Array{Float64,2}}`: each element is an array of size (nspanwisepanels, nsteps) containing local x-axis (roll) moment coefficients at each lifting line section, corresponding to each lifting surface
-* `cmys::Vector{Array{Float64,2}}`: each element is an array of size (nspanwisepanels, nsteps) containing local y-axis (pitch) moment coefficients at each lifting line section, corresponding to each lifting surface
-* `cmzs::Vector{Array{Float64,2}}`: each element is an array of size (nspanwisepanels, nsteps) containing local z-axis (yaw) moment force coefficients at each lifting line section, corresponding to each lifting surface
-* `cfs::Vector{Array{Float64,2}}`: vector with length equal to the number of lifting surfaces, each member containing an array of size (3,nspanwisepanels) of force coefficients cd, cy, cl
-* `cms::Vector{Array{Float64,2}}`: vector with length equal to the number of lifting surfaces, each member containing an array of size (3,nspanwisepanels) of moment coefficients cmx, cmy,
+* `cfs::Vector{Vector{Array{Float64,2}}}`: [i][j]th element is an array of size (3,nspanwisepanels) of force coefficients cd, cy, cl corresponding to the ith step, jth lifting surface
+* `cms::Vector{Vector{Array{Float64,2}}}`: [i][j]th element is an array of size (3,nspanwisepanels) of moment coefficients cmx, cmy, cmz corresponding to the ith step, jth lifting surface
 * `surfacenames::Vector{String}`: names of each lifting surface to be shown in the legend
-* `plotdirectory::String`: path to the folder where plots will be saved
-* `plotbasename::String`: first part of saved figure file names
-* `plotextension::String`: extension of saved figure file names
+* `plot_directory::String`: path to the folder where plots will be saved
+* `plot_base_name::String`: first part of saved figure file names
+* `plot_extension::String`: extension of saved figure file names
 * `plotstepi::Vector{Int}`: which steps at which to plot
-"""
-# * `cl_ylim::Vector{Float64}`: y axis limits for ploting c_l
-# * `cd_ylim::Vector{Float64}`: y axis limits for ploting c_d
-# * `cy_ylim::Vector{Float64}`: y axis limits for ploting c_y
 
-function post_plot_lift_moment_distribution(aircraft, steprange)
-    
+"""
+function post_plot_lift_moment_distribution(aircraft, step_range)
+
     # extract info
-    nsteps = length(steprange)
+    nsteps = length(step_range)
     nwings = length(aircraft.wingsystem.system.surfaces)
-    nspanwisepanels = [size(surface)[2] for surface in aircraft.wingsystem.system.surfaces]
-    
     # initialize parameters
     surfacenames = ["wing$i" for i in 1:nwings]
-    cls = [zeros(nspanwisepanels[i], nsteps) for i in 1:length(surfacenames)]
-    cds = deepcopy(cls)
-    cys = deepcopy(cls)
-    cmxs = deepcopy(cls)
-    cmys = deepcopy(cls)
-    cmzs = deepcopy(cls)
-    cfs = [zeros(nsteps, nspanwisepanels[i]) for i in 1:length(surfacenames)]
+    cfs = [[zeros(3, length(aircraft.wingsystem.system.surfaces[i])) for i in 1:nwings] for j in 1:nsteps]
     cms = deepcopy(cfs)
-    plotdirectory = ""
-    plotbasename = "default"
-    plotextension = ".pdf"
-    plotstepi = deepcopy(steprange)
-    # cl_ylim = zeros(2)
-    # cd_ylim = zeros(2)
-    # cy_ylim = zeros(2)
+    plot_directory = ""
+    plot_base_name = "default"
+    plot_extension = ".pdf"
+    plotstepi = deepcopy(step_range)
 
-    return cls, cds, cys, cmxs, cmys, cmzs, cfs, cms, surfacenames, plotdirectory, plotbasename, plotextension, plotstepi
+    return cfs, cms, surfacenames, plot_directory, plot_base_name, plot_extension, plotstepi
 end

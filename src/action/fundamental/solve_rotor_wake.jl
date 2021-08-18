@@ -7,7 +7,7 @@ README: define an `Action` object to solve for the wake of a rotor system
 
 
 """
-    solve_rotor_wake(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol) <: Action
+    solve_rotor_wake(aircraft, parameters, freestream, environment, step_range, stepi, step_symbol) <: Action
 
 # Arguments:
 
@@ -15,9 +15,9 @@ README: define an `Action` object to solve for the wake of a rotor system
 * `parameters<:Parameters` `Parameters` struct
 * `freestream::Freestream`: `Freestream` object
 * `environment::Environment` `Environment` object
-* `steprange::AbstractArray`: array of times for which the simulation is run
+* `step_range::AbstractArray`: array of times for which the simulation is run
 * `stepi::Int`: index of the current step
-* `stepsymbol::String`: defines the step, e.g. `alpha` or `time`
+* `step_symbol::String`: defines the step, e.g. `alpha` or `time`
 
 `parameters <: Parameters` requires the following elements:
 
@@ -31,7 +31,7 @@ README: define an `Action` object to solve for the wake of a rotor system
 * `swirlmultipliers::Vector{Function}` : [i]th element is a function f(distance2plane, Rtip) that is multiplied by the swirl induced velocity function of the ith rotor
 
 """
-function solve_rotor_wake(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol)
+function solve_rotor_wake(aircraft, parameters, freestream, environment, step_range, stepi, step_symbol)
 
     us = parameters.us[stepi]
     vs = parameters.vs[stepi]
@@ -55,14 +55,14 @@ end
 
 
 """
-    solve_rotor_wake(aircraft, steprange)
+    solve_rotor_wake(aircraft, step_range)
 
 Method returns initialized elements required for the `parameters <: Parameters` struct during simulation.
 
 # Arguments:
 
 * `aircraft::Aircraft` : system to be simulated
-* `steprange::AbstractArray` : defines each step of the simulation
+* `step_range::AbstractArray` : defines each step of the simulation
 
 # Returns:
 
@@ -76,16 +76,16 @@ Method returns initialized elements required for the `parameters <: Parameters` 
 * `swirlmultipliers::Vector{Function}` : [i]th element is a function f(distance2plane, Rtip) that is multiplied by the swirl induced velocity function of the ith rotor
 
 """
-function solve_rotor_wake(aircraft, steprange)
-    
-    wakefunctions = Vector{Any}(nothing,length(steprange))
-    _, _, _, _, us, vs = solve_rotor(aircraft, steprange)
+function solve_rotor_wake(aircraft, step_range)
 
-    wakeshapefunctions = fill((Rtip, x) -> Rtip, length(aircraft.rotorsystem.index))
-    axialinterpolations = fill((rs, us, r, Rtip) -> FM.linear(rs, us, r), length(aircraft.rotorsystem.index))
-    swirlinterpolations = fill((rs, vs, r, Rtip) -> FM.linear(rs, vs, r), length(aircraft.rotorsystem.index))
-    axialmultipliers = fill((distance2plane, Rtip) -> 2, length(aircraft.rotorsystem.index))
-    swirlmultipliers = fill((distance2plane, Rtip) -> 1, length(aircraft.rotorsystem.index))
+    wakefunctions = Function[(x) -> [0.0, 0.0, 0.0] for i in 1:length(step_range)]
+    _, _, _, _, us, vs = solve_rotor(aircraft, step_range)
+
+    wakeshapefunctions = Function[(Rtip, x) -> Rtip for i in 1:length(aircraft.rotorsystem.index)]
+    axialinterpolations = Function[(rs, us, r, Rtip) -> FM.linear(rs, us, r) for i in 1:length(aircraft.rotorsystem.index)]
+    swirlinterpolations = Function[(rs, vs, r, Rtip) -> FM.linear(rs, vs, r) for i in 1:length(aircraft.rotorsystem.index)]
+    axialmultipliers = Function[(distance2plane, Rtip) -> 2 for i in 1:length(aircraft.rotorsystem.index)]
+    swirlmultipliers = Function[(distance2plane, Rtip) -> 1 for i in 1:length(aircraft.rotorsystem.index)]
 
     return wakefunctions, us, vs, wakeshapefunctions, axialinterpolations, swirlinterpolations, axialmultipliers, swirlmultipliers
 end

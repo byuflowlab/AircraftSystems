@@ -9,20 +9,20 @@ wing_θtip = PROWIMData.wing["theta_tip"]
 wing_le_sweep = PROWIMData.wing["le_sweep"]
 wing_ϕ = PROWIMData.wing["dihedral"]
 
-plotbasename = "PROWIM_props_off"
+plot_base_name = "PROWIM_props_off"
 data_PROWIM_lift_distribution = AS.lift_distribution_template(ploti, alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, wing_le_sweep, wing_ϕ;
-    plotdirectory = joinpath(AS.topdirectory, "data","plots",AS.TODAY),
-    plotbasename = plotbasename,
-    plotextension = ".pdf",
-    stepsymbol = LS.L"\alpha ",
+    plot_directory = joinpath(AS.topdirectory, "data","plots",AS.TODAY),
+    plot_base_name = plot_base_name,
+    plot_extension = ".pdf",
+    step_symbol = LS.L"\alpha ",
     surfacenames = ["PROWIM, props off"]
 )
 objective = AS.runsimulation!(data_PROWIM_lift_distribution...)
 
 prowim_lift_distribution_props_off = PROWIMData.props_off["lift_distribution"]
 
-fig = plt.figure(plotbasename * "_cf_distribution")
-fig_lift = plt.figure(plotbasename * "_lift_distribution")
+fig = plt.figure(plot_base_name * "_cf_distribution")
+fig_lift = plt.figure(plot_base_name * "_lift_distribution")
 axs = fig.get_axes()
 ax_lift = fig_lift.get_axes()[1]
 alpha_labels = Int.(round.(alphas .* 180/pi, digits=0))
@@ -34,9 +34,9 @@ end
 axs[3].legend(loc="upper left", bbox_to_anchor=(1.01,1))
 ax_lift.legend(loc="upper left", bbox_to_anchor=(1.01,1))
 fig.tight_layout()
-fig.savefig(joinpath(plotdirectory,"PROWIM_props_off_lift_distribution.pdf"), bbox_inches="tight")
+fig.savefig(joinpath(plot_directory,"PROWIM_props_off_lift_distribution.pdf"), bbox_inches="tight")
 fig.tight_layout()
-fig.savefig(joinpath(plotdirectory,"PROWIM_props_off_lift_distribution.pdf"), bbox_inches="tight")
+fig.savefig(joinpath(plot_directory,"PROWIM_props_off_lift_distribution.pdf"), bbox_inches="tight")
 # fig.savefig(joinpath(notebookdirectory,"PROWIM_propsoff_lift_distribution.pdf"), bbox_inches="tight")
 
 # @test objective == 0

@@ -6,7 +6,7 @@ README: define an `Action` object to solve a CCBlade rotor
 =###############################################################################################
 
 """
-    nondimensionalize_rotor_c(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol) <: Action
+    nondimensionalize_rotor_c(aircraft, parameters, freestream, environment, step_range, stepi, step_symbol) <: Action
 
 # Arguments:
 
@@ -14,20 +14,20 @@ README: define an `Action` object to solve a CCBlade rotor
 * `parameters<:Parameters` `Parameters` struct
 * `freestream::Freestream` : `Freestream` object
 * `environment::Environment` `Environment` object
-* `steprange::AbstractArray` : array of times for which the simulation is run
+* `step_range::AbstractArray` : array of times for which the simulation is run
 * `stepi::Int` : index of the current step
-* `stepsymbol::String` : defines the step, e.g. `alpha` or `time`
+* `step_symbol::String` : defines the step, e.g. `alpha` or `time`
 
 `parameters <: Parameters` requires the following elements:
 
-* `omegas::Vector{Float64}` : a vector of length `length(steprange)` containing a vector of rotational velocities for each rotor
-* `Js::Vector{Vector{Float64}}` : a vector of length `length(steprange)` containing a vector of advance ratios for each rotor
-* `CTs::Vector{Vector{Float64}}` : a vector of length `length(steprange)` containing a vector of thrust coefficients for each rotor
-* `CQs::Vector{Vector{Float64}}` : a vector of length `length(steprange)` containing a vector of torque coefficients for each rotor
-* `ηs::Vector{Vector{Float64}}` : a vector of length `length(steprange)` containing a vector of propulsive efficiencies for each rotor
+* `omegas::Vector{Float64}` : a vector of length `length(step_range)` containing a vector of rotational velocities for each rotor
+* `Js::Vector{Vector{Float64}}` : a vector of length `length(step_range)` containing a vector of advance ratios for each rotor
+* `CTs::Vector{Vector{Float64}}` : a vector of length `length(step_range)` containing a vector of thrust coefficients for each rotor
+* `CQs::Vector{Vector{Float64}}` : a vector of length `length(step_range)` containing a vector of torque coefficients for each rotor
+* `ηs::Vector{Vector{Float64}}` : a vector of length `length(step_range)` containing a vector of propulsive efficiencies for each rotor
 
 """
-function nondimensionalize_rotor_c(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol)
+function nondimensionalize_rotor_c(aircraft, parameters, freestream, environment, step_range, stepi, step_symbol)
 
     omegas = parameters.omegas[stepi]
     Js, CTs, CQs, ηs = solverotorsnondimensional(aircraft.rotorsystem, omegas, freestream, environment)
@@ -41,14 +41,14 @@ function nondimensionalize_rotor_c(aircraft, parameters, freestream, environment
 end
 
 """
-    nondimensionalize_rotor_c(aircraft, steprange)
+    nondimensionalize_rotor_c(aircraft, step_range)
 
 Method returns initialized elements required for the `parameters <: Parameters` struct during simulation.
 
 # Arguments:
 
 * `aircraft::Aircraft` : system to be simulated
-* `steprange::AbstractArray` : defines each step of the simulation
+* `step_range::AbstractArray` : defines each step of the simulation
 
 # Returns:
 
@@ -59,9 +59,9 @@ Method returns initialized elements required for the `parameters <: Parameters` 
 * `ηs::Array{Float64,2}` : each i,jth element is the propulsive efficiency of the ith rotor at the jth step
 
 """
-function nondimensionalize_rotor_c(aircraft, steprange)
-    
-    omegas, Js, CTs, CQs, _, _ = solve_rotor(aircraft, steprange)
+function nondimensionalize_rotor_c(aircraft, step_range)
+
+    omegas, Js, CTs, CQs, _, _ = solve_rotor(aircraft, step_range)
     ηs = deepcopy(CQs)
 
     return omegas, Js, CTs, CQs, ηs

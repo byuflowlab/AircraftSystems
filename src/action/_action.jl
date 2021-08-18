@@ -7,9 +7,9 @@ Inputs:
 * `parameters <: Parameters` : inherits from the `Parameters` type; object containing data required by `<: Action` functions
 * `freestream::Freestream` : freestream object
 * `environment::Environment` : environment object
-* `steprange::AbstractArray` : range of steps defining simulation
+* `step_range::AbstractArray` : range of steps defining simulation
 * `stepi::Int` : index of the current step
-* `stepsymbol::String` : defines the step, e.g. `alpha` or `time`
+* `step_symbol::String` : defines the step, e.g. `alpha` or `time`
 
 Modifies:
 
@@ -23,7 +23,7 @@ Outputs:
 Dispatch is as follows:
 
 ```
-function myaction!(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol) <: Action
+function myaction!(aircraft, parameters, freestream, environment, step_range, stepi, step_symbol) <: Action
     ...
     return flag
 end

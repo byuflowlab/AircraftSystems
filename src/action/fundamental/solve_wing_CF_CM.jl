@@ -1,5 +1,5 @@
 #=##############################################################################################
-Filename: solve_wing_CF.jl
+Filename: solve_wing_CF_CM.jl
 Author: Ryan Anderson
 Contact: rymanderson@gmail.com
 README: define an `Action` object to solve a CCBlade rotor
@@ -7,7 +7,7 @@ README: define an `Action` object to solve a CCBlade rotor
 
 
 """
-    solve_wing_CF(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol)
+    solve_wing_CF_CM(aircraft, parameters, freestream, environment, step_range, stepi, step_symbol)
 
 Action function.
 
@@ -17,20 +17,19 @@ Action function.
 * `parameters<:Parameters`: `Parameters` struct
 * `freestream::Freestream`: `Freestream` object
 * `environment::Environment` `Environment` object
-* `steprange::AbstractArray`: array of times for which the simulation is run
+* `step_range::AbstractArray`: array of times for which the simulation is run
 * `stepi::Int`: index of the current step
-* `stepsymbol::String`: defines the step, e.g. `alpha` or `time`
+* `step_symbol::String`: defines the step, e.g. `alpha` or `time`
 
 `parameters <: Parameters` requires the following elements:
 
 * `wakefunctions::Vector{Function}`: [i]th element is a function vwake(X::Vector{Float64}) describing the wake induced velocity at `X` at the ith step
-* `CLs::Vector{Vector{Float64}}`: a vector of length `length(steprange)` containing lift coefficients at each step
-* `CDs::Vector{Vector{Float64}}`: a vector of length `length(steprange)` containing drag coefficients at each step
-* `CYs::Vector{Vector{Float64}}`: a vector of length `length(steprange)` containing side force coefficients at each step
+* `CFs::Array{Float64,2}` : [:,j]th element is the [CD,CY,CL] force coefficients of the aircraft at the jth step
+* `CMs::Array{Float64,2}` : [:,j]th element is the [CMx,CMy,CMz] moment coefficients of the aircraft at the jth step
 
 """
-function solve_wing_CF(aircraft, parameters, freestream, environment, steprange, stepi, stepsymbol)
-    
+function solve_wing_CF_CM(aircraft, parameters, freestream, environment, step_range, stepi, step_symbol)
+
     # interpret freestream
     vlmfreestream = VL.Freestream(freestream)
 
@@ -42,39 +41,37 @@ function solve_wing_CF(aircraft, parameters, freestream, environment, steprange,
 
     # extract forces and moments
     CF, CM = VL.body_forces(aircraft.wingsystem.system; frame=VL.Wind())
-    
+
     # store to `parameters`
-    parameters.CLs[stepi] = CF[3]
-    parameters.CDs[stepi] = CF[1]
-    parameters.CYs[stepi] = CF[2]
+    parameters.CFs[:,stepi] .= CF
+    parameters.CMs[:,stepi] .= CM
 
     return false
 end
 
 
 """
-    solve_wing_CF(system, steprange)
+solve_wing_CF_CM(system, step_range)
 
 Method returns initialized elements required for the `parameters <: Parameters` struct during simulation.
 
 # Arguments:
 
 * `aircraft::Aircraft` : aircraft system to be simulated
-* `steprange::AbstractArray` : defines each step of the simulation
+* `step_range::AbstractArray` : defines each step of the simulation
 
 # Returns:
 
-* `CLs::Array{Float64,1}` : ith element is the lift coefficient of the aircraft at the ith step
-* `CDs::Array{Float64,1}` : ith element is the drag coefficient of the aircraft at the ith step
-* `CYs::Array{Float64,1}` : ith element is the side force coefficient of the aircraft at the ith step
+* `wakefunctions::Vector{Function}`: [i]th element is a function vwake(X::Vector{Float64}) describing the wake induced velocity at `X` at the ith step
+* `CFs::Array{Float64,2}` : [:,j]th element is the [CD,CY,CL] force coefficients of the aircraft at the jth step
+* `CMs::Array{Float64,2}` : [:,j]th element is the [CMx,CMy,CMz] moment coefficients of the aircraft at the jth step
 
 """
-function solve_wing_CF(aircraft, steprange)
+function solve_wing_CF_CM(aircraft, step_range)
 
-    wakefunctions = Vector{Any}(nothing,length(steprange))
-    CLs = zeros(length(steprange))
-    CDs = zeros(length(steprange))
-    CYs = zeros(length(steprange))
+    wakefunctions = Function[(x) -> [0.0, 0.0, 0.0] for i in 1:length(step_range)]
+    CFs = zeros(3, length(step_range))
+    CMs = zeros(3, length(step_range))
 
-    return wakefunctions, CLs, CDs, CYs
+    return wakefunctions, CFs, CMs
 end

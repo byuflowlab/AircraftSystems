@@ -12,8 +12,8 @@ Inputs:
 
 * `aircraft::Aircraft` : aircraft system struct
 * `parameters <: Parameters` : inherits from the `Parameters` type; object containing data required by `<: Action` functions
-* `steprange::AbstractArray` : range of times defining simulation
-* `stepsymbol::String` : defines the step, e.g. `alpha` or `time`
+* `step_range::AbstractArray` : range of times defining simulation
+* `step_symbol::String` : defines the step, e.g. `alpha` or `time`
 
 Modifies:
 
@@ -27,7 +27,7 @@ Outputs:
 Dispatch is as follows:
 
 ```
-function mypostaction!(aircraft, parameters, steprange, stepsymbol)
+function mypostaction!(aircraft, parameters, step_range, step_symbol)
     ...
     return flag
 end

@@ -388,7 +388,7 @@ props_on["lift_distribution"] = [
     ]
 ]
 
-props_on["lift_distribution_alpha"] = [0.0, 4.0, 10.0] # degrees
+props_on["lift_distribution_alpha"] = [0.0, 4.0, 10.0] .* pi/180 # radians
 
 props_on["CL_alpha"] = [
     0 0;

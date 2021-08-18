@@ -18,11 +18,11 @@ Describes the freestream.
 * `Omega::Vector{Float64}` : angular velocity about roll, pitch, and yaw axes
 
 """
-struct Freestream{F, VF <: AbstractArray}
-    vinf::F
-    alpha::F
-    beta::F
-    Omega::VF
+struct Freestream{TF}
+    vinf::TF
+    alpha::TF
+    beta::TF
+    Omega::StaticArrays.SArray{Tuple{3},TF,1,3}
 end
 
 """
@@ -47,7 +47,7 @@ function freestream2vector(freestream)
             -sin(beta),
             sin(alpha) * cos(beta)
         ]
-        
+
     return Vinf
 end
 
