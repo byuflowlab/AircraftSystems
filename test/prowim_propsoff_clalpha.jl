@@ -31,7 +31,7 @@ axs[1].scatter(CD_data_wake_survey[:,1], CD_data_wake_survey[:,2], marker = "x",
 axs[1].legend(loc="upper left", bbox_to_anchor=(1.01,1))
 
 fig_props_off_cl_alpha.tight_layout()
-if savefigs
+if save_figs
     fig_props_off_cl_alpha.savefig(joinpath(plot_directory,"PROWIM_props_off_cl_alpha_sweep.pdf"), bbox_inches="tight")
 end
 

@@ -14,7 +14,7 @@ README: this is a template file. Convenience methods are provided to prepare a s
 
 * `CFs::Array{Float64,2}` : [:,j]th element is the [CD,CY,CL] force coefficients of the aircraft at the jth step
 * `CMs::Array{Float64,2}` : [:,j]th element is the [CMx,CMy,CMz] moment coefficients of the aircraft at the jth step
-* `wakefunctions::Vector{FUN}`
+* `wake_function::Vector{FUN}`
 * `plot_directory::TS`
 * `plot_base_name::TS`
 * `plot_extension::TS`
@@ -23,7 +23,7 @@ README: this is a template file. Convenience methods are provided to prepare a s
 struct CLAlphaSweep{TF,TS,FUN} <: Parameters
     CFs::Array{TF,2}
     CMs::Array{TF,2}
-    wakefunctions::Vector{FUN}
+    wake_function::Vector{FUN}
     plot_directory::TS
     plot_base_name::TS
     plot_extension::TS
@@ -70,7 +70,7 @@ function cl_alpha_sweep_template(alphas, wing_b, wing_TR, wing_AR, wing_θroot, 
             kwargs...)
 
     # prepare subsystems
-    wings = simplewingsystem(wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, wing_le_sweep, wing_ϕ; kwargs...)
+    wings = simplewing_system(wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, wing_le_sweep, wing_ϕ; kwargs...)
     rotors = CCBladeSystem(
         Vector{CC.Rotor}(undef,0),
         Vector{Vector{CC.Section{Float64, Float64, Float64, nothing}}}(undef,0),
@@ -101,14 +101,14 @@ function cl_alpha_sweep_template(alphas, wing_b, wing_TR, wing_AR, wing_θroot, 
     actions = [solve_wing_CF_CM]
 
     # initialize parameters
-    wakefunctions, CFs, CMs = solve_wing_CF_CM(aircraft, alphas) # wakefunctions, CFs, CMs
+    wake_function, CFs, CMs = solve_wing_CF_CM(aircraft, alphas) # wake_function, CFs, CMs
 
     # check sizes and instantiate struct
     @assert size(CFs) == size(CMs) "size of CFs and CMs inconsistent"
     @assert size(CFs)[2] == length(alphas) "length of parameter CFs and alphas inconsistent"
     @assert size(CFs)[1] == 3 "first dimension of CFs should be of length 1"
 
-    parameters = CLAlphaSweep(CFs, CMs, wakefunctions, plot_directory, plot_base_name, plot_extension)
+    parameters = CLAlphaSweep(CFs, CMs, wake_function, plot_directory, plot_base_name, plot_extension)
 
     # build freestream_function
     function freestream_function(aircraft, parameters, environment, alphas, stepi)

@@ -59,9 +59,9 @@ locations[1:end-1] = "0" .* locations[1:end-1]
 # contourfilenames = "epema_interpolated_bspline_n30_" .* locations
 # uncomment below to repeat the r/R = 0.7 airfoil across the blade
 contour_filenames = fill("epema_interpolated_bspline_n30_" * locations[8],length(radii[1]))
-contour_paths = fill(joinpath.(contourdirectory, contour_filenames .* ".dat"),length(nblades))
+contour_paths = fill(joinpath.(contour_directory, contour_filenames .* ".dat"),length(nblades))
 
-polar_directory = polardirectory
+polar_directory = polar_directory
 plotstepi = 1:length(alphas)
 
 Res = [5e4, 1e5, 5e5, 1e6, 1e7]
@@ -127,7 +127,7 @@ cl_data_props_on = PROWIMData.props_on["lift_distribution"]
 plot_labels = "Velduis, " .* [LS.L"\alpha = 0^\circ", LS.L"\alpha = 4^\circ", LS.L"\alpha = 10^\circ"]
 # local aircraft = data_PROWIM_vlm_bem[1]
 aircraft = data_PROWIM_vlm_bem[1]
-b = aircraft.wingsystem.lifting_line_rs[1][2,end]
+b = aircraft.wing_system.lifting_line_rs[1][2,end]
 for (i, data) in enumerate(cl_data_props_on)
     cratio = i / length(cl_data_props_on)
     axs_cf[3].scatter(data[:,1] .* b, data[:,2], marker="+", color=(0.05, 0.85-cratio*0.7, 0.15 + 0.75 * cratio), label=plot_labels[i])

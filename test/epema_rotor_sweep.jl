@@ -38,8 +38,8 @@ locations[1:end-1] = "0" .* locations[1:end-1]
 contourfilenames = fill("epema_interpolated_bspline_n30_" * locations[8],length(locations))
 repeattag = "_repeat07af"
 ##########################################################
-contour_paths_list = fill(joinpath(contourdirectory, contourfilenames[1] * ".dat"),3)
-# contour_paths_list = fill(joinpath.(contourdirectory, contourfilenames .* ".dat"),3)
+contour_paths_list = fill(joinpath(contour_directory, contourfilenames[1] * ".dat"),3)
+# contour_paths_list = fill(joinpath.(contour_directory, contourfilenames .* ".dat"),3)
 airfoilnames = fill(contourfilenames, 3)
 
 plotstepi = 1:length(Js)
@@ -62,7 +62,7 @@ spin_directions = fill(true,3)
 
 plot_base_name = "epema"
 # data_epema_rotor_sweep = AS.rotor_sweep_template(Js, omegas, nblades, rhub_list, rtip_list, radii, chords, twists, airfoilcontours, airfoilnames, index, positions, orientations, spin_directions, Res_list, Ms_list;
-#     polardirectory = polardirectory,
+#     polar_directory = polar_directory,
 #     closefigure = true,
 #     useoldfiles = true,
 #     rotor_names = [LS.L"\theta_{r/R=0.7} = 25^\circ", LS.L"\theta_{r/R=0.7} = 30^\circ", LS.L"\theta_{r/R=0.7} = 35^\circ"],

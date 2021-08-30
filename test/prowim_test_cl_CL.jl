@@ -3,26 +3,26 @@
 aircraft_CL = data_PROWIM_CL_alpha[1]
 parameters_CL = data_PROWIM_CL_alpha[2]
 
-lifting_line_rs_CL = aircraft_CL.wingsystem.lifting_line_rs[1]
+lifting_line_rs_CL = aircraft_CL.wing_system.lifting_line_rs[1]
 lifting_line_xs_CL = lifting_line_rs_CL[1,:]
 lifting_line_ys_CL = lifting_line_rs_CL[2,:]
 lifting_line_zs_CL = lifting_line_rs_CL[3,:]
 
-cpxs_CL = vcat([panel.rtl[1] for panel in aircraft_CL.wingsystem.system.surfaces[1]][1,:], aircraft_CL.wingsystem.system.surfaces[1][end].rtr[1])
-cpys_CL = vcat([panel.rtl[2] for panel in aircraft_CL.wingsystem.system.surfaces[1]][1,:], aircraft_CL.wingsystem.system.surfaces[1][end].rtr[2])
-cpzs_CL = vcat([panel.rtl[3] for panel in aircraft_CL.wingsystem.system.surfaces[1]][1,:], aircraft_CL.wingsystem.system.surfaces[1][end].rtr[3])
+cpxs_CL = vcat([panel.rtl[1] for panel in aircraft_CL.wing_system.system.surfaces[1]][1,:], aircraft_CL.wing_system.system.surfaces[1][end].rtr[1])
+cpys_CL = vcat([panel.rtl[2] for panel in aircraft_CL.wing_system.system.surfaces[1]][1,:], aircraft_CL.wing_system.system.surfaces[1][end].rtr[2])
+cpzs_CL = vcat([panel.rtl[3] for panel in aircraft_CL.wing_system.system.surfaces[1]][1,:], aircraft_CL.wing_system.system.surfaces[1][end].rtr[3])
 
 aircraft_cl = data_PROWIM_lift_distribution[1]
 parameters_cl = data_PROWIM_lift_distribution[2]
 
-lifting_line_rs_cl = aircraft_cl.wingsystem.lifting_line_rs[1]
+lifting_line_rs_cl = aircraft_cl.wing_system.lifting_line_rs[1]
 lifting_line_xs_cl = lifting_line_rs_cl[1,:]
 lifting_line_ys_cl = lifting_line_rs_cl[2,:]
 lifting_line_zs_cl = lifting_line_rs_cl[3,:]
 
-cpxs_cl = vcat([panel.rtl[1] for panel in aircraft_cl.wingsystem.system.surfaces[1]][1,:], aircraft_cl.wingsystem.system.surfaces[1][end].rtr[1])
-cpys_cl = vcat([panel.rtl[2] for panel in aircraft_cl.wingsystem.system.surfaces[1]][1,:], aircraft_cl.wingsystem.system.surfaces[1][end].rtr[2])
-cpzs_cl = vcat([panel.rtl[3] for panel in aircraft_cl.wingsystem.system.surfaces[1]][1,:], aircraft_cl.wingsystem.system.surfaces[1][end].rtr[3])
+cpxs_cl = vcat([panel.rtl[1] for panel in aircraft_cl.wing_system.system.surfaces[1]][1,:], aircraft_cl.wing_system.system.surfaces[1][end].rtr[1])
+cpys_cl = vcat([panel.rtl[2] for panel in aircraft_cl.wing_system.system.surfaces[1]][1,:], aircraft_cl.wing_system.system.surfaces[1][end].rtr[2])
+cpzs_cl = vcat([panel.rtl[3] for panel in aircraft_cl.wing_system.system.surfaces[1]][1,:], aircraft_cl.wing_system.system.surfaces[1][end].rtr[3])
 
 fig_check_geometry_x = plt.figure("prowim_geometry_x")
 fig_check_geometry_x.clear()
@@ -70,9 +70,9 @@ fig_check_geometry_x.savefig(joinpath(plot_directory, savename_x), bbox_inches="
 fig_check_geometry_y.savefig(joinpath(plot_directory, savename_y), bbox_inches="tight")
 fig_check_geometry_z.savefig(joinpath(plot_directory, savename_z), bbox_inches="tight")
 
-# properties_cl = VL.get_surface_properties(aircraft_cl.wingsystem.system)
+# properties_cl = VL.get_surface_properties(aircraft_cl.wing_system.system)
 
 # vtk_directory = joinpath(AS.topdirectory, "test", "data", "vtk", "prowim")
 # # if !isdir(vtk_directory); mkpath(vtk_directory); end
-# # VL.write_vtk(joinpath(vtk_directory, "prowim_wing"), aircraft_cl.wingsystem.surfaces, properties)
-# VL.write_vtk("prowim_wing", aircraft_cl.wingsystem.system.surfaces, properties; symmetric = false)
+# # VL.write_vtk(joinpath(vtk_directory, "prowim_wing"), aircraft_cl.wing_system.surfaces, properties)
+# VL.write_vtk("prowim_wing", aircraft_cl.wing_system.system.surfaces, properties; symmetric = false)

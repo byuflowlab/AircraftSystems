@@ -43,7 +43,7 @@ function solve_rotor_nondimensional(aircraft, parameters, freestream, environmen
     vs = parameters.vs[stepi]
     omegas = view(parameters.omegas,:,stepi)
 
-    solverotorsnondimensional!(Js, Ts, Qs, Ps, CTs, CQs, ηs, us, vs, aircraft.rotorsystem, omegas, freestream, environment)
+    solverotorsnondimensional!(Js, Ts, Qs, Ps, CTs, CQs, ηs, us, vs, aircraft.rotor_system, omegas, freestream, environment)
 
     return false
 end

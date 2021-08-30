@@ -23,12 +23,12 @@ Parameters for a blown wing system.
 * `ηs::Array{TF,2}`:
 * `us::Vector{Vector{Vector{TF}}}`:
 * `vs::Vector{Vector{Vector{TF}}}`:
-* `wakefunctions::Vector{Function}`:
-* `wakeshapefunctions::Vector{Function}`:
-* `axialinterpolations::Vector{Function}`:
-* `swirlinterpolations::Vector{Function}`:
-* `axialmultipliers::Vector{Function}`:
-* `swirlmultipliers::Vector{Function}`:
+* `wake_function::Vector{Function}`:
+* `wake_shape_functions::Vector{Function}`:
+* `axial_interpolations::Vector{Function}`:
+* `swirl_interpolations::Vector{Function}`:
+* `axial_multipliers::Vector{Function}`:
+* `swirl_multipliers::Vector{Function}`:
 * `CFs::Array{TF,2}`: [:,j]th element is the [CD,CY,CL] force coefficients of the aircraft at the jth step
 * `CMs::Array{TF,2}`: [:,j]th element is the [CMx,CMy,CMz] moment coefficients of the aircraft at the jth step
 * `cfs::Vector{Vector{Array{TF,2}}}`:
@@ -52,12 +52,12 @@ struct VLM_BEM{TF,TR} <: Parameters
     ηs::Array{TF,2}
     us::Vector{Vector{Vector{TF}}}
     vs::Vector{Vector{Vector{TF}}}
-    wakefunctions::Vector{Function}
-    wakeshapefunctions::Vector{Function}
-    axialinterpolations::Vector{Function}
-    swirlinterpolations::Vector{Function}
-    axialmultipliers::Vector{Function}
-    swirlmultipliers::Vector{Function}
+    wake_function::Vector{Function}
+    wake_shape_functions::Vector{Function}
+    axial_interpolations::Vector{Function}
+    swirl_interpolations::Vector{Function}
+    axial_multipliers::Vector{Function}
+    swirl_multipliers::Vector{Function}
     CFs::Array{TF,2}
     CMs::Array{TF,2}
     cfs::Vector{Vector{Array{TF,2}}}
@@ -81,21 +81,22 @@ struct ParamsSolveVLMBEM{TF} <: Parameters
     Js::Array{TF,2}
     Ts::Array{TF,2}
     Qs::Array{TF,2}
+    Ps::Array{TF,2}
     CTs::Array{TF,2}
     CQs::Array{TF,2}
     ηs::Array{TF,2}
     us::Vector{Vector{Vector{TF}}}
     vs::Vector{Vector{Vector{TF}}}
-    wakefunctions::Vector{Function}
-    wakeshapefunctions::Vector{Function}
-    axialinterpolations::Vector{Function}
-    swirlinterpolations::Vector{Function}
-    axialmultipliers::Vector{Function}
-    swirlmultipliers::Vector{Function}
+    wake_function::Vector{Function}
+    wake_shape_functions::Vector{Function}
+    axial_interpolations::Vector{Function}
+    swirl_interpolations::Vector{Function}
+    axial_multipliers::Vector{Function}
+    swirl_multipliers::Vector{Function}
     CFs::Array{TF,2}
     CMs::Array{TF,2}
-    cfs::Vector{Array{TF,2}}
-    cms::Vector{Array{TF,2}}
+    cfs::Vector{Vector{Array{TF,2}}}
+    cms::Vector{Vector{Array{TF,2}}}
 end
 
 # function (rs::RotorSweepParameters{V1, V2, V3, V4, V5})(alphas, omega...)
@@ -163,8 +164,8 @@ Template function returns inputs for a VLM + BEM simulation.
 
 """
 function vlm_bem_template(vinfs, plotstepi, alphas, omegas,
-    wingsystem::VortexLatticeSystem,
-    rotorsystem::CCBladeSystem;
+    wing_system::VortexLatticeSystem,
+    rotor_system::CCBladeSystem;
         wake_developement_factor = 1.0, # fully developed by default
         swirl_recovery_factor = 0.5, # as described in Veldhuis' paper
         surfacenames = ["default wing"],
@@ -180,8 +181,8 @@ function vlm_bem_template(vinfs, plotstepi, alphas, omegas,
         kwargs...
 )
     # prepare subsystems
-    wings = wingsystem
-    rotors = rotorsystem
+    wings = wing_system
+    rotors = rotor_system
     inertia = Inertia(mass, inertia_x, inertia_y, inertia_z)
     nonliftingbodies = nothing
     structures = nothing
@@ -201,9 +202,9 @@ function vlm_bem_template(vinfs, plotstepi, alphas, omegas,
 
     # set wake development parameters
     @assert wake_developement_factor <= 1 && wake_developement_factor >= 0 "`wake_developement_factor` must be between 0 and 1"
-    axialmultipliers = Function[(distance2plane, Rtip) -> 2 for i in 1:length(aircraft.rotorsystem.index)]
-    swirlmultipliers = Function[(distance2plane, Rtip) -> 1 for i in 1:length(aircraft.rotorsystem.index)]
-    params_solve_vlm_bem = params_solve_vlm_bem[1:14]..., axialmultipliers, swirlmultipliers, params_solve_vlm_bem[17:end]...
+    axial_multipliers = Function[(distance2plane, Rtip) -> 2 for i in 1:length(aircraft.rotor_system.index)]
+    swirl_multipliers = Function[(distance2plane, Rtip) -> 1 for i in 1:length(aircraft.rotor_system.index)]
+    params_solve_vlm_bem = params_solve_vlm_bem[1:14]..., axial_multipliers, swirl_multipliers, params_solve_vlm_bem[17:end]...
     #= Contains:
         1 `omegas::Vector{Float64}` : a vector of rotational speeds in rad/s at the current step
         2 `Js::Array{Float64,2}` : each [i,j]th element is the advance ratio of the ith rotor at the jth step
@@ -214,12 +215,12 @@ function vlm_bem_template(vinfs, plotstepi, alphas, omegas,
         7 `ηs::Array{Float64,2}` : each [i,j]th element is the propulsive efficiency of the ith rotor at the jth step
         8 `us::Vector{Vector{Vector{Float64}}}` : each [i][j][k]th element is the axial induced velocity at ith step of the jth rotor at the kth radial section
         9 `vs::Vector{Vector{Vector{Float64}}}` : each [i][j][k]th element is the swirl induced velocity at ith step of the jth rotor at the kth radial section
-        10 `wakefunctions::Vector{Function}` : function accepts position X and returns the rotor induced velocity
-        11 `wakeshapefunctions::Vector{Function}` : [i]th element is a function f(Rtip, x) describing the radial distance from the rotor axis to the boundary of the wake of the ith rotor
-        12 `axialinterpolations::Vector{Function}` : [i]th element is a function f(rs, us, r, Rtip) that returns the axial component of rotor-induced velocity at distance r from the rotor axis based on the calculated axial induced velocities output from CCBlade of the ith rotor
-        13 `swirlinterpolations::Vector{Function}` : [i]th element is a function f(rs, us, r, Rtip) that returns the swirl component of rotor-induced velocity at distance r from the rotor axis based on the calculated axial induced velocities output from CCBlade of the ith rotor
-        14 `axialmultipliers::Vector{Function}` : [i]th element is a function f(distance2plane, Rtip) that is multiplied by the axial induced velocity function of the ith rotor
-        15 `swirlmultipliers::Vector{Function}` : [i]th element is a function f(distance2plane, Rtip) that is multiplied by the swirl induced velocity function of the ith rotor
+        10 `wake_function::Vector{Function}` : function accepts position X and returns the rotor induced velocity
+        11 `wake_shape_functions::Vector{Function}` : [i]th element is a function f(Rtip, x) describing the radial distance from the rotor axis to the boundary of the wake of the ith rotor
+        12 `axial_interpolations::Vector{Function}` : [i]th element is a function f(rs, us, r, Rtip) that returns the axial component of rotor-induced velocity at distance r from the rotor axis based on the calculated axial induced velocities output from CCBlade of the ith rotor
+        13 `swirl_interpolations::Vector{Function}` : [i]th element is a function f(rs, us, r, Rtip) that returns the swirl component of rotor-induced velocity at distance r from the rotor axis based on the calculated axial induced velocities output from CCBlade of the ith rotor
+        14 `axial_multipliers::Vector{Function}` : [i]th element is a function f(distance2plane, Rtip) that is multiplied by the axial induced velocity function of the ith rotor
+        15 `swirl_multipliers::Vector{Function}` : [i]th element is a function f(distance2plane, Rtip) that is multiplied by the swirl induced velocity function of the ith rotor
         16 `CFs::Array{TF,2}`: [:,j]th element is the [CD,CY,CL] force coefficients of the aircraft at the jth step
         17 `CMs::Array{TF,2}`: [:,j]th element is the [CMx,CMy,CMz] moment coefficients of the aircraft at the jth
         18 `cfs::Vector{Vector{Array{Float64,2}}}`: [i][j]th element is an array of size (3,nspanwisepanels) of force coefficients cd, cy, cl corresponding to the ith step, jth lifting surface
@@ -279,15 +280,15 @@ function vlm_bem_template(vinfs, plotstepi, alphas, omegas,
         freestream = Freestream(vinf, alpha, beta, Omega)
 
         # update reference
-        # vwake = parameters.wakefunctions[stepi]
-        reference = aircraft.wingsystem.system.reference[1]
+        # vwake = parameters.wake_function[stepi]
+        reference = aircraft.wing_system.system.reference[1]
         S = reference.S
         c = reference.c
         b = reference.b
         r = reference.r
         newV = freestream.vinf
         newreference = VL.Reference(S,c,b,r,newV)
-        aircraft.wingsystem.system.reference[1] = newreference
+        aircraft.wing_system.system.reference[1] = newreference
 
         return freestream
     end
@@ -307,7 +308,7 @@ function vlm_bem_template(vinfs, plotstepi, alphas, omegas,
 end
 
 function vlm_bem_template(vinfs, plotstepi, alphas,
-    wingsystem::VortexLatticeSystem,
+    wing_system::VortexLatticeSystem,
     omegas, nblades_list, rhub_list, rtip_list, radii_list, chords_list, twists_list,
     contour_paths_list, index,
     rotor_positions, rotor_orientations, spin_directions, Res_lists, Ms_lists;
@@ -336,7 +337,54 @@ function vlm_bem_template(vinfs, plotstepi, alphas,
     # rotors = CCBladeSystem(nblades, rhub, rtip, radii, chords, twists, contour_paths_list, index, rotor_positions, rotor_orientation, spin_directions, Res_list, Ms_list; kwargs...)
 
     return vlm_bem_template(vinfs, plotstepi, alphas, omegas,
-        wingsystem, rotors;
+        wing_system, rotors;
+            wake_developement_factor, # fully developed by default
+            swirl_recovery_factor, # as described in Veldhuis' paper
+            surfacenames,
+            rotor_names,
+            mass,
+            inertia_x,
+            inertia_y,
+            inertia_z,
+            plot_directory,
+            plot_base_name,
+            plot_extension,
+            step_symbol,
+            kwargs...
+    )
+end
+
+function vlm_bem_template(vinfs, plotstepi, alphas,
+    wing_system::VortexLatticeSystem,
+    omegas, nblades_list, rhub_list, rtip_list, radii_list, chords_list, twists_list,
+    contour_paths_list, uncorrected_polar_paths_lists, corrected_polar_paths_lists, index,
+    rotor_positions, rotor_orientations, spin_directions, Res_lists, Ms_lists;
+        wake_developement_factor = 1.0, # fully developed by default
+        swirl_recovery_factor = 0.5, # as described in Veldhuis' paper
+        surfacenames = ["default wing"],
+        rotor_names = ["rotor 1"],
+        mach_correction = nothing,
+        mass = 0.0,
+        inertia_x = 0.0,
+        inertia_y = 0.0,
+        inertia_z = 0.0,
+        plot_directory = joinpath(topdirectory, "data","plots",TODAY),
+        plot_base_name = "default",
+        plot_extension = ".pdf",
+        step_symbol = L"\alpha ",
+        kwargs...
+)
+    # prepare subsystems
+    rotors = CCBladeSystem(nblades_list, rhub_list, rtip_list, mach_correction,
+        radii_list, chords_list, twists_list,
+        Res_lists, Ms_lists, contour_paths_list, uncorrected_polar_paths_lists, corrected_polar_paths_lists,
+        index, rotor_positions, rotor_orientations, spin_directions;
+            kwargs...
+    )
+    # rotors = CCBladeSystem(nblades, rhub, rtip, radii, chords, twists, contour_paths_list, index, rotor_positions, rotor_orientation, spin_directions, Res_list, Ms_list; kwargs...)
+
+    return vlm_bem_template(vinfs, plotstepi, alphas, omegas,
+        wing_system, rotors;
             wake_developement_factor, # fully developed by default
             swirl_recovery_factor, # as described in Veldhuis' paper
             surfacenames,
@@ -383,6 +431,53 @@ function vlm_bem_template(vinfs, plotstepi, alphas,
         wings,
         omegas, nblades_list, rhub_list, rtip_list, radii, chords_list, twists_list,
         contour_paths_list, index,
+        rotor_positions, rotor_orientations, spin_directions, Res_lists, Ms_lists;
+            wake_developement_factor, # fully developed by default
+            swirl_recovery_factor, # as described in Veldhuis' paper
+            surfacenames,
+            rotor_names,
+            mass,
+            inertia_x,
+            inertia_y,
+            inertia_z,
+            plot_directory,
+            plot_base_name,
+            plot_extension,
+            step_symbol,
+            kwargs...
+    )
+end
+
+function vlm_bem_template(vinfs, plotstepi, alphas,
+    wing_lexs, wing_leys, wing_lezs, wing_chords, wing_thetas, wing_phis, wing_nspanwisepanels, wing_nchordwisepanels,
+    omegas, nblades_list, rhub_list, rtip_list, radii, chords_list, twists_list,
+    contour_paths_list, uncorrected_polar_paths_lists, corrected_polar_paths_lists, index,
+    rotor_positions, rotor_orientations, spin_directions, Res_lists, Ms_lists;
+        Vref = 1.0, symmetric = true, iref = 1, static_margin = 0.10, liftingline_x_over_c = 0.25,
+        cambers = [fill((xc) -> 0, length(lex)) for lex in wing_lexs],
+        spanwise_spacings = fill(VL.Uniform(), length(wing_lexs)),
+        chordwise_spacings = fill(VL.Uniform(), length(wing_lexs)),
+        wake_developement_factor = 1.0, # fully developed by default
+        swirl_recovery_factor = 0.5, # as described in Veldhuis' paper
+        surfacenames = ["default wing"],
+        rotor_names = ["rotor 1"],
+        mass = 0.0,
+        inertia_x = 0.0,
+        inertia_y = 0.0,
+        inertia_z = 0.0,
+        plot_directory = joinpath(topdirectory, "data","plots",TODAY),
+        plot_base_name = "default",
+        plot_extension = ".pdf",
+        step_symbol = L"\alpha ",
+        kwargs...
+)
+    # prepare subsystems
+    wings = VortexLatticeSystem(wing_lexs, wing_leys, wing_lezs, wing_chords, wing_thetas, wing_phis, wing_nspanwisepanels, wing_nchordwisepanels; Vref, symmetric, iref, static_margin, liftingline_x_over_c, cambers, spanwise_spacings, chordwise_spacings)
+
+    return vlm_bem_template(vinfs, plotstepi, alphas,
+        wings,
+        omegas, nblades_list, rhub_list, rtip_list, radii, chords_list, twists_list,
+        contour_paths_list, uncorrected_polar_paths_lists, corrected_polar_paths_lists, index,
         rotor_positions, rotor_orientations, spin_directions, Res_lists, Ms_lists;
             wake_developement_factor, # fully developed by default
             swirl_recovery_factor, # as described in Veldhuis' paper

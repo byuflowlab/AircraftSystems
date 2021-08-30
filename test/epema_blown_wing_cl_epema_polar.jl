@@ -21,14 +21,16 @@ rhub = [rotor[:"radius_hub"]]
 rtip = [rotor[:"radius"]]
 rotor_chord_data = rotor["r/R vs chord/R"]
 rotor_twist_data = rotor["r/R vs twist"]
-radii = [rotor_chord_data[:,1] * rtip[1]]
-rotor_chords = [rotor_chord_data[:,2] * rtip[1]]
-rotor_twists = [FM.linear(rotor_twist_data[:,1]*rtip[1], rotor_twist_data[:,2], radii[1])] * pi/180
+radii = radii_list
+rotor_chords = chords_list
+rotor_twists = twists_list
+# radii = [rotor_chord_data[:,1] * rtip[1]]
+# rotor_chords = [rotor_chord_data[:,2] * rtip[1]]
+# rotor_twists = [FM.linear(rotor_twist_data[:,1]*rtip[1], rotor_twist_data[:,2], radii[1])] * pi/180
 
-airfoilcontour = joinpath(contourdirectory, "epema_interpolated_bspline_n30_0700.dat")
-airfoilcontours = [fill(airfoilcontour, length(radii[1]))]
-airfoilname = "epema_interpolated_bspline_n30_0700"
-airfoilnames = [fill(airfoilname, length(radii[1]))]
+airfoilcontour = joinpath(contour_directory, "epema_interpolated_bspline_n30_0700.dat")
+airfoilcontours = fill(airfoilcontour, length(radii))
+# airfoilcontours = [fill(airfoilcontour, length(radii[1]))]
 index = [1]
 rotor_positions = [[0.0; rotor[:"y"]; 0.0]]
 rotor_orientations = [[-1.0; 0.0; 0.0]] # positive x downstream
@@ -51,8 +53,10 @@ wing_n_chordwise_panels = 1
 Res = [5e4, 1e5, 5e5, 1e6, 1e7]
 Machs = [0.0, 0.1, 0.2, 0.3]
 
-Res_list = fill(fill(Res, length(radii[1])), length(nblades))
-Ms_list = fill(fill(Machs, length(radii[1])), length(nblades))
+# Res_list = fill(fill(Res, length(radii[1])), length(nblades))
+# Ms_list = fill(fill(Machs, length(radii[1])), length(nblades))
+Res_list = fill(Res, length(nblades))
+Ms_list = fill(Machs, length(nblades))
 
 args = AS.vlm_bem_template(vinfs, plotstepi, alphas,
     xle, yle, zle, wing_chord, wing_twist, wing_phi, wing_npanels, wing_n_chordwise_panels,
@@ -82,16 +86,16 @@ outs = AS.runsimulation!(args...)
 
 aircraft = args[1]
 parameters = args[2]
-panels = aircraft.wingsystem.system.surfaces[1]
+panels = aircraft.wing_system.system.surfaces[1]
 
-span_plot = aircraft.wingsystem.lifting_line_rs[1][2,2:end] / (wing[:"span"]/2) # normalized
+span_plot = aircraft.wing_system.lifting_line_rs[1][2,2:end] / (wing[:"span"]/2) # normalized
 cls_plot = parameters.cfs[1][1][3,:]
 wing_chords = FM.linear(epema_chords[:,1], epema_chords[:,2], range(epema_chords[1,1], stop=epema_chords[3,1], length=length(span_plot)))
 # cls_plot = cls_plot .* wing_chords / wing[:"mac"] #VortexLattice already normalizes it for now
 
-gammas = [panel.gamma * Vref for panel in aircraft.wingsystem.system.properties[1]]
-velocities = [panel.velocity * Vref for panel in aircraft.wingsystem.system.properties[1]]
-velocities_minus_rotor = velocities .- parameters.wakefunctions[1].(VL.top_center.(panels)) #w/o rotor-induced velocities
+gammas = [panel.gamma * Vref for panel in aircraft.wing_system.system.properties[1]]
+velocities = [panel.velocity * Vref for panel in aircraft.wing_system.system.properties[1]]
+velocities_minus_rotor = velocities .- parameters.wake_function[1].(VL.top_center.(panels)) #w/o rotor-induced velocities
 # cr = CartesianIndices(panels)
 Δs = VL.top_vector.(panels)
 
@@ -119,5 +123,8 @@ plt.plot(span_plot, cls_new3, "--", label="2 * Γ (V_{infty} + V_w + V_r)/ V_{in
 plt.xlabel("2y/b")
 plt.ylabel("normalized c_l (c/c_{mac})")
 plt.legend()
+if save_figs
+    plt.savefig(joinpath(plot_directory,"epema_blown_wing_cl_epema_polar" * ".pdf"), bbox_inches="tight")
+end
 
 # no tests for now - eventually would like to add some tests on cl values, as well as add results to the plot

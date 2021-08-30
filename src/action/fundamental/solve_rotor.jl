@@ -44,7 +44,7 @@ function solve_rotor(aircraft, parameters, freestream, environment, step_range, 
     us = parameters.us[stepi]
     vs = parameters.vs[stepi]
 
-    solverotors!(Js, Ts, Qs, Ps, us, vs, aircraft.rotorsystem, omegas, freestream, environment)
+    solve_rotors!(Js, Ts, Qs, Ps, us, vs, aircraft.rotor_system, omegas, freestream, environment)
 
     return false
 end
@@ -72,13 +72,13 @@ Method returns initialized elements required for the `parameters <: Parameters` 
 """
 function solve_rotor(aircraft, step_range)
 
-    nrotors = length(aircraft.rotorsystem.index) # number of rotors
+    nrotors = length(aircraft.rotor_system.index) # number of rotors
     omegas = ones(Float64, nrotors, length(step_range))
     Js = zeros(nrotors, length(step_range))
     Ts = zeros(nrotors, length(step_range))
     Qs = zeros(nrotors, length(step_range))
     Ps = zeros(nrotors, length(step_range))
-    us = [[zeros(length(aircraft.rotorsystem.rlists[i])) for i in aircraft.rotorsystem.index] for _ in 1:length(step_range)]
+    us = [[zeros(length(aircraft.rotor_system.rlists[i])) for i in aircraft.rotor_system.index] for _ in 1:length(step_range)]
     vs = deepcopy(us)
 
     return omegas, Js, Ts, Qs, Ps, us, vs

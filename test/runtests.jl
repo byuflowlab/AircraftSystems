@@ -14,14 +14,14 @@ println("Finished.")
 plot_directory = joinpath(AS.topdirectory, "data", "plots", AS.TODAY)
 if !isdir(plot_directory); mkpath(plot_directory); end
 
-const savefigs = false #! Set true if you need to save the test figures.
+const save_figs = false #! Set true if you need to save the test figures.
 
 # prepare Epema rotor
 include("EpemaData.jl")
-contourdirectory = joinpath(AS.topdirectory, "test", "data", "airfoil", "contours")
-polardirectory = joinpath(AS.topdirectory, "test", "data", "airfoil", "polars")
+contour_directory = joinpath(AS.topdirectory, "test", "data", "airfoil", "contours")
+polar_directory = joinpath(AS.topdirectory, "test", "data", "airfoil", "polars")
 rs_desired = [0.207, 0.3, 0.4, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0]
-# EpemaData.scans_to_interpolated_contours(contourdirectory, plot_directory, rs_desired)
+# EpemaData.scans_to_interpolated_contours(contour_directory, plot_directory, rs_desired)
 
 # Fetch PROWIM data.
 include("PROWIMData.jl")
@@ -62,3 +62,7 @@ include("prowim_propsoff_liftdist.jl")
 include("prowim_propson_liftdist.jl")
 
 # end
+
+# benchmarks
+
+include("benchmark_ccblade.jl")

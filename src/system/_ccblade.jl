@@ -25,7 +25,7 @@ Defines CCBlade rotor geometry.
 
 """
 struct CCBladeSystem{TF,TF1,TF2,TF3,TAF}
-        # T1 <: Union{Nothing, CC.MachCorrection}, T2 <: Union{Nothing, CC.ReCorrection},
+        # T1 <: Union{Nothing, CC.Mach_correction}, T2 <: Union{Nothing, CC.ReCorrection},
         # T3 <: Union{Nothing, CC.RotationCorrection}, T4 <: Union{Nothing, CC.TipCorrection}}
     rotors::Vector{CC.Rotor}#{TF, Int64, Bool, T1, T2, T3, T4}}
     sectionlists::Vector{Vector{CCBlade.Section{TF1, TF2, TF3, TAF}}}
@@ -75,7 +75,7 @@ Convenience constructor for `CCBladeSystem`.
 
 # Optional Arguments:
 
-* `machcorrection` : CCBlade Mach correction object
+* `mach_correction` : CCBlade Mach correction object
 * `skipstart = 1`: number of header lines in airfoil contour file
 * `xfoil_alpha = range(-20.0, stop=20.0, length= 161)`: angles of attack at which to run Xfoil
 * `M = 0`: Mach number (WARNING: REQUIRES FURTHER DEVELOPMENT FOR NONZERO MACH NUMBER)
@@ -92,7 +92,7 @@ Convenience constructor for `CCBladeSystem`.
 * `radians = false`: units of written files
 * `savefiles = true`: save airfoil files to be read later
 * `useoldfiles = true`: read old files if available
-* `polardirectory = joinpath(topdirectory, "data", "airfoil", "polars", TODAY)`: save directory for airfoil files
+* `polar_directory = joinpath(topdirectory, "data", "airfoil", "polars", TODAY)`: save directory for airfoil files
 * `plotoutput = true`: plot airfoil data; quickly show which polars may need to be modified
 * `saveplots = true`: save airfoil plots
 * `plot_extension = ".pdf"`: file extension for saved airfoil plots
@@ -101,7 +101,7 @@ Convenience constructor for `CCBladeSystem`.
 
 # Returns:
 
-* `rotorsystem::CCBladeSystem`: constructs a `CCBladeSystem` struct
+* `rotor_system::CCBladeSystem`: constructs a `CCBladeSystem` struct
 
 """
 function CCBladeSystem(rotors, sectionlists, index, positions, orientations, spin_directions)
@@ -110,6 +110,7 @@ function CCBladeSystem(rotors, sectionlists, index, positions, orientations, spi
     for (iorientation, orientation) in enumerate(orientations)
         @assert isapprox(LA.norm(orientation), 1.0) "`orientations` must be unit vectors; check the $(iorientation)th vector"
     end
+
     @assert length(index) == length(positions) "length of `index` must match the length of `positions`"
     @assert length(index) == length(orientations) "length of `index` must match the length of `orientations`"
     @assert maximum(index) <= length(rotors) "maximum rotor index cannot exceed the number of rotors"
@@ -119,11 +120,11 @@ function CCBladeSystem(rotors, sectionlists, index, positions, orientations, spi
     return CCBladeSystem(rotors, sectionlists, rlists, index, positions, orientations, spin_directions)
 end
 
-function CCBladeSystem(nblades_list, rhub_list, rtip_list, machcorrection,
+function CCBladeSystem(nblades_list, rhub_list, rtip_list, mach_correction,
     sectionlists, rlists, index, positions, orientations, spin_directions; kwargs...
 )
     # build CCBlade.Rotor objects
-    rotors = build_rotors(nblades_list, rhub_list, rtip_list, machcorrection; kwargs...)
+    rotors = build_rotors(nblades_list, rhub_list, rtip_list, mach_correction; kwargs...)
 
     return CCBladeSystem(rotors, sectionlists, rlists, index, positions, orientations, spin_directions)
 end
@@ -138,13 +139,13 @@ function CCBladeSystem(rotors,
     return CCBladeSystem(rotors, sectionlists, index, positions, orientations, spin_directions)
 end
 
-function CCBladeSystem(nblades_list, rhub_list, rtip_list, machcorrection,
+function CCBladeSystem(nblades_list, rhub_list, rtip_list, mach_correction,
     radii_list, chords_list, twists_list, ccblade_af_objects_list,
     index, positions, orientations, spin_directions;
         kwargs...
 )
     # build CCBlade.Rotor objects
-    rotors = build_rotors(nblades_list, rhub_list, rtip_list, machcorrection; kwargs...)
+    rotors = build_rotors(nblades_list, rhub_list, rtip_list, mach_correction; kwargs...)
 
     return CCBladeSystem(rotors,
         radii_list, chords_list, twists_list, ccblade_af_objects_list,
@@ -152,7 +153,7 @@ function CCBladeSystem(nblades_list, rhub_list, rtip_list, machcorrection,
     )
 end
 
-function CCBladeSystem(nblades_list, rhub_list, rtip_list, machcorrection,
+function CCBladeSystem(nblades_list, rhub_list, rtip_list, mach_correction,
     radii_list, chords_list, twists_list,
     Res_lists, Ms_lists, contour_paths_list, uncorrected_polar_paths_lists, corrected_polar_paths_lists,
     index, positions, orientations, spin_directions;
@@ -161,13 +162,13 @@ function CCBladeSystem(nblades_list, rhub_list, rtip_list, machcorrection,
     # build af objects
     ccblade_af_objects_list = generate_polars.(rtip_list, radii_list, chords_list, twists_list, Res_lists, Ms_lists, contour_paths_list, uncorrected_polar_paths_lists, corrected_polar_paths_lists; kwargs...)
 
-    return CCBladeSystem(nblades_list, rhub_list, rtip_list, machcorrection,
+    return CCBladeSystem(nblades_list, rhub_list, rtip_list, mach_correction,
         radii_list, chords_list, twists_list, ccblade_af_objects_list,
         index, positions, orientations, spin_directions
     )
 end
 
-function CCBladeSystem(nblades_list, rhub_list, rtip_list, machcorrection,
+function CCBladeSystem(nblades_list, rhub_list, rtip_list, mach_correction,
     radii_list, chords_list, twists_list,
     Res_lists, Ms_lists, contour_paths_list::Vector{String},
     index, positions, orientations, spin_directions;
@@ -189,7 +190,7 @@ function CCBladeSystem(nblades_list, rhub_list, rtip_list, machcorrection,
         )
     end
 
-    return CCBladeSystem(nblades_list, rhub_list, rtip_list, machcorrection,
+    return CCBladeSystem(nblades_list, rhub_list, rtip_list, mach_correction,
         radii_list, chords_list, twists_list,
         Res_lists, Ms_lists, contour_paths_list, uncorrected_polar_paths_lists, corrected_polar_paths_lists,
         index, positions, orientations, spin_directions;
@@ -197,7 +198,7 @@ function CCBladeSystem(nblades_list, rhub_list, rtip_list, machcorrection,
     )
 end
 
-function CCBladeSystem(nblades_list, rhub_list, rtip_list, machcorrection,
+function CCBladeSystem(nblades_list, rhub_list, rtip_list, mach_correction,
     radii_list, chords_list, twists_list,
     Res_lists, Ms_lists, contour_paths_list,
     index, positions, orientations, spin_directions;
@@ -219,7 +220,7 @@ function CCBladeSystem(nblades_list, rhub_list, rtip_list, machcorrection,
         )
     end
 
-    return CCBladeSystem(nblades_list, rhub_list, rtip_list, machcorrection,
+    return CCBladeSystem(nblades_list, rhub_list, rtip_list, mach_correction,
         radii_list, chords_list, twists_list,
         Res_lists, Ms_lists, contour_paths_list, uncorrected_polar_paths_lists, corrected_polar_paths_lists,
         index, positions, orientations, spin_directions;
@@ -241,7 +242,7 @@ end
     return [section.r for section in sections]
 end
 
-@inline function build_rotors(nblades_list, rhub_list, rtip_list, machcorrection = nothing; kwargs...)
+@inline function build_rotors(nblades_list, rhub_list, rtip_list, mach_correction = nothing; kwargs...)
 
     @assert length(nblades_list) == length(rhub_list) "list of nblades and list of hub radii must be the same length"
     @assert length(nblades_list) == length(rtip_list) "list of nblades and list of tip radii must be the same length"
@@ -250,7 +251,7 @@ end
     for i in 1:length(rotors)
         # note: Mach correction on the fly not required
         # rhub_list[i] =
-        rotors[i] = CC.Rotor(rhub_list[i], rtip_list[i], nblades_list[i]; precone=0.0, turbine=false, mach=machcorrection, re=nothing, rotation=nothing, tip=CC.PrandtlTipHub()) #mach=CC.PrandtlGlauert()
+        rotors[i] = CC.Rotor(rhub_list[i], rtip_list[i], nblades_list[i]; precone=0.0, turbine=false, mach=mach_correction, re=nothing, rotation=nothing, tip=CC.PrandtlTipHub()) #mach=CC.PrandtlGlauert()
     end
     return rotors
 end
@@ -343,8 +344,8 @@ function rotor_2_polars(radii, chords, cr75, Res, Ms, contour_paths::String, unc
 )
 
     @assert length(radii) == length(chords) "length of radii and chords inconsistent"
-    @assert size(uncorrected_polar_paths) == (length(Res), length(Ms)) "size of uncorrected_polar_files is $(size(uncorrected_polar_files)); expected $((length(Res), length(Ms)))"
-    @assert size(corrected_polar_paths) == (length(Res), length(Ms)) "size of corrected_polar_files is $(size(corrected_polar_files)); expected $((length(Res), length(Ms)))"
+    @assert length(uncorrected_polar_paths) == length(Res) * length(Ms) "size of uncorrected_polar_paths is $(size(uncorrected_polar_paths)); expected $((length(Res), length(Ms)))"
+    @assert length(corrected_polar_paths) == length(Res) * length(Ms) "size of corrected_polar_paths is $(size(corrected_polar_paths)); expected $((length(Res), length(Ms)))"
 
     # TODO: re-write this to use multiple dispatch rather than if statements
     if length(Res) == 1
@@ -907,11 +908,11 @@ end
 
 
 """
-    solverotorsnondimensional(rotorsystem, omegas, freestream, environment)
+    solverotorsnondimensional(rotor_system, omegas, freestream, environment)
 
 # Arguments:
 
-* `rotorsystem`
+* `rotor_system`
 * `omegas`
 * `freestream`
 * `environment`
@@ -924,26 +925,26 @@ end
 * `ηs`
 
 """
-function solverotorsnondimensional(rotorsystem, omegas, freestream, environment)#, interstream::Interstream)
+function solverotorsnondimensional(rotor_system, omegas, freestream, environment)#, interstream::Interstream)
 
     # extract rotor info
-    orientations = rotorsystem.orientations
+    orientations = rotor_system.orientations
 
     # operating conditions
     vinflows = rotorinflow.(Ref(freestream), orientations)
 
     # pre-allocate solution
-    Js, Ts, Qs, Ps, us, vs = solverotors(rotorsystem, omegas, freestream, environment)
+    Js, Ts, Qs, Ps, us, vs = solverotors(rotor_system, omegas, freestream, environment)
 
     CTs = similar(Qs)
     CQs = similar(Qs)
     ηs = similar(Qs)
 
     # iterate over rotors
-    for (i, rotorindex) in enumerate(rotorsystem.index)
+    for (i, rotorindex) in enumerate(rotor_system.index)
 
         # isolate rotor
-        rotor = rotorsystem.rotors[rotorindex]
+        rotor = rotor_system.rotors[rotorindex]
 
         η, CT, CQ = CC.nondim(Ts[i], Qs[i], vinflows[i], omegas[i], environment.ρ, rotor, "propeller")
         CTs[i] = CT
@@ -958,21 +959,21 @@ end
 """
 In-place version of solverotorsnondimensional.
 """
-function solverotorsnondimensional!(Js, Ts, Qs, Ps, CTs, CQs, ηs, rotorsystem, omegas, freestream, environment)#, interstream::Interstream)
+function solverotorsnondimensional!(Js, Ts, Qs, Ps, CTs, CQs, ηs, rotor_system, omegas, freestream, environment)#, interstream::Interstream)
 
     # extract rotor info
-    orientations = rotorsystem.orientations
+    orientations = rotor_system.orientations
 
     # operating conditions
     vinflows = rotorinflow.(Ref(freestream), orientations)
 
     # pre-allocate solution
-    solverotors!(Js, Ts, Qs, Ps, rotorsystem, omegas, freestream, environment)
+    solve_rotors!(Js, Ts, Qs, Ps, rotor_system, omegas, freestream, environment)
 
     # iterate over rotors
-    for (i, rotorindex) in enumerate(rotorsystem.index)
+    for (i, rotorindex) in enumerate(rotor_system.index)
         # isolate rotor
-        rotor = rotorsystem.rotors[rotorindex]
+        rotor = rotor_system.rotors[rotorindex]
         η, CT, CQ = CC.nondim(Ts[i], Qs[i], vinflows[i], omegas[i], environment.ρ, rotor, "propeller")
         CTs[i] = CT
         CQs[i] = CQ
@@ -986,21 +987,21 @@ end
 """
 In-place version of solverotorsnondimensional including `us` and `vs`.
 """
-function solverotorsnondimensional!(Js, Ts, Qs, Ps, CTs, CQs, ηs, us, vs, rotorsystem, omegas, freestream, environment)#, interstream::Interstream)
+function solverotorsnondimensional!(Js, Ts, Qs, Ps, CTs, CQs, ηs, us, vs, rotor_system, omegas, freestream, environment)#, interstream::Interstream)
 
     # extract rotor info
-    orientations = rotorsystem.orientations
+    orientations = rotor_system.orientations
 
     # operating conditions
     vinflows = rotorinflow.(Ref(freestream), orientations)
 
     # pre-allocate solution
-    solverotors!(Js, Ts, Qs, Ps, us, vs, rotorsystem, omegas, freestream, environment)
+    solve_rotors!(Js, Ts, Qs, Ps, us, vs, rotor_system, omegas, freestream, environment)
 
     # iterate over rotors
-    for (i, rotorindex) in enumerate(rotorsystem.index)
+    for (i, rotorindex) in enumerate(rotor_system.index)
         # isolate rotor
-        rotor = rotorsystem.rotors[rotorindex]
+        rotor = rotor_system.rotors[rotorindex]
         η, CT, CQ = CC.nondim(Ts[i], Qs[i], vinflows[i], omegas[i], environment.ρ, rotor, "propeller")
         CTs[i] = CT
         CQs[i] = CQ
@@ -1012,13 +1013,13 @@ end
 
 
 """
-    solverotors(rotorsystem, omegas, freestream, environment)
+    solverotors(rotor_system, omegas, freestream, environment)
 
 Solves the rotor system at the specified RPM, freestream, and environment.
 
 # Arguments:
 
-* `rotorsystem::CCBladeSystem`: a rotor system
+* `rotor_system::CCBladeSystem`: a rotor system
 * `omegas::Vector{Float64}: vector of rotational velocities in rad/s of each rotor
 * `freestream::Freestream`: Freestream object
 * `environment::Environment`: Environment object
@@ -1033,24 +1034,24 @@ Solves the rotor system at the specified RPM, freestream, and environment.
 * `vs::Vector{Vector{Float64}}`: [i][j] refers to the swirl induced velocity at the rotor disk at the jth radial station of the ith rotor
 
 """
-function solverotors(rotorsystem, omegas, freestream, environment)#, interstream::Interstream)
+function solverotors(rotor_system, omegas, freestream, environment)#, interstream::Interstream)
 
     # pre-allocate solution
-    Js = zeros(length(rotorsystem.index))
+    Js = zeros(length(rotor_system.index))
     Ts = similar(Js)
     Qs = similar(Js)
     Ps = similar(Js)
-    us = [zeros(typeof(freestream.vinf), length(radii)) for radii in rotorsystem.rlists[rotorsystem.index]]
+    us = [zeros(typeof(freestream.vinf), length(radii)) for radii in rotor_system.rlists[rotor_system.index]]
     vs = deepcopy(us)
 
-    solverotors!(Js, Ts, Qs, Ps, us, vs, rotorsystem, omegas, freestream, environment)
+    solve_rotors!(Js, Ts, Qs, Ps, us, vs, rotor_system, omegas, freestream, environment)
 
     return Js, Ts, Qs, Ps, us, vs
 end
 
 
 """
-    solverotors!(Js, Ts, Qs, us, vs, rotorsystem, omegas, freestream, environment)
+    solve_rotors!(Js, Ts, Qs, us, vs, rotor_system, omegas, freestream, environment)
 
 In-place instance of `solverotors`.
 
@@ -1061,7 +1062,7 @@ In-place instance of `solverotors`.
 * `Qs::Vector{Float64}` : vector of torque values of each rotor
 * `us::Vector{Vector{Float64}}` : [i][j] refers to the axial induced velocity at the rotor disk at the jth radial station of the ith rotor
 * `vs::Vector{Vector{Float64}}` : [i][j] refers to the swirl induced velocity at the rotor disk at the jth radial station of the ith rotor
-* `rotorsystem::CCBladeSystem` : a rotor system
+* `rotor_system::CCBladeSystem` : a rotor system
 * `omegas::Vector{Float64} : vector of rotational velocities in rad/s of each rotor
 * `freestream::Freestream` : Freestream object
 * `environment::Environment` : Environment object
@@ -1075,46 +1076,58 @@ In-place instance of `solverotors`.
 * `vs::Vector{Vector{Float64}}`
 
 """
-function solverotors!(Js, Ts, Qs, Ps, us, vs, rotorsystem, omegas, freestream, environment)#, interstream::Interstream)
+function solve_rotors!(Js, Ts, Qs, Ps, us, vs, rotor_system, omegas, freestream, environment)#, interstream::Interstream)
 
+    # benchmarks = Vector{Float64}(undef,5)
+
+    # benchmarks[1] = @elapsed begin
     # extract rotor info
-    rlists = rotorsystem.rlists[rotorsystem.index]
-    orientations = rotorsystem.orientations
+    rlists = rotor_system.rlists[rotor_system.index]
+    orientations = rotor_system.orientations
+    # end
 
+    # benchmarks[2] = @elapsed begin
     # operating conditions
     vinflows = rotorinflow.(Ref(freestream), orientations)
     operatingpoints_list = rotor2operatingpoints.(vinflows, rlists, omegas, Ref(environment))
+    # end
 
     # iterate over rotors
-    for (i, rotorindex) in enumerate(rotorsystem.index)
-
+    for (i, rotorindex) in enumerate(rotor_system.index)
+        # benchmarks[3] = @elapsed begin
         # isolate rotor
-        rotor = rotorsystem.rotors[rotorindex]
-        sections = rotorsystem.sectionlists[rotorindex]
+        rotor = rotor_system.rotors[rotorindex]
+        sections = rotor_system.sectionlists[rotorindex]
 
         # isolate operating conditions
         operatingpoints = operatingpoints_list[i]
+        # end
 
+        # benchmarks[4] = @elapsed begin
         # solve CCBlade
         outputs = CC.solve.(Ref(rotor), sections, operatingpoints)
+        # end
 
+        # benchmarks[5] = @elapsed begin
         T, Q = CC.thrusttorque(rotor, sections, outputs)
         Ts[i] = T
         Qs[i] = Q
         Ps[i] = Q * omegas[i]
         us[i][:] .= outputs.u
         vs[i][:] .= outputs.v
+        # end
     end
 
     # calculate Js
-    Js .= vinflows ./ omegas * 2 * pi ./ [2 * rotor.Rtip for rotor in rotorsystem.rotors[rotorsystem.index]]
+    Js .= vinflows ./ omegas * 2 * pi ./ [2 * rotor.Rtip for rotor in rotor_system.rotors[rotor_system.index]]
 
+    # println("CHRONOS: $benchmarks")
     return nothing
 end
 
 
 """
-    solverotors!(Js, Ts, Qs, rotorsystem, omegas, freestream, environment)
+    solve_rotors!(Js, Ts, Qs, rotor_system, omegas, freestream, environment)
 
 In-place instance of `solverotors`.
 
@@ -1125,7 +1138,7 @@ In-place instance of `solverotors`.
 * `Qs::Vector{Float64}` : vector of torque values of each rotor
 * `us::Vector{Vector{Float64}}` : [i][j] refers to the axial induced velocity at the rotor disk at the jth radial station of the ith rotor
 * `vs::Vector{Vector{Float64}}` : [i][j] refers to the swirl induced velocity at the rotor disk at the jth radial station of the ith rotor
-* `rotorsystem::CCBladeSystem` : a rotor system
+* `rotor_system::CCBladeSystem` : a rotor system
 * `omegas::Vector{Float64} : vector of rotational velocities in rad/s of each rotor
 * `freestream::Freestream` : Freestream object
 * `environment::Environment` : Environment object
@@ -1139,21 +1152,21 @@ In-place instance of `solverotors`.
 * `vs::Vector{Vector{Float64}}`
 
 """
-function solverotors!(Js, Ts, Qs, Ps, rotorsystem, omegas, freestream, environment)#, interstream::Interstream)
+function solve_rotors!(Js, Ts, Qs, Ps, rotor_system, omegas, freestream, environment)#, interstream::Interstream)
 
     # extract rotor info
-    rlists = rotorsystem.rlists[rotorsystem.index]
-    orientations = rotorsystem.orientations
+    rlists = rotor_system.rlists[rotor_system.index]
+    orientations = rotor_system.orientations
 
     # operating conditions
     vinflows = rotorinflow.(Ref(freestream), orientations)
     operatingpoints_list = rotor2operatingpoints.(vinflows, rlists, omegas, Ref(environment))
 
     # iterate over rotors
-    for (i, rotorindex) in enumerate(rotorsystem.index)
+    for (i, rotorindex) in enumerate(rotor_system.index)
         # isolate rotor
-        rotor = rotorsystem.rotors[rotorindex]
-        sections = rotorsystem.sectionlists[rotorindex]
+        rotor = rotor_system.rotors[rotorindex]
+        sections = rotor_system.sectionlists[rotorindex]
 
         # isolate operating conditions
         operatingpoints = operatingpoints_list[i]
@@ -1167,7 +1180,7 @@ function solverotors!(Js, Ts, Qs, Ps, rotorsystem, omegas, freestream, environme
     end
 
     # calculate Js
-    Js .= vinflows ./ omegas * 2 * pi ./ [2 * rotor.Rtip for rotor in rotorsystem.rotors[rotorsystem.index]]
+    Js .= vinflows ./ omegas * 2 * pi ./ [2 * rotor.Rtip for rotor in rotor_system.rotors[rotor_system.index]]
 
     return Js, Ts, Qs, Ps
 end
@@ -1177,10 +1190,10 @@ solverotor(rotor, sections, operatingpoints) = CC.solve.(Ref(rotor), sections, o
 
 
 """
-    solverotors_outputs(rotorsystem, omegas, freestream, environment)
+    solverotors_outputs(rotor_system, omegas, freestream, environment)
 
 # Arguments
-* `rotorsystem`
+* `rotor_system`
 * `omegas`
 * `freestream`
 * `environment`
@@ -1191,69 +1204,69 @@ solverotor(rotor, sections, operatingpoints) = CC.solve.(Ref(rotor), sections, o
 * `outputs`
 
 """
-function solverotors_outputs(rotorsystem, omegas, freestream, environment)
+function solverotors_outputs(rotor_system, omegas, freestream, environment)
 
     # extract rotor info
-    rlists = rotorsystem.rlists[rotorsystem.index]
-    orientations = rotorsystem.orientations
+    rlists = rotor_system.rlists[rotor_system.index]
+    orientations = rotor_system.orientations
 
     # operating conditions
     vinflows = rotorinflow.(Ref(freestream), orientations)
     operatingpoints_list = rotor2operatingpoints.(vinflows, rlists, omegas, Ref(environment))
 
     # solve rotors
-    outputs_list = solverotor.(rotorsystem.rotors[rotorsystem.index], rotorsystem.sectionlists[rotorsystem.index], operatingpoints_list)
+    outputs_list = solverotor.(rotor_system.rotors[rotor_system.index], rotor_system.sectionlists[rotor_system.index], operatingpoints_list)
 
     # calculate Js
-    Js = vinflows ./ omegas * 2 * pi ./ [2 * rotor.Rtip for rotor in rotorsystem.rotors[rotorsystem.index]]
+    Js = vinflows ./ omegas * 2 * pi ./ [2 * rotor.Rtip for rotor in rotor_system.rotors[rotor_system.index]]
 
     return Js, outputs
 end
 
 
 """
-    induced2wakefunction(rotorsystem, us, vs;
-        wakeshapefunctions = Function[(Rtip, x) -> Rtip for i in 1:length(rotorsystem.index)],
-        axialinterpolations = Function[(rs, us, r, Rtip) -> FM.linear(rs, us, r) for i in 1:length(rotorsystem.index)],
-        swirlinterpolations = Function[(rs, vs, r, Rtip) -> FM.linear(rs, vs, r) for i in 1:length(rotorsystem.index)],
-        axialmultipliers = Function[(distance2plane, Rtip) -> 2 for i in 1:length(aircraft.rotorsystem.index)],
-        swirlmultipliers = Function[(distance2plane, Rtip) -> 1 for i in 1:length(aircraft.rotorsystem.index)]
+    induced2wakefunction(rotor_system, us, vs;
+        wake_shape_functions = Function[(Rtip, x) -> Rtip for i in 1:length(rotor_system.index)],
+        axial_interpolations = Function[(rs, us, r, Rtip) -> FM.linear(rs, us, r) for i in 1:length(rotor_system.index)],
+        swirl_interpolations = Function[(rs, vs, r, Rtip) -> FM.linear(rs, vs, r) for i in 1:length(rotor_system.index)],
+        axial_multipliers = Function[(distance2plane, Rtip) -> 2 for i in 1:length(aircraft.rotor_system.index)],
+        swirl_multipliers = Function[(distance2plane, Rtip) -> 1 for i in 1:length(aircraft.rotor_system.index)]
     )
 
 Interpolates rotor-induced velocities into a wake function of X.
 
 # Arguments:
 
-* `rotorsystem::CCBladeSystem`: system of rotors
+* `rotor_system::CCBladeSystem`: system of rotors
 * `us::Vector{Vector{Float64}}`: [i][j]th element is the axial induced velocity at the jth radial station of the ith rotor
 * `vs::Vector{Vector{Float64}}`: [i][j]th element is the swirl induced velocity at the jth radial station of the ith rotor
 
 # Keyword Arguments:
 
 * `wakeshapefunction = (Rtip, x) -> Rtip,` : function accepts a rotor radius and axial coordinate and returns the local wake radius
-* `axialinterpolations = (rs, us, r) -> FM.linear(rs, us, r)` : function accepts radial stations, axial velocities, and the radial coordinate and returns the unmodified axial induced velocity
-* `swirlinterpolations = (rs, vs, r) -> FM.linear(rs, vs, r)` : function accepts radial stations, swirl velocities, and the radial coordinate and returns the unmodified swirl induced velocity
+* `axial_interpolations = (rs, us, r) -> FM.linear(rs, us, r)` : function accepts radial stations, axial velocities, and the radial coordinate and returns the unmodified axial induced velocity
+* `swirl_interpolations = (rs, vs, r) -> FM.linear(rs, vs, r)` : function accepts radial stations, swirl velocities, and the radial coordinate and returns the unmodified swirl induced velocity
 * `axialmultiplier = (u, distance2plane, Rtip) -> u * 2` : function multiplied by the axial interpolation function
 * `swirlmultiplier = (v, distance2plane, Rtip) -> v` : function multiplied by the swirlinterpolation function
 
 """
-function induced2wakefunction(rotorsystem, us, vs;
-    wakeshapefunctions = Function[(Rtip, x) -> Rtip for i in 1:length(rotorsystem.index)],
-    axialinterpolations = Function[(rs, us, r, Rtip) -> FM.linear(rs, us, r) for i in 1:length(rotorsystem.index)],
-    swirlinterpolations = Function[(rs, vs, r, Rtip) -> FM.linear(rs, vs, r) for i in 1:length(rotorsystem.index)],
-    axialmultipliers = Function[(distance2plane, Rtip) -> 2 for i in 1:length(aircraft.rotorsystem.index)],
-    swirlmultipliers = Function[(distance2plane, Rtip) -> 1 for i in 1:length(aircraft.rotorsystem.index)]
+function induced2wakefunction(rotor_system, us, vs;
+    wake_shape_functions = Function[(Rtip, x) -> Rtip for i in 1:length(rotor_system.index)],
+    axial_interpolations = Function[(rs, us, r, Rtip) -> FM.linear(rs, us, r) for i in 1:length(rotor_system.index)],
+    swirl_interpolations = Function[(rs, vs, r, Rtip) -> FM.linear(rs, vs, r) for i in 1:length(rotor_system.index)],
+    axial_multipliers = Function[(distance2plane, Rtip) -> 2 for i in 1:length(aircraft.rotor_system.index)],
+    swirl_multipliers = Function[(distance2plane, Rtip) -> 1 for i in 1:length(aircraft.rotor_system.index)]
 )
     function wakefunction(X)
         Vwake = zeros(3)
-        for (irotor, rotorindex) in enumerate(rotorsystem.index)
+        for (irotor, rotorindex) in enumerate(rotor_system.index)
 
             # translate origin to rotor center (R is the vector from the rotor center to X)
-            R = X - rotorsystem.positions[irotor]
+            R = X - rotor_system.positions[irotor]
             r = LA.norm(R)
 
             # calculate distance from rotor plane (positive is in the negative thrust direction)
-            distance2plane = -LA.dot(R, rotorsystem.orientations[irotor])
+            distance2plane = -LA.dot(R, rotor_system.orientations[irotor])
 
             # angle between normal and R (\in [0,\pi])
             θ = acos(distance2plane/r)
@@ -1262,21 +1275,21 @@ function induced2wakefunction(rotorsystem, us, vs;
             distance2centerline = r * sin(θ) # always positive
 
             # check if X is within the wake
-            Rtip = rotorsystem.rotors[rotorindex].Rtip
-            Rhub = rotorsystem.rotors[rotorindex].Rhub
-            if distance2centerline < wakeshapefunctions[irotor](Rtip, distance2plane) && distance2centerline > Rhub #! Quick fix, not as comprehensive. Do we need another function? Or perhaps the wakeshapefunction outputs a lower and upper bound on the radius
+            Rtip = rotor_system.rotors[rotorindex].Rtip
+            Rhub = rotor_system.rotors[rotorindex].Rhub
+            if distance2centerline < wake_shape_functions[irotor](Rtip, distance2plane) && distance2centerline > Rhub #! Quick fix, not as comprehensive. Do we need another function? Or perhaps the wakeshapefunction outputs a lower and upper bound on the radius
                 # interpolate wake velocity
-                u = axialinterpolations[irotor](rotorsystem.rlists[rotorindex], us[irotor], distance2centerline, Rtip) * axialmultipliers[irotor](distance2plane, Rtip)
-                v = swirlinterpolations[irotor](rotorsystem.rlists[rotorindex], vs[irotor], distance2centerline, Rtip) * swirlmultipliers[irotor](distance2plane, Rtip)
+                u = axial_interpolations[irotor](rotor_system.rlists[rotorindex], us[irotor], distance2centerline, Rtip) * axial_multipliers[irotor](distance2plane, Rtip)
+                v = swirl_interpolations[irotor](rotor_system.rlists[rotorindex], vs[irotor], distance2centerline, Rtip) * swirl_multipliers[irotor](distance2plane, Rtip)
                 # get axial unit vector
-                axialhat = -rotorsystem.orientations[irotor]
+                axialhat = -rotor_system.orientations[irotor]
 
                 # get tangential unit vector
-                tangentialhat = LA.cross(rotorsystem.orientations[irotor], R)
+                tangentialhat = LA.cross(rotor_system.orientations[irotor], R)
                 tangentialhat ./= LA.norm(tangentialhat)
 
                 # project R onto the plane parallel to normal
-                Vinduced = u * axialhat + v * tangentialhat * (rotorsystem.spin_directions[irotor] ? 1 : -1)
+                Vinduced = u * axialhat + v * tangentialhat * (rotor_system.spin_directions[irotor] ? 1 : -1)
                 Vwake .+= Vinduced
             end
         end

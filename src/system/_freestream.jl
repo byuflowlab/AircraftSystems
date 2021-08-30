@@ -18,11 +18,11 @@ Describes the freestream.
 * `Omega::Vector{Float64}` : angular velocity about roll, pitch, and yaw axes
 
 """
-struct Freestream{TF}
-    vinf::TF
-    alpha::TF
-    beta::TF
-    Omega::StaticArrays.SArray{Tuple{3},TF,1,3}
+struct Freestream{TF1,TF2,TF3,TF4}
+    vinf::TF1
+    alpha::TF2
+    beta::TF3
+    Omega::StaticArrays.SArray{Tuple{3},TF4,1,3}
 end
 
 """
@@ -50,14 +50,3 @@ function freestream2vector(freestream)
 
     return Vinf
 end
-
-"""
-Function describing a velocity field superimposed over the freestream. Dispatch is as follows:
-
-function interstream(X::Vector{R})
-    ...
-    return velocity_at_X::Vector{R}
-end
-
-"""
-abstract type Interstream end

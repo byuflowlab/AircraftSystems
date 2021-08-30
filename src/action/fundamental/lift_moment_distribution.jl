@@ -33,9 +33,9 @@ NOTE: THIS ACTION DOES NOT SOLVE THE VORTEX LATTICE. Call `solve_wing_CF_CM` pri
 function lift_moment_distribution(aircraft, parameters, freestream, environment, step_range, stepi, step_symbol)
 
     # extract lift and moment distribution
-    cfs, cms = VL.lifting_line_coefficients(aircraft.wingsystem.system, aircraft.wingsystem.lifting_line_rs, aircraft.wingsystem.lifting_line_chords; frame = VL.Wind())
+    cfs, cms = VL.lifting_line_coefficients(aircraft.wing_system.system, aircraft.wing_system.lifting_line_rs, aircraft.wing_system.lifting_line_chords; frame = VL.Wind())
     # store to `parameters`
-    nwings = length(aircraft.wingsystem.system.surfaces)
+    nwings = length(aircraft.wing_system.system.surfaces)
     parameters.cfs[stepi] .= cfs
     parameters.cms[stepi] .= cms
     # for iwing in 1:nwings
@@ -72,23 +72,23 @@ NOTE: THIS ACTION DOES NOT SOLVE THE VORTEX LATTICE. Call `solve_CF` prior to ca
 function lift_moment_distribution_blownwing(aircraft, parameters, freestream, environment, step_range, stepi, step_symbol)
 
     # extract lift and moment distribution
-    cfs, cms = VL.lifting_line_coefficients(aircraft.wingsystem.system, aircraft.wingsystem.lifting_line_rs, aircraft.wingsystem.lifting_line_chords; frame = VL.Wind())
+    cfs, cms = VL.lifting_line_coefficients(aircraft.wing_system.system, aircraft.wing_system.lifting_line_rs, aircraft.wing_system.lifting_line_chords; frame = VL.Wind())
 
     # store to `parameters`
     parameters.cfs[stepi] .= cfs
     parameters.cms[stepi] .= cms
 
     # correct lift coefficients as done by Epema
-    nwings = length(aircraft.wingsystem.system.surfaces)
-    Vref = aircraft.wingsystem.system.reference[1].V
-    Vinf = aircraft.wingsystem.system.freestream[1].Vinf
+    nwings = length(aircraft.wing_system.system.surfaces)
+    Vref = aircraft.wing_system.system.reference[1].V
+    Vinf = aircraft.wing_system.system.freestream[1].Vinf
     for iwing in 1:nwings
         # first determine cl w/o rotor induced velocities
-        panels = aircraft.wingsystem.system.surfaces[iwing]
-        n_spanwise_sections = size(aircraft.wingsystem.system.properties[iwing])[2]
-        gammas = [Vref * sum([panel.gamma for panel in aircraft.wingsystem.system.properties[iwing][:,i_spanwise_section]])  for i_spanwise_section in 1:n_spanwise_sections]
-        velocities = [panel.velocity * Vref for panel in aircraft.wingsystem.system.properties[iwing]]
-        vwakes = parameters.wakefunctions[iwing].(VL.top_center.(panels))
+        panels = aircraft.wing_system.system.surfaces[iwing]
+        n_spanwise_sections = size(aircraft.wing_system.system.properties[iwing])[2]
+        gammas = [Vref * sum([panel.gamma for panel in aircraft.wing_system.system.properties[iwing][:,i_spanwise_section]])  for i_spanwise_section in 1:n_spanwise_sections]
+        velocities = [panel.velocity * Vref for panel in aircraft.wing_system.system.properties[iwing]]
+        vwakes = parameters.wake_function[stepi].(VL.top_center.(panels))
         # vwakes_minus_y = [[v[1]; 0.0; v[3]] for v in vwakes]
         # velocities_minus_rotor = velocities .- vwakes_minus_y #w/o rotor-induced velocities
         velocities_minus_rotor = velocities .- vwakes #w/o rotor-induced velocities
@@ -98,7 +98,7 @@ function lift_moment_distribution_blownwing(aircraft, parameters, freestream, en
         # TODO: interpote to get 1/4 chord velocity
         v_perp = [Statistics.mean(v_perp_norm[:,i]) for i in 1:n_spanwise_sections]
         # this step normalizes by the mac
-        cls = 2 * gammas .* v_perp ./ (aircraft.wingsystem.system.reference[iwing].c * Vinf^2)
+        cls = 2 * gammas .* v_perp ./ (aircraft.wing_system.cmacs[iwing] * Vinf^2)
         # store to parameters
         parameters.cfs[stepi][iwing][3,:] .= cls
     end
@@ -124,9 +124,9 @@ Method returns initialized elements required for the `parameters <: Parameters` 
 """
 function lift_moment_distribution(aircraft, step_range)
 
-    nwings = length(aircraft.wingsystem.system.surfaces)
-    nspanwisepanels = [size(surface)[2] for surface in aircraft.wingsystem.system.surfaces]
-    cfs = [[zeros(3, length(aircraft.wingsystem.system.surfaces[i])) for i in 1:nwings] for j in 1:length(step_range)]
+    nwings = length(aircraft.wing_system.system.surfaces)
+    nspanwisepanels = [size(surface)[2] for surface in aircraft.wing_system.system.surfaces]
+    cfs = [[zeros(3, length(aircraft.wing_system.system.surfaces[i])) for i in 1:nwings] for j in 1:length(step_range)]
     cms = deepcopy(cfs)
 
     return cfs, cms

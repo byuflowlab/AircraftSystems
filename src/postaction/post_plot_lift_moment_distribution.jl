@@ -77,10 +77,10 @@ function post_plot_lift_moment_distribution(aircraft, step_range)
 
     # extract info
     nsteps = length(step_range)
-    nwings = length(aircraft.wingsystem.system.surfaces)
+    nwings = length(aircraft.wing_system.system.surfaces)
     # initialize parameters
     surfacenames = ["wing$i" for i in 1:nwings]
-    cfs = [[zeros(3, length(aircraft.wingsystem.system.surfaces[i])) for i in 1:nwings] for j in 1:nsteps]
+    cfs = [[zeros(3, length(aircraft.wing_system.system.surfaces[i])) for i in 1:nwings] for j in 1:nsteps]
     cms = deepcopy(cfs)
     plot_directory = ""
     plot_base_name = "default"

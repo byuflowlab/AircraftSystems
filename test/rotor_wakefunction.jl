@@ -4,25 +4,25 @@ parameters = data_epema_rotor_sweep[2]
 struct TestParams
     us
     vs
-    wakefunctions
-    wakeshapefunctions
-    axialinterpolations
-    swirlinterpolations
-    axialmultipliers
-    swirlmultipliers
+    wake_function
+    wake_shape_functions
+    axial_interpolations
+    swirl_interpolations
+    axial_multipliers
+    swirl_multipliers
 end
 
 nsteps = length(parameters.us)
 stepi = 5
 
-testparams = TestParams(deepcopy(parameters.us), deepcopy(parameters.vs), Vector{Any}(nothing,nsteps), fill((Rtip, x) -> Rtip, length(aircraft.rotorsystem.index)), fill((rs, us, r, Rtip) -> FM.linear(rs, us, r), length(aircraft.rotorsystem.index)), fill((rs, vs, r, Rtip) -> FM.linear(rs, vs, r), length(aircraft.rotorsystem.index)), fill((distance2plane, Rtip) -> 2, length(aircraft.rotorsystem.index)), fill((distance2plane, Rtip) -> 1, length(aircraft.rotorsystem.index)))
+testparams = TestParams(deepcopy(parameters.us), deepcopy(parameters.vs), Vector{Any}(nothing,nsteps), fill((Rtip, x) -> Rtip, length(aircraft.rotor_system.index)), fill((rs, us, r, Rtip) -> FM.linear(rs, us, r), length(aircraft.rotor_system.index)), fill((rs, vs, r, Rtip) -> FM.linear(rs, vs, r), length(aircraft.rotor_system.index)), fill((distance2plane, Rtip) -> 2, length(aircraft.rotor_system.index)), fill((distance2plane, Rtip) -> 1, length(aircraft.rotor_system.index)))
 
 for i=1:nsteps
     AS.solve_rotor_wake(aircraft, testparams, nothing, nothing, nothing, i, nothing)
 end
 
-wakefun_aoa4 = testparams.wakefunctions[2]
-r = aircraft.rotorsystem.rotors[1].Rtip
+wakefun_aoa4 = testparams.wake_function[2]
+r = aircraft.rotor_system.rotors[1].Rtip
 # thetas = range(0, 2*pi, length=12)
 # rs = range(r/10, 2*r, length=4)
 # x = [r * cos(theta) for theta in thetas, r in rs]

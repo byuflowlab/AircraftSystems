@@ -133,7 +133,7 @@ function rotor_sweep_template(Js, omegas, rotors;
         J = get_J(parameters, 1, stepi)
         omega = parameters.omegas[1] # get omega for the first rotor
         n = omega / 2 / pi
-        D = aircraft.rotorsystem.rotors[1].Rtip * 2
+        D = aircraft.rotor_system.rotors[1].Rtip * 2
 
         # calculate freestream
         Vinf = J * n * D
@@ -174,7 +174,7 @@ Convenience function to create rotors with pre-created polars.
 * `nblades_list::Vector{Int}` : number of blades of the ith rotor
 * `rhub_list::Vector{Float64}` : hub radius of the ith rotor
 * `rtip_list::Vector{Float64}` : tip radius of the ith rotor
-* `mach_correction::Union{Nothing, CCBlade.MachCorrection}` : mach correction method used
+* `mach_correction::Union{Nothing, CCBlade.Mach_correction}` : mach correction method used
 * `radii_list::Vector{Vector{Float64}}` : ith element is a vector of radial stations defining the ith rotor
 * `chords_list::Vector{Vector{Float64}}` : ith element is a vector of chords defining the ith rotor
 * `twists_list::Vector{Vector{Float64}}` : ith element is a vector of twist angles in radians defining the ith rotor

@@ -35,7 +35,7 @@ index = [1]
 rotor_positions = [[0.0; rotor[:"y"]; 0.0]]
 rotor_orientations = [[-1.0; 0.0; 0.0]] # positive x downstream
 spin_directions = [true]
-polardirectory=joinpath(AS.topdirectory, "data","airfoil","polars","20210618")
+polar_directory=joinpath(AS.topdirectory, "data","airfoil","polars","20210618")
 
 args = AS.lift_distribution_template(vinfs, plotstepi, alphas, wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, wing_le_sweep, wing_ϕ,
                         Res_list = [fill([EpemaData.setup[:"Re"]], length(radii))],

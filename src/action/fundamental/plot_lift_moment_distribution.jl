@@ -38,7 +38,7 @@ function plot_lift_moment_distribution(aircraft, parameters, freestream, environ
     styles = ["-", "--", "--^", "--v"]
 
     # extract main wing span
-    b = aircraft.wingsystem.system.surfaces[1][end].rtr[2] * 2
+    b = aircraft.wing_system.system.surfaces[1][end].rtr[2] * 2
 
     if stepi in plotstepi
 
@@ -46,7 +46,7 @@ function plot_lift_moment_distribution(aircraft, parameters, freestream, environ
         surfacenames = parameters.surfacenames
         cfs = parameters.cfs
         cms = parameters.cms
-        lifting_line_rs = aircraft.wingsystem.lifting_line_rs
+        lifting_line_rs = aircraft.wing_system.lifting_line_rs
         plot_directory = parameters.plot_directory
         plot_base_name = parameters.plot_base_name
         plot_extension = parameters.plot_extension
@@ -177,9 +177,9 @@ Method returns initialized elements required for the `parameters <: Parameters` 
 """
 function plot_lift_moment_distribution(aircraft, step_range)
 
-    nwings = length(aircraft.wingsystem.surfaces)
+    nwings = length(aircraft.wing_system.surfaces)
     surfacenames = Vector{String}(undef,nwings)
-    cfs = [[zeros(3, length(aircraft.wingsystem.surfaces[i])) for i in 1:nwings] for j in 1:length(step_range)]
+    cfs = [[zeros(3, length(aircraft.wing_system.surfaces[i])) for i in 1:nwings] for j in 1:length(step_range)]
     cms = deepcopy(cfs)
     plot_directory = ""
     plot_base_name = "default"

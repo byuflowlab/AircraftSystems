@@ -34,14 +34,14 @@ function solve_wing_viscous_drag(aircraft, parameters, freestream, environment, 
     wing_strip_ys = parameters.wing_strip_ys
     wing_strip_polars = parameters.wing_strip_polars
     # apply viscous correction
-    nwings = length(aircraft.wingsystem.system.surfaces)
+    nwings = length(aircraft.wing_system.system.surfaces)
     for iwing in 1:nwings
 
     end
-    # update cds of aircraft.wingsystem.system
+    # update cds of aircraft.wing_system.system
 
     # extract forces and moments
-    CF_viscous, CM_viscous = VL.body_forces(aircraft.wingsystem.system; frame=VL.Wind())
+    CF_viscous, CM_viscous = VL.body_forces(aircraft.wing_system.system; frame=VL.Wind())
     # store to `parameters`
     for iwing in 1:nwings
         parameters.cds[iwing][:,stepi] = cfs[iwing][1,:]

@@ -40,7 +40,7 @@ function post_plot_rotor_sweep(aircraft, parameters, step_range, step_symbol)
     plot_directory = parameters.plot_directory
     plot_base_name = parameters.plot_base_name
     plot_extension = parameters.plot_extension
-    nrotors = length(aircraft.rotorsystem.index)
+    nrotors = length(aircraft.rotor_system.index)
 
     # check data
     @assert length(rotor_names) == nrotors "length of rotor_names is inconsistent: got $(length(rotor_names)); expected $nrotors"
@@ -125,7 +125,7 @@ Method returns initialized elements required for the `parameters <: Parameters` 
 function post_plot_rotor_sweep(aircraft, step_range)
 
     _, Js, _, _, CTs, CQs, ηs, _, _ = solve_rotor_nondimensional(aircraft, step_range)
-    nrotors = length(aircraft.rotorsystem.index)
+    nrotors = length(aircraft.rotor_system.index)
     rotor_names = ["rotor$i" for i in 1:nrotors]
     plot_directory = ""
     plot_base_name = "default"

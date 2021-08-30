@@ -17,7 +17,7 @@ README: this is a template file. Convenience methods are provided to calculate t
 * `CMs::Array{Float64,2}` : [:,j]th element is the [CMx,CMy,CMz] moment coefficients of the aircraft at the jth step
 * `cfs::Vector{Vector{Array{TF,2}}}`
 * `cms::Vector{Vector{Array{TF,2}}}`
-* `wakefunctions::V4`: additional velocity function; default is nothing
+* `wake_function::V4`: additional velocity function; default is nothing
 * `plot_directory::String`
 * `plot_base_name::String`
 * `plot_extension::String`
@@ -30,7 +30,7 @@ struct LiftDistribution{TF,TR} <: Parameters
     CMs::Array{TF,2}
     cfs::Vector{Vector{Array{TF,2}}}
     cms::Vector{Vector{Array{TF,2}}}
-    wakefunctions::Vector{Function}
+    wake_function::Vector{Function}
     plot_directory::String
     plot_base_name::String
     plot_extension::String
@@ -38,8 +38,8 @@ struct LiftDistribution{TF,TR} <: Parameters
     surfacenames::Vector{String}
 end
 
-LiftDistribution(CFs, CMs, cfs, cms, plot_directory, plot_base_name, plot_extension, ploti, surfacenames; wakefunctions=[nothing]) =
-    LiftDistribution(CFs, CMs, cfs, cms, wakefunctions, plot_directory, plot_base_name, plot_extension, ploti, surfacenames)
+LiftDistribution(CFs, CMs, cfs, cms, plot_directory, plot_base_name, plot_extension, ploti, surfacenames; wake_function=[nothing]) =
+    LiftDistribution(CFs, CMs, cfs, cms, wake_function, plot_directory, plot_base_name, plot_extension, ploti, surfacenames)
 
 # function (rs::RotorSweepParameters{V1, V2, V3, V4, V5})(alphas, omega...)
 
@@ -88,7 +88,7 @@ function lift_distribution_template(ploti, alphas, wing_b, wing_TR, wing_AR, win
             kwargs...)
 
     # prepare subsystems
-    wings = simplewingsystem(wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, wing_le_sweep, wing_ϕ; kwargs...)
+    wings = simplewing_system(wing_b, wing_TR, wing_AR, wing_θroot, wing_θtip, wing_le_sweep, wing_ϕ; kwargs...)
     rotors = CCBladeSystem(
         Vector{CC.Rotor}(undef,0),
         Vector{Vector{CC.Section{Float64, Float64, Float64, nothing}}}(undef,0),
@@ -111,7 +111,7 @@ function lift_distribution_template(ploti, alphas, wing_b, wing_TR, wing_AR, win
     actions = [solve_wing_CF_CM, lift_moment_distribution]
 
     # initialize parameters
-    wakefunctions, CFs, CMs = solve_wing_CF_CM(aircraft, alphas) # wakefunctions, CFs, CMs
+    wake_function, CFs, CMs = solve_wing_CF_CM(aircraft, alphas) # wake_function, CFs, CMs
     cfs, cms = lift_moment_distribution(aircraft, alphas) # let step_range be replaced by alphas
     _, _, _, _, _, _, _ = post_plot_lift_moment_distribution(aircraft, alphas)
 
@@ -119,7 +119,7 @@ function lift_distribution_template(ploti, alphas, wing_b, wing_TR, wing_AR, win
     @assert size(CFs) == size(CMs) "size of CFs and CMs inconsistent"
     @assert size(CFs)[2] == length(alphas) "length of parameter CFs and alphas inconsistent"
     @assert size(CFs)[1] == 3 "first dimension of CFs should be of length 1"
-    nspanwisepanels1 = size(aircraft.wingsystem.system.surfaces[1])[2]
+    nspanwisepanels1 = size(aircraft.wing_system.system.surfaces[1])[2]
     @assert length(cfs[1]) == length(surfacenames) "length of cfs is inconsistent: expected $(length(surfacenames)); got $(length(cfs))"
     @assert length(cms[1]) == length(surfacenames) "length of cms is inconsistent: expected $(length(surfacenames)); got $(length(cms))"
     @assert size(cfs[1][1]) == (3, nspanwisepanels1) "size of cfs[1] is inconsistent: expected $((3, nspanwisepanels1)); got $(size(cfs[1]))"
@@ -128,7 +128,7 @@ function lift_distribution_template(ploti, alphas, wing_b, wing_TR, wing_AR, win
     if !isdir(plot_directory); mkpath(plot_directory); end
 
     # build parameters struct
-    parameters = LiftDistribution(CFs, CMs, cfs, cms, wakefunctions, plot_directory, plot_base_name, plot_extension, ploti, surfacenames)
+    parameters = LiftDistribution(CFs, CMs, cfs, cms, wake_function, plot_directory, plot_base_name, plot_extension, ploti, surfacenames)
 
     # build freestream_function
     function freestream_function(aircraft, parameters, environment, alphas, stepi)

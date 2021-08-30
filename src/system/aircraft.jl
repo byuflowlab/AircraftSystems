@@ -17,24 +17,22 @@ instances of the `Action` types.
 
 # Fields:
 
-* `wingsystem` : comprehensively defines the aircraft's wings
-* `rotorsystem` : comprehensively defines the aircraft's rotors
-* `nonliftingbodysystem` : comprehensively defines non-lifting body(s) composing the aircraft
-* `structuresystem` : comprehensively defines the aircraft's structure(s)
-* `motorsystem` : comprehensively defines the aircraft's motor(s)
-* `batterysystem` : comprehensively defines the aircraft's batterie(s)
+* `wing_system` : comprehensively defines the aircraft's wings
+* `rotor_system` : comprehensively defines the aircraft's rotors
+* `nonlifting_body_system` : comprehensively defines non-lifting body(s) composing the aircraft
+* `structure_system` : comprehensively defines the aircraft's structure(s)
+* `motor_system` : comprehensively defines the aircraft's motor(s)
+* `battery_system` : comprehensively defines the aircraft's batterie(s)
 
 """
 struct Aircraft{TF,TF1,TF2,TF3,TAF}
-        # T1 <: Union{Nothing, CC.MachCorrection}, T2 <: Union{Nothing, CC.ReCorrection},
+        # T1 <: Union{Nothing, CC.Mach_correction}, T2 <: Union{Nothing, CC.ReCorrection},
         # T3 <: Union{Nothing, CC.RotationCorrection}, T4 <: Union{Nothing, CC.TipCorrection}}
-    wingsystem::Union{VortexLatticeSystem{TF}, Nothing}
-    rotorsystem::CCBladeSystem{TF,TF1,TF2,TF3,TAF}#,T1,T2,T3,T4}, Nothing}
-    inertiasystem::Union{Inertia{TF}, Nothing}
-    nonliftingbodysystem::Nothing
-    structuresystem::Nothing
-    motorsystem::Nothing
-    batterysystem::Nothing
+    wing_system::Union{VortexLatticeSystem{TF}, Nothing}
+    rotor_system::CCBladeSystem{TF,TF1,TF2,TF3,TAF}#,T1,T2,T3,T4}, Nothing}
+    inertia_system::Union{Inertia{TF}, Nothing}
+    nonlifting_body_system::Nothing
+    structure_system::Nothing
+    motor_system::Nothing
+    battery_system::Nothing
 end
-
-CCBladeSystem{Float64,Float64,Float64,Float64,CCBlade.AlphaReMachAF{Float64,String}}

@@ -30,7 +30,7 @@ README: define an `Action` object to solve a CCBlade rotor
 function nondimensionalize_rotor_c(aircraft, parameters, freestream, environment, step_range, stepi, step_symbol)
 
     omegas = parameters.omegas[stepi]
-    Js, CTs, CQs, ηs = solverotorsnondimensional(aircraft.rotorsystem, omegas, freestream, environment)
+    Js, CTs, CQs, ηs = solverotorsnondimensional(aircraft.rotor_system, omegas, freestream, environment)
 
     parameters.Js[:,stepi] .= Js
     parameters.CTs[:,stepi] .= CTs
